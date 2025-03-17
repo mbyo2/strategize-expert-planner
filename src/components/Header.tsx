@@ -16,22 +16,7 @@ const Header: React.FC = () => {
           </span>
         </div>
         
-        <div className="flex items-center space-x-4">
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-              Dashboard
-            </Link>
-            <Link to="/industry" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-              Industry
-            </Link>
-            <Link to="/planning" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-              Planning
-            </Link>
-            <Link to="/resources" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-              Resources
-            </Link>
-          </nav>
-          
+        <div className="flex items-center">
           <Button variant="ghost" size="icon" className="text-foreground">
             <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:rotate-90 dark:scale-0" />
             <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
