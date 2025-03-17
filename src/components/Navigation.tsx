@@ -6,12 +6,12 @@ import { HomeIcon, LineChart, Target, LayoutDashboard, Briefcase, Settings } fro
 
 const Navigation = () => {
   const navItems = [
-    { name: 'Dashboard', icon: <HomeIcon className="h-5 w-5" />, path: '/' },
-    { name: 'Industry Analysis', icon: <LineChart className="h-5 w-5" />, path: '/industry' },
-    { name: 'Strategic Planning', icon: <LayoutDashboard className="h-5 w-5" />, path: '/planning' },
-    { name: 'Goals', icon: <Target className="h-5 w-5" />, path: '/goals' },
-    { name: 'Resources', icon: <Briefcase className="h-5 w-5" />, path: '/resources' },
-    { name: 'Settings', icon: <Settings className="h-5 w-5" />, path: '/settings' },
+    { name: 'Dashboard', icon: <HomeIcon className="h-4 w-4 mr-2" />, path: '/' },
+    { name: 'Industry Analysis', icon: <LineChart className="h-4 w-4 mr-2" />, path: '/industry' },
+    { name: 'Strategic Planning', icon: <LayoutDashboard className="h-4 w-4 mr-2" />, path: '/planning' },
+    { name: 'Goals', icon: <Target className="h-4 w-4 mr-2" />, path: '/goals' },
+    { name: 'Resources', icon: <Briefcase className="h-4 w-4 mr-2" />, path: '/resources' },
+    { name: 'Settings', icon: <Settings className="h-4 w-4 mr-2" />, path: '/settings' },
   ];
 
   return (
@@ -30,8 +30,10 @@ const Navigation = () => {
                   : "text-muted-foreground"
               )}
             >
-              {item.icon}
-              <span className="ml-3 hidden lg:block">{item.name}</span>
+              <span className="flex items-center">
+                {item.icon}
+                {item.name}
+              </span>
             </NavLink>
           ))}
         </div>
