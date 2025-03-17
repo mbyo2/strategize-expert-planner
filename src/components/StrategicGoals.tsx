@@ -61,7 +61,11 @@ const StrategicGoals: React.FC = () => {
             </span>
           </div>
           
-          <Progress value={goal.progress} className="h-1.5 mb-1" />
+          <Progress 
+            value={goal.progress} 
+            className="h-1.5 mb-1" 
+            indicatorClassName={goal.status === 'completed' ? "bg-green-500" : "bg-primary"} 
+          />
           
           <div className="flex justify-between items-center">
             <span className={`text-xs ${

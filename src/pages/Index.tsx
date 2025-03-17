@@ -19,7 +19,7 @@ import IndustryMetrics from '@/components/IndustryMetrics';
 const Index = () => {
   return (
     <PageLayout 
-      title="Strategic Dashboard" 
+      title="Intantiko Strategic Dashboard" 
       subtitle="Monitor your organization's strategic initiatives and industry performance"
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -76,7 +76,7 @@ const Index = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="hover-lift">
+        <Card className="banking-card">
           <CardContent className="pt-6">
             <h3 className="text-lg font-medium mb-2">Recent Market Changes</h3>
             <ul className="space-y-3">
@@ -94,13 +94,13 @@ const Index = () => {
               </li>
             </ul>
             
-            <Button variant="ghost" size="sm" className="mt-4">
+            <Button variant="ghost" size="sm" className="mt-4 text-primary hover:text-primary/80">
               View all updates <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </CardContent>
         </Card>
 
-        <Card className="hover-lift">
+        <Card className="banking-card">
           <CardContent className="pt-6">
             <h3 className="text-lg font-medium mb-2">Strategic Recommendations</h3>
             <ul className="space-y-3">
@@ -118,7 +118,7 @@ const Index = () => {
               </li>
             </ul>
             
-            <Button variant="ghost" size="sm" className="mt-4">
+            <Button variant="ghost" size="sm" className="mt-4 text-primary hover:text-primary/80">
               See all recommendations <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </CardContent>
