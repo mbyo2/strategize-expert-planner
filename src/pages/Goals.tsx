@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Target, ChevronRight, Check, ArrowUpRight, Circle, Clock, AlertCircle } from 'lucide-react';
 import PageLayout from '../components/PageLayout';
@@ -32,6 +33,7 @@ const Goals = () => {
       </div>
 
       <div className="space-y-6">
+        {/* First card */}
         <Card className="banking-card">
           <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
@@ -102,6 +104,7 @@ const Goals = () => {
           </CardContent>
         </Card>
 
+        {/* Second card */}
         <Card className="banking-card">
           <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
@@ -150,7 +153,7 @@ const Goals = () => {
                   </li>
                   <li className="flex items-start space-x-2">
                     <Circle className="h-4 w-4 text-blue-500 mt-0.5" />
-                    <span className="text-sm">Reduce average support response time to < 2 hours (In Progress)</span>
+                    <span className="text-sm">Reduce average support response time to &lt; 2 hours (In Progress)</span>
                   </li>
                   <li className="flex items-start space-x-2">
                     <AlertCircle className="h-4 w-4 text-red-500 mt-0.5" />
@@ -172,6 +175,7 @@ const Goals = () => {
           </CardContent>
         </Card>
 
+        {/* Third card */}
         <Card className="banking-card">
           <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
@@ -242,6 +246,7 @@ const Goals = () => {
           </CardContent>
         </Card>
 
+        {/* Fourth card */}
         <Card className="banking-card">
           <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
