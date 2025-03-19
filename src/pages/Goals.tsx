@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Target, ChevronRight, Check, ArrowUpRight, Circle, Clock, AlertCircle } from 'lucide-react';
-import PageLayout from '@/components/PageLayout';
+import PageLayout from '../components/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
