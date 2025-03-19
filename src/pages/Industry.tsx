@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { LineChart, Building, TrendingUp, Scale, PieChart, ChevronRight } from 'lucide-react';
-import PageLayout from '@/components/PageLayout';
+import PageLayout from '../components/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import IndustryMetrics from '@/components/IndustryMetrics';
+import IndustryMetrics from '../components/IndustryMetrics';
 
 const Industry = () => {
   return (

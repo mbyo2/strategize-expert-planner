@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { LayoutDashboard, Compass, Flag, Calendar, Lightbulb, Users, ChevronRight } from 'lucide-react';
-import PageLayout from '@/components/PageLayout';
+import PageLayout from '../components/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   LineChart, 
@@ -9,12 +8,12 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import PageLayout from '@/components/PageLayout';
-import StrategySection from '@/components/StrategySection';
-import InfoCard from '@/components/InfoCard';
+import PageLayout from '../components/PageLayout';
+import StrategySection from '../components/StrategySection';
+import InfoCard from '../components/InfoCard';
 import { Card, CardContent } from '@/components/ui/card';
-import StrategicGoals from '@/components/StrategicGoals';
-import IndustryMetrics from '@/components/IndustryMetrics';
+import StrategicGoals from '../components/StrategicGoals';
+import IndustryMetrics from '../components/IndustryMetrics';
 
 const Index = () => {
   return (
