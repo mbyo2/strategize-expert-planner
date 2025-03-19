@@ -1,10 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { HomeIcon, LineChart, Target, LayoutDashboard, Briefcase, Settings } from 'lucide-react';
+import { HomeIcon, LineChart, Target, LayoutDashboard, Briefcase, Settings, Menu, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Navigation = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  
   const navItems = [
     { name: 'Dashboard', icon: <HomeIcon className="h-4 w-4 mr-2" />, path: '/' },
     { name: 'Industry Analysis', icon: <LineChart className="h-4 w-4 mr-2" />, path: '/industry' },
@@ -15,30 +18,42 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="hidden md:flex lg:flex-col justify-between lg:justify-start lg:h-[calc(100vh-4rem)] py-4 px-2 lg:py-8 lg:px-4 bg-sidebar border-r border-border">
-      <div className="flex lg:flex-col items-center lg:items-start space-x-8 lg:space-x-0 lg:space-y-8 w-full">
-        <div className="flex-1 lg:pt-6 flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible items-center lg:items-start space-x-1 lg:space-x-0 lg:space-y-1 w-full">
-          {navItems.map((item) => (
-            <NavLink 
-              key={item.name}
-              to={item.path}
-              className={({ isActive }) => cn(
-                "flex items-center font-medium py-3 px-3 lg:pl-4 lg:pr-8 rounded-md text-sm transition-colors",
-                "hover:bg-primary/10 hover:text-primary",
-                isActive 
-                  ? "bg-primary text-primary-foreground" 
-                  : "text-muted-foreground"
-              )}
-            >
-              <span className="flex items-center">
-                {item.icon}
-                {item.name}
-              </span>
-            </NavLink>
-          ))}
-        </div>
-      </div>
-    </nav>
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="md:hidden fixed top-3 right-3 z-50"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+      </Button>
+      
+      {isOpen && (
+        <nav className="md:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur-sm">
+          <div className="flex flex-col items-center justify-center h-full space-y-4 p-4">
+            {navItems.map((item) => (
+              <NavLink 
+                key={item.name}
+                to={item.path}
+                onClick={() => setIsOpen(false)}
+                className={({ isActive }) => cn(
+                  "flex items-center font-medium py-3 px-4 rounded-md text-sm transition-colors w-full max-w-xs",
+                  "hover:bg-primary/10 hover:text-primary",
+                  isActive 
+                    ? "bg-primary text-primary-foreground" 
+                    : "text-muted-foreground"
+                )}
+              >
+                <span className="flex items-center">
+                  {item.icon}
+                  {item.name}
+                </span>
+              </NavLink>
+            ))}
+          </div>
+        </nav>
+      )}
+    </>
   );
 };
 
