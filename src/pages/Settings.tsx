@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { Settings as SettingsIcon, User, Bell, Shield, Monitor, Mail, Save, Plus, Minus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings as SettingsIcon, User, Bell, Shield, Monitor, Mail, Save, Plus, Minus, Moon, Sun, Monitor as Display } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
+import { Slider } from '@/components/ui/slider';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -52,8 +52,38 @@ const Settings = () => {
 
   const [securityDialogOpen, setSecurityDialogOpen] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
+  const [twoFactorDialogOpen, setTwoFactorDialogOpen] = useState(false);
+  const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState('');
 
-  // Handle profile form submission
+  useEffect(() => {
+    if (appearanceSettings.theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else if (appearanceSettings.theme === 'light') {
+      document.documentElement.classList.remove('dark');
+    } else if (appearanceSettings.theme === 'system') {
+      const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (isDarkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  }, [appearanceSettings.theme]);
+
+  useEffect(() => {
+    const fontSizeClasses = ['text-sm', 'text-base', 'text-lg'];
+    document.body.classList.remove(...fontSizeClasses);
+    
+    const fontSizeMap = {
+      1: 'text-sm',
+      2: 'text-base',
+      3: 'text-lg'
+    };
+    
+    document.body.classList.add(fontSizeMap[appearanceSettings.fontSize as keyof typeof fontSizeMap]);
+  }, [appearanceSettings.fontSize]);
+
   const handleProfileUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -63,7 +93,6 @@ const Settings = () => {
     });
   };
 
-  // Handle notification settings changes
   const handleNotificationChange = (key: string, value: boolean) => {
     setNotificationSettings(prev => ({
       ...prev,
@@ -76,33 +105,93 @@ const Settings = () => {
     });
   };
 
-  // Handle appearance settings changes
   const handleAppearanceChange = (key: string, value: any) => {
     setAppearanceSettings(prev => ({
       ...prev,
       [key]: value
     }));
 
-    toast({
-      title: "Appearance settings updated",
-      description: "Your visual preferences have been saved.",
+    let title = "Appearance settings updated";
+    let description = "Your visual preferences have been saved.";
+    
+    if (key === 'theme') {
+      description = `Theme switched to ${value} mode.`;
+    } else if (key === 'compactView') {
+      description = `Compact view ${value ? 'enabled' : 'disabled'}.`;
+    } else if (key === 'showMetrics') {
+      description = `Metrics display ${value ? 'enabled' : 'disabled'}.`;
+    }
+
+    toast({ title, description });
+  };
+
+  const adjustFontSize = (direction: 'increase' | 'decrease') => {
+    setAppearanceSettings(prev => {
+      const newSize = direction === 'increase' 
+        ? Math.min(prev.fontSize + 1, 3)
+        : Math.max(prev.fontSize - 1, 1);
+      
+      toast({
+        title: "Font size updated",
+        description: `Font size ${direction === 'increase' ? 'increased' : 'decreased'}.`,
+      });
+      
+      return {
+        ...prev,
+        fontSize: newSize
+      };
     });
   };
 
-  // Handle font size adjustment
-  const adjustFontSize = (direction: 'increase' | 'decrease') => {
-    setAppearanceSettings(prev => ({
-      ...prev,
-      fontSize: direction === 'increase' 
-        ? Math.min(prev.fontSize + 1, 3)
-        : Math.max(prev.fontSize - 1, 1)
-    }));
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
-  // Password change form schema
+  const saveAvatar = () => {
+    setProfileData(prev => ({
+      ...prev,
+      avatarUrl: avatarPreview
+    }));
+    setAvatarDialogOpen(false);
+    toast({
+      title: "Avatar updated",
+      description: "Your profile picture has been changed successfully.",
+    });
+  };
+
+  const handle2FAToggle = (enabled: boolean) => {
+    if (enabled && !twoFactorEnabled) {
+      setTwoFactorDialogOpen(true);
+    } else if (!enabled && twoFactorEnabled) {
+      setTwoFactorEnabled(false);
+      toast({
+        title: "Two-factor authentication disabled",
+        description: "Your account is now secured with single-factor authentication only.",
+      });
+    }
+  };
+
+  const confirm2FAActivation = () => {
+    setTwoFactorEnabled(true);
+    setTwoFactorDialogOpen(false);
+    toast({
+      title: "Two-factor authentication enabled",
+      description: "Your account is now secured with 2FA.",
+    });
+  };
+
   const passwordFormSchema = z.object({
     currentPassword: z.string().min(1, "Current password is required"),
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    newPassword: z.string().min(8, "Password must be at least 8 characters")
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, 
+        "Password must include uppercase, lowercase, number and special character"),
     confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
   }).refine(data => data.newPassword === data.confirmPassword, {
     message: "Passwords don't match",
@@ -119,8 +208,9 @@ const Settings = () => {
   });
 
   const onPasswordSubmit = (values: z.infer<typeof passwordFormSchema>) => {
-    console.log(values);
+    console.log("Password change values:", values);
     setSecurityDialogOpen(false);
+    passwordForm.reset();
     toast({
       title: "Password updated",
       description: "Your password has been changed successfully.",
@@ -166,7 +256,57 @@ const Settings = () => {
                     <AvatarImage src={profileData.avatarUrl} alt={`${profileData.firstName} ${profileData.lastName}`} />
                     <AvatarFallback className="text-lg">{profileData.firstName[0]}{profileData.lastName[0]}</AvatarFallback>
                   </Avatar>
-                  <Button variant="outline" size="sm">Change Avatar</Button>
+                  
+                  <Dialog open={avatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">Change Avatar</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Update Profile Picture</DialogTitle>
+                      </DialogHeader>
+                      
+                      <div className="space-y-4">
+                        <div className="flex justify-center">
+                          {avatarPreview ? (
+                            <div className="relative h-32 w-32 rounded-full overflow-hidden">
+                              <img 
+                                src={avatarPreview} 
+                                alt="Avatar Preview" 
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <Avatar className="h-32 w-32">
+                              <AvatarFallback className="text-2xl">{profileData.firstName[0]}{profileData.lastName[0]}</AvatarFallback>
+                            </Avatar>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="avatar-upload">Upload Image</Label>
+                          <Input 
+                            id="avatar-upload" 
+                            type="file" 
+                            accept="image/*"
+                            onChange={handleAvatarChange}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Recommended: Square JPG, PNG. Max 5MB.
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setAvatarDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={saveAvatar} disabled={!avatarPreview}>
+                          Save Changes
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
                 
                 <div className="flex-1">
@@ -470,11 +610,65 @@ const Settings = () => {
                     </div>
                     <Switch id="twoFactor" 
                       checked={twoFactorEnabled}
-                      onCheckedChange={setTwoFactorEnabled}
+                      onCheckedChange={handle2FAToggle}
                     />
                   </div>
                   
-                  <Button variant="outline">
+                  <Dialog open={twoFactorDialogOpen} onOpenChange={setTwoFactorDialogOpen}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Set Up Two-Factor Authentication</DialogTitle>
+                      </DialogHeader>
+                      
+                      <div className="space-y-4 py-2">
+                        <div className="flex justify-center py-4">
+                          <div className="border p-3 rounded-md bg-gray-50 dark:bg-gray-900">
+                            {/* Placeholder for QR code - in a real app this would be a dynamic QR code */}
+                            <div className="w-48 h-48 grid grid-cols-8 grid-rows-8 gap-0.5">
+                              {Array.from({ length: 64 }).map((_, i) => (
+                                <div 
+                                  key={i} 
+                                  className={`${Math.random() > 0.5 ? 'bg-black dark:bg-white' : 'bg-white dark:bg-black'}`}
+                                ></div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="verification-code">Verification Code</Label>
+                          <Input 
+                            id="verification-code" 
+                            placeholder="Enter 6-digit code"
+                            className="font-mono"
+                          />
+                          <p className="text-sm text-muted-foreground">
+                            Scan the QR code with your authenticator app, then enter the verification code.
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setTwoFactorDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={confirm2FAActivation}>
+                          Verify and Enable
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                  
+                  <Button 
+                    variant="outline"
+                    disabled={!twoFactorEnabled}
+                    onClick={() => {
+                      toast({
+                        title: "2FA Settings",
+                        description: "Manage your two-factor authentication methods and settings.",
+                      });
+                    }}
+                  >
                     Manage 2FA Settings
                   </Button>
                 </div>
@@ -551,26 +745,32 @@ const Settings = () => {
                   
                   <div className="grid grid-cols-3 gap-4">
                     <div 
-                      className={`border ${appearanceSettings.theme === 'light' ? 'border-primary' : ''} rounded-md p-4 flex flex-col items-center cursor-pointer`}
+                      className={`border ${appearanceSettings.theme === 'light' ? 'border-primary' : 'border-muted'} rounded-md p-4 flex flex-col items-center cursor-pointer transition-all hover:bg-accent/10`}
                       onClick={() => handleAppearanceChange('theme', 'light')}
                     >
-                      <div className="w-full h-24 bg-white dark:bg-gray-900 rounded-md mb-3 border"></div>
+                      <div className="w-full h-24 bg-white dark:bg-gray-200 rounded-md mb-3 border border-gray-200 flex items-center justify-center">
+                        <Sun className="h-8 w-8 text-orange-400" />
+                      </div>
                       <span className="font-medium">Light</span>
                     </div>
                     
                     <div 
-                      className={`border ${appearanceSettings.theme === 'dark' ? 'border-primary' : ''} rounded-md p-4 flex flex-col items-center cursor-pointer`}
+                      className={`border ${appearanceSettings.theme === 'dark' ? 'border-primary' : 'border-muted'} rounded-md p-4 flex flex-col items-center cursor-pointer transition-all hover:bg-accent/10`}
                       onClick={() => handleAppearanceChange('theme', 'dark')}
                     >
-                      <div className="w-full h-24 bg-gray-900 rounded-md mb-3 border border-gray-700"></div>
+                      <div className="w-full h-24 bg-gray-900 rounded-md mb-3 border border-gray-700 flex items-center justify-center">
+                        <Moon className="h-8 w-8 text-indigo-300" />
+                      </div>
                       <span className="font-medium">Dark</span>
                     </div>
                     
                     <div 
-                      className={`border ${appearanceSettings.theme === 'system' ? 'border-primary' : ''} rounded-md p-4 flex flex-col items-center cursor-pointer`}
+                      className={`border ${appearanceSettings.theme === 'system' ? 'border-primary' : 'border-muted'} rounded-md p-4 flex flex-col items-center cursor-pointer transition-all hover:bg-accent/10`}
                       onClick={() => handleAppearanceChange('theme', 'system')}
                     >
-                      <div className="w-full h-24 bg-gradient-to-b from-white to-gray-900 rounded-md mb-3 border"></div>
+                      <div className="w-full h-24 bg-gradient-to-b from-white to-gray-900 rounded-md mb-3 border border-gray-300 flex items-center justify-center">
+                        <Display className="h-8 w-8 text-blue-500" />
+                      </div>
                       <span className="font-medium">System</span>
                     </div>
                   </div>
@@ -607,29 +807,50 @@ const Settings = () => {
                 <div className="pt-6 border-t space-y-4">
                   <h3 className="text-lg font-medium">Font Size</h3>
                   
-                  <div className="flex items-center gap-4">
-                    <Button 
-                      variant="outline" 
-                      className="py-1 px-2 h-auto text-sm"
-                      onClick={() => adjustFontSize('decrease')}
-                      disabled={appearanceSettings.fontSize <= 1}
-                    >
-                      <Minus className="h-3 w-3" />
-                    </Button>
-                    <div className="flex-grow h-1 bg-gray-200 dark:bg-gray-700 rounded-full">
-                      <div 
-                        className="h-1 bg-primary rounded-full" 
-                        style={{ width: `${(appearanceSettings.fontSize / 3) * 100}%` }}
-                      ></div>
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-4">
+                      <Button 
+                        variant="outline" 
+                        className="py-1 px-2 h-auto text-sm"
+                        onClick={() => adjustFontSize('decrease')}
+                        disabled={appearanceSettings.fontSize <= 1}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <div className="flex-grow">
+                        <Slider 
+                          value={[appearanceSettings.fontSize]} 
+                          min={1} 
+                          max={3} 
+                          step={1}
+                          onValueChange={(value) => handleAppearanceChange('fontSize', value[0])}
+                        />
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        className="py-1 px-2 h-auto text-sm"
+                        onClick={() => adjustFontSize('increase')}
+                        disabled={appearanceSettings.fontSize >= 3}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      className="py-1 px-2 h-auto text-sm"
-                      onClick={() => adjustFontSize('increase')}
-                      disabled={appearanceSettings.fontSize >= 3}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
+                    
+                    <div className="font-medium text-center">
+                      {appearanceSettings.fontSize === 1 && "Small"}
+                      {appearanceSettings.fontSize === 2 && "Medium"}
+                      {appearanceSettings.fontSize === 3 && "Large"}
+                    </div>
+                    
+                    <div className="p-4 border rounded-md">
+                      <p className={`
+                        ${appearanceSettings.fontSize === 1 ? 'text-sm' : ''}
+                        ${appearanceSettings.fontSize === 2 ? 'text-base' : ''}
+                        ${appearanceSettings.fontSize === 3 ? 'text-lg' : ''}
+                      `}>
+                        This is a preview of your selected font size. Adjust until comfortable.
+                      </p>
+                    </div>
                   </div>
                 </div>
                 
@@ -872,4 +1093,3 @@ const Settings = () => {
 };
 
 export default Settings;
-
