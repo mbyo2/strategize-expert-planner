@@ -4,18 +4,30 @@ import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { HomeIcon, LineChart, Target, LayoutDashboard, Briefcase, Settings, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth, UserRole } from '@/hooks/useAuth';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { isAuthenticated, hasPermission } = useAuth();
   
+  // Define nav items with required roles
   const navItems = [
-    { name: 'Dashboard', icon: <HomeIcon className="h-4 w-4 mr-2" />, path: '/' },
-    { name: 'Industry Analysis', icon: <LineChart className="h-4 w-4 mr-2" />, path: '/industry' },
-    { name: 'Strategic Planning', icon: <LayoutDashboard className="h-4 w-4 mr-2" />, path: '/planning' },
-    { name: 'Goals', icon: <Target className="h-4 w-4 mr-2" />, path: '/goals' },
-    { name: 'Resources', icon: <Briefcase className="h-4 w-4 mr-2" />, path: '/resources' },
-    { name: 'Settings', icon: <Settings className="h-4 w-4 mr-2" />, path: '/settings' },
+    { name: 'Dashboard', icon: <HomeIcon className="h-4 w-4 mr-2" />, path: '/', requiredRoles: [] as UserRole[] },
+    { name: 'Industry Analysis', icon: <LineChart className="h-4 w-4 mr-2" />, path: '/industry', requiredRoles: ['analyst', 'manager', 'admin'] as UserRole[] },
+    { name: 'Strategic Planning', icon: <LayoutDashboard className="h-4 w-4 mr-2" />, path: '/planning', requiredRoles: ['manager', 'admin'] as UserRole[] },
+    { name: 'Goals', icon: <Target className="h-4 w-4 mr-2" />, path: '/goals', requiredRoles: [] as UserRole[] },
+    { name: 'Resources', icon: <Briefcase className="h-4 w-4 mr-2" />, path: '/resources', requiredRoles: ['analyst', 'manager', 'admin'] as UserRole[] },
+    { name: 'Settings', icon: <Settings className="h-4 w-4 mr-2" />, path: '/settings', requiredRoles: [] as UserRole[] },
   ];
+
+  // Filter nav items based on user permissions
+  const filteredNavItems = isAuthenticated 
+    ? navItems.filter(item => item.requiredRoles.length === 0 || hasPermission(item.requiredRoles))
+    : [];
+
+  if (!isAuthenticated || filteredNavItems.length === 0) {
+    return null;
+  }
 
   return (
     <>
@@ -31,7 +43,7 @@ const Navigation = () => {
       {isOpen && (
         <nav className="md:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur-sm">
           <div className="flex flex-col items-center justify-center h-full space-y-4 p-4">
-            {navItems.map((item) => (
+            {filteredNavItems.map((item) => (
               <NavLink 
                 key={item.name}
                 to={item.path}
