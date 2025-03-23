@@ -19,9 +19,22 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Slider } from '@/components/ui/slider';
+import { Loader2 } from 'lucide-react';
+
+type ServiceStatus = 'connected' | 'disconnected' | 'connecting' | 'disconnecting';
+
+interface IntegrationService {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  description: string;
+  status: ServiceStatus;
+  connectionDate?: string;
+}
 
 const Settings = () => {
   const { toast } = useToast();
+
   const [profileData, setProfileData] = useState({
     firstName: 'John',
     lastName: 'Smith',
@@ -47,7 +60,7 @@ const Settings = () => {
     theme: 'light',
     compactView: false,
     showMetrics: true,
-    fontSize: 2, // 1-3 scale
+    fontSize: 2,
   });
 
   const [securityDialogOpen, setSecurityDialogOpen] = useState(false);
@@ -55,6 +68,52 @@ const Settings = () => {
   const [twoFactorDialogOpen, setTwoFactorDialogOpen] = useState(false);
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState('');
+  
+  const [connectedServices, setConnectedServices] = useState<IntegrationService[]>([
+    {
+      id: 'outlook',
+      name: 'Microsoft Outlook',
+      icon: <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />,
+      description: 'Calendar synchronization enabled',
+      status: 'connected',
+      connectionDate: '2023-09-15T14:30:00Z'
+    },
+    {
+      id: 'teams',
+      name: 'Microsoft Teams',
+      icon: <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />,
+      description: 'Connected for notifications',
+      status: 'connected',
+      connectionDate: '2023-10-20T09:15:00Z'
+    }
+  ]);
+
+  const [availableServices, setAvailableServices] = useState<IntegrationService[]>([
+    {
+      id: 'slack',
+      name: 'Slack',
+      icon: <Bell className="h-5 w-5 text-green-600 dark:text-green-400" />,
+      description: 'Connect for notifications and updates',
+      status: 'disconnected'
+    },
+    {
+      id: 'google',
+      name: 'Google Workspace',
+      icon: <Monitor className="h-5 w-5 text-blue-600 dark:text-blue-400" />,
+      description: 'Connect calendar and docs',
+      status: 'disconnected'
+    },
+    {
+      id: 'jira',
+      name: 'Jira',
+      icon: <SettingsIcon className="h-5 w-5 text-purple-600 dark:text-purple-400" />,
+      description: 'Task management integration',
+      status: 'disconnected'
+    }
+  ]);
+
+  const [apiKeyVisible, setApiKeyVisible] = useState(false);
+  const [apiKey, setApiKey] = useState('a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6');
 
   useEffect(() => {
     if (appearanceSettings.theme === 'dark') {
@@ -214,6 +273,86 @@ const Settings = () => {
     toast({
       title: "Password updated",
       description: "Your password has been changed successfully.",
+    });
+  };
+
+  const handleDisconnectService = (serviceId: string) => {
+    const serviceToDisconnect = connectedServices.find(service => service.id === serviceId);
+    if (!serviceToDisconnect) return;
+    
+    setConnectedServices(prev => 
+      prev.map(service => 
+        service.id === serviceId 
+          ? { ...service, status: 'disconnecting' as ServiceStatus } 
+          : service
+      )
+    );
+    
+    setTimeout(() => {
+      setConnectedServices(prev => prev.filter(service => service.id !== serviceId));
+      
+      setAvailableServices(prev => [
+        ...prev,
+        { ...serviceToDisconnect, status: 'disconnected' as ServiceStatus }
+      ]);
+      
+      toast({
+        title: "Integration removed",
+        description: `${serviceToDisconnect.name} has been disconnected.`,
+      });
+    }, 1500);
+  };
+
+  const handleConnectService = (serviceId: string) => {
+    const serviceToConnect = availableServices.find(service => service.id === serviceId);
+    if (!serviceToConnect) return;
+    
+    setAvailableServices(prev => 
+      prev.map(service => 
+        service.id === serviceId 
+          ? { ...service, status: 'connecting' as ServiceStatus } 
+          : service
+      )
+    );
+    
+    setTimeout(() => {
+      setAvailableServices(prev => prev.filter(service => service.id !== serviceId));
+      
+      setConnectedServices(prev => [
+        ...prev,
+        { 
+          ...serviceToConnect, 
+          status: 'connected' as ServiceStatus,
+          connectionDate: new Date().toISOString()
+        }
+      ]);
+      
+      toast({
+        title: "Integration added",
+        description: `${serviceToConnect.name} has been connected successfully.`,
+      });
+    }, 1500);
+  };
+
+  const regenerateApiKey = () => {
+    const newKey = Array.from({ length: 32 }, () => 
+      Math.floor(Math.random() * 16).toString(16)
+    ).join('');
+    
+    setApiKey(newKey);
+    setApiKeyVisible(false);
+    
+    toast({
+      title: "API key regenerated",
+      description: "A new API key has been generated. The old key is no longer valid.",
+    });
+  };
+
+  const copyApiKey = () => {
+    navigator.clipboard.writeText(apiKey);
+    toast({
+      title: "API key copied",
+      description: "The API key has been copied to your clipboard.",
     });
   };
 
@@ -623,7 +762,6 @@ const Settings = () => {
                       <div className="space-y-4 py-2">
                         <div className="flex justify-center py-4">
                           <div className="border p-3 rounded-md bg-gray-50 dark:bg-gray-900">
-                            {/* Placeholder for QR code - in a real app this would be a dynamic QR code */}
                             <div className="w-48 h-48 grid grid-cols-8 grid-rows-8 gap-0.5">
                               {Array.from({ length: 64 }).map((_, i) => (
                                 <div 
@@ -918,136 +1056,83 @@ const Settings = () => {
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Connected Services</h3>
                   
-                  <div className="border rounded-md p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-md flex items-center justify-center">
-                        <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Microsoft Outlook</p>
-                        <p className="text-sm text-muted-foreground">Calendar synchronization enabled</p>
-                      </div>
+                  {connectedServices.length === 0 ? (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <p>No services connected. Connect a service from the options below.</p>
                     </div>
-                    <div>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          toast({
-                            title: "Integration removed",
-                            description: "Microsoft Outlook has been disconnected.",
-                          });
-                        }}
-                      >
-                        Disconnect
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="border rounded-md p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-md flex items-center justify-center">
-                        <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  ) : (
+                    connectedServices.map(service => (
+                      <div key={service.id} className="border rounded-md p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-md flex items-center justify-center">
+                            {service.icon}
+                          </div>
+                          <div>
+                            <p className="font-medium">{service.name}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm text-muted-foreground">{service.description}</p>
+                              {service.connectionDate && (
+                                <span className="text-xs text-muted-foreground">
+                                  Connected {new Date(service.connectionDate).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDisconnectService(service.id)}
+                            disabled={service.status === 'disconnecting'}
+                          >
+                            {service.status === 'disconnecting' ? (
+                              <>
+                                <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                                Disconnecting...
+                              </>
+                            ) : (
+                              'Disconnect'
+                            )}
+                          </Button>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">Microsoft Teams</p>
-                        <p className="text-sm text-muted-foreground">Connected for notifications</p>
-                      </div>
-                    </div>
-                    <div>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          toast({
-                            title: "Integration removed",
-                            description: "Microsoft Teams has been disconnected.",
-                          });
-                        }}
-                      >
-                        Disconnect
-                      </Button>
-                    </div>
-                  </div>
+                    ))
+                  )}
                 </div>
                 
                 <div className="pt-6 border-t space-y-4">
                   <h3 className="text-lg font-medium">Available Integrations</h3>
                   
-                  <div className="border rounded-md p-4 flex items-center justify-between bg-muted/10">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-green-100 dark:bg-green-900/30 rounded-md flex items-center justify-center">
-                        <Bell className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  {availableServices.map(service => (
+                    <div key={service.id} className="border rounded-md p-4 flex items-center justify-between bg-muted/10">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 bg-green-100 dark:bg-green-900/30 rounded-md flex items-center justify-center">
+                          {service.icon}
+                        </div>
+                        <div>
+                          <p className="font-medium">{service.name}</p>
+                          <p className="text-sm text-muted-foreground">{service.description}</p>
+                        </div>
                       </div>
                       <div>
-                        <p className="font-medium">Slack</p>
-                        <p className="text-sm text-muted-foreground">Connect for notifications and updates</p>
+                        <Button 
+                          size="sm"
+                          onClick={() => handleConnectService(service.id)}
+                          disabled={service.status === 'connecting'}
+                        >
+                          {service.status === 'connecting' ? (
+                            <>
+                              <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                              Connecting...
+                            </>
+                          ) : (
+                            'Connect'
+                          )}
+                        </Button>
                       </div>
                     </div>
-                    <div>
-                      <Button 
-                        size="sm"
-                        onClick={() => {
-                          toast({
-                            title: "Integration added",
-                            description: "Slack has been connected successfully.",
-                          });
-                        }}
-                      >
-                        Connect
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="border rounded-md p-4 flex items-center justify-between bg-muted/10">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-md flex items-center justify-center">
-                        <Monitor className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Google Workspace</p>
-                        <p className="text-sm text-muted-foreground">Connect calendar and docs</p>
-                      </div>
-                    </div>
-                    <div>
-                      <Button 
-                        size="sm"
-                        onClick={() => {
-                          toast({
-                            title: "Integration added",
-                            description: "Google Workspace has been connected successfully.",
-                          });
-                        }}
-                      >
-                        Connect
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="border rounded-md p-4 flex items-center justify-between bg-muted/10">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-purple-100 dark:bg-purple-900/30 rounded-md flex items-center justify-center">
-                        <SettingsIcon className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Jira</p>
-                        <p className="text-sm text-muted-foreground">Task management integration</p>
-                      </div>
-                    </div>
-                    <div>
-                      <Button 
-                        size="sm"
-                        onClick={() => {
-                          toast({
-                            title: "Integration added",
-                            description: "Jira has been connected successfully.",
-                          });
-                        }}
-                      >
-                        Connect
-                      </Button>
-                    </div>
-                  </div>
+                  ))}
                 </div>
                 
                 <div className="pt-6 border-t space-y-4">
@@ -1056,31 +1141,80 @@ const Settings = () => {
                   <div className="space-y-2">
                     <Label htmlFor="api-key">API Key</Label>
                     <div className="flex gap-2">
-                      <Input id="api-key" value="••••••••••••••••••••••••••••••" readOnly className="flex-grow font-mono" />
+                      <Input 
+                        id="api-key" 
+                        type={apiKeyVisible ? "text" : "password"}
+                        value={apiKeyVisible ? apiKey : "••••••••••••••••••••••••••••••"} 
+                        readOnly 
+                        className="flex-grow font-mono" 
+                      />
                       <Button 
                         variant="outline"
-                        onClick={() => {
-                          toast({
-                            title: "API key copied",
-                            description: "The API key has been copied to your clipboard.",
-                          });
-                        }}
+                        onClick={() => setApiKeyVisible(!apiKeyVisible)}
+                      >
+                        {apiKeyVisible ? 'Hide' : 'Show'}
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={copyApiKey}
                       >
                         Copy
                       </Button>
                       <Button 
                         variant="outline"
-                        onClick={() => {
-                          toast({
-                            title: "API key regenerated",
-                            description: "A new API key has been generated. The old key is no longer valid.",
-                          });
-                        }}
+                        onClick={regenerateApiKey}
                       >
                         Regenerate
                       </Button>
                     </div>
-                    <p className="text-sm text-muted-foreground">This key provides access to the Intantiko API. Keep it secure and do not share it.</p>
+                    <p className="text-sm text-muted-foreground">This key provides access to the API. Keep it secure and do not share it.</p>
+                  </div>
+                  
+                  <div className="space-y-3 pt-4">
+                    <h4 className="text-md font-medium">API Usage</h4>
+                    <div className="bg-muted/30 border rounded-md p-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Requests this month</span>
+                          <span className="font-medium">1,248 / 5,000</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2.5 dark:bg-muted/50">
+                          <div className="bg-primary h-2.5 rounded-full" style={{ width: '25%' }}></div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          API usage resets on the 1st of each month. Need more requests? 
+                          <Button variant="link" className="h-auto p-0 px-1">
+                            Upgrade your plan
+                          </Button>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3 pt-4">
+                    <h4 className="text-md font-medium">Webhooks</h4>
+                    <div className="border rounded-md p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <p className="font-medium">Notification webhook</p>
+                          <p className="text-sm text-muted-foreground">https://api.example.com/webhooks/notifications</p>
+                        </div>
+                        <Button variant="outline" size="sm">Edit</Button>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">
+                          Test webhook
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-destructive">
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <Button variant="outline" size="sm" className="mt-2">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add webhook
+                    </Button>
                   </div>
                 </div>
               </div>
