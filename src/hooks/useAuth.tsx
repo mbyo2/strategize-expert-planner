@@ -12,6 +12,21 @@ export interface User {
   email: string;
   role: UserRole;
   avatar?: string;
+  jobTitle?: string;
+  department?: string;
+  company?: string;
+  bio?: string;
+}
+
+// Profile update interface
+export interface ProfileUpdate {
+  name?: string;
+  email?: string;
+  avatar?: string;
+  jobTitle?: string;
+  department?: string;
+  company?: string;
+  bio?: string;
 }
 
 // Auth context interface
@@ -23,6 +38,7 @@ interface AuthContextType {
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   hasPermission: (requiredRoles: UserRole[]) => boolean;
+  updateProfile: (profileData: ProfileUpdate) => void;
 }
 
 // Mock users for demonstration
@@ -141,6 +157,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   };
 
+  // Update user profile
+  const updateProfile = (profileData: ProfileUpdate) => {
+    if (!user) return;
+    
+    // Update user object with new profile data
+    const updatedUser = { ...user, ...profileData };
+    
+    // Update state and localStorage
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
   // Check if user has required role permissions
   const hasPermission = (requiredRoles: UserRole[]): boolean => {
     if (!user) return false;
@@ -162,6 +190,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     signup,
     logout,
     hasPermission,
+    updateProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

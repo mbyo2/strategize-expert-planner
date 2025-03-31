@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { HomeIcon, LineChart, Target, LayoutDashboard, Briefcase, Settings, Menu, X } from 'lucide-react';
+import { HomeIcon, LineChart, Target, LayoutDashboard, Briefcase, Settings, Menu, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth, UserRole } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -19,6 +19,7 @@ const Navigation = () => {
     { name: 'Strategic Planning', icon: <LayoutDashboard className="h-5 w-5 mr-3" />, path: '/planning', requiredRoles: ['manager', 'admin'] as UserRole[] },
     { name: 'Goals', icon: <Target className="h-5 w-5 mr-3" />, path: '/goals', requiredRoles: [] as UserRole[] },
     { name: 'Resources', icon: <Briefcase className="h-5 w-5 mr-3" />, path: '/resources', requiredRoles: ['analyst', 'manager', 'admin'] as UserRole[] },
+    { name: 'Profile', icon: <User className="h-5 w-5 mr-3" />, path: '/profile', requiredRoles: [] as UserRole[] },
     { name: 'Settings', icon: <Settings className="h-5 w-5 mr-3" />, path: '/settings', requiredRoles: [] as UserRole[] },
   ];
 

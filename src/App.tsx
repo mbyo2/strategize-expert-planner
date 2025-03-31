@@ -12,6 +12,7 @@ import Planning from "./pages/Planning";
 import Goals from "./pages/Goals";
 import Resources from "./pages/Resources";
 import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/goals" element={<AuthGuard><Goals /></AuthGuard>} />
             <Route path="/resources" element={<AuthGuard requiredRoles={['analyst', 'manager', 'admin']}><Resources /></AuthGuard>} />
             <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
+            <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
