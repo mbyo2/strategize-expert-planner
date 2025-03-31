@@ -3,6 +3,7 @@ import React from 'react';
 import PageLayout from '../components/PageLayout';
 import CustomizableDashboard from '../components/CustomizableDashboard';
 import InfoCard from '../components/InfoCard';
+import ReportGenerator from '../components/ReportGenerator';
 import { Target, Building, Users, Calendar } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -14,6 +15,11 @@ const Index = () => {
       title="Intantiko Strategic Dashboard" 
       subtitle="Monitor your organization's strategic initiatives and industry performance"
     >
+      <div className="flex justify-between items-center mb-4">
+        <div />
+        <ReportGenerator triggerClassName="ml-auto" />
+      </div>
+      
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <InfoCard
           title="Strategic Goals"
