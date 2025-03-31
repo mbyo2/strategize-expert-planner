@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   LineChart, 
@@ -14,14 +15,17 @@ import InfoCard from '../components/InfoCard';
 import { Card, CardContent } from '@/components/ui/card';
 import StrategicGoals from '../components/StrategicGoals';
 import IndustryMetrics from '../components/IndustryMetrics';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
+  const isMobile = useIsMobile();
+  
   return (
     <PageLayout 
       title="Intantiko Strategic Dashboard" 
       subtitle="Monitor your organization's strategic initiatives and industry performance"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <InfoCard
           title="Strategic Goals"
           value="6"
@@ -56,7 +60,7 @@ const Index = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <StrategySection
           title="Industry Analysis"
           description="Key metrics and competitive position"
@@ -74,11 +78,11 @@ const Index = () => {
         </StrategySection>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         <Card className="banking-card">
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-medium mb-2">Recent Market Changes</h3>
-            <ul className="space-y-3">
+          <CardContent className={`${isMobile ? 'p-4' : 'pt-6'}`}>
+            <h3 className="text-base sm:text-lg font-medium mb-2">Recent Market Changes</h3>
+            <ul className="space-y-2 sm:space-y-3 text-sm sm:text-base">
               <li className="flex items-start">
                 <span className="h-2 w-2 rounded-full bg-green-500 mt-2 mr-2"></span>
                 <span>Competitor XYZ launched new product line targeting small business segment</span>
@@ -93,32 +97,32 @@ const Index = () => {
               </li>
             </ul>
             
-            <Button variant="ghost" size="sm" className="mt-4 text-primary hover:text-primary/80">
-              View all updates <ChevronRight className="ml-1 h-4 w-4" />
+            <Button variant="ghost" size={isMobile ? "sm" : "default"} className="mt-3 sm:mt-4 text-primary hover:text-primary/80">
+              View all updates <ChevronRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </CardContent>
         </Card>
 
         <Card className="banking-card">
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-medium mb-2">Strategic Recommendations</h3>
-            <ul className="space-y-3">
+          <CardContent className={`${isMobile ? 'p-4' : 'pt-6'}`}>
+            <h3 className="text-base sm:text-lg font-medium mb-2">Strategic Recommendations</h3>
+            <ul className="space-y-2 sm:space-y-3 text-sm sm:text-base">
               <li className="flex items-start">
-                <span className="h-5 w-5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs mr-2">1</span>
+                <span className="h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs mr-2">1</span>
                 <span>Increase R&D investment in AI technologies to maintain competitive edge</span>
               </li>
               <li className="flex items-start">
-                <span className="h-5 w-5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs mr-2">2</span>
+                <span className="h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs mr-2">2</span>
                 <span>Expand distribution channels in emerging markets to capture growth</span>
               </li>
               <li className="flex items-start">
-                <span className="h-5 w-5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs mr-2">3</span>
+                <span className="h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs mr-2">3</span>
                 <span>Develop strategic partnerships with complementary service providers</span>
               </li>
             </ul>
             
-            <Button variant="ghost" size="sm" className="mt-4 text-primary hover:text-primary/80">
-              See all recommendations <ChevronRight className="ml-1 h-4 w-4" />
+            <Button variant="ghost" size={isMobile ? "sm" : "default"} className="mt-3 sm:mt-4 text-primary hover:text-primary/80">
+              See all recommendations <ChevronRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </CardContent>
         </Card>

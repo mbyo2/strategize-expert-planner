@@ -5,6 +5,7 @@ import Footer from './Footer';
 import Navigation from './Navigation';
 import FadeIn from './FadeIn';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -14,17 +15,26 @@ interface PageLayoutProps {
 }
 
 const PageLayout: React.FC<PageLayoutProps> = ({ children, title, subtitle, className }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <Navigation />
       
-      <main className={cn("flex-1 px-4 lg:px-8 py-8", className)}>
+      <main className={cn("flex-1 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8", className)}>
         {(title || subtitle) && (
-          <header className="mb-8 pb-4 border-b">
+          <header className="mb-4 sm:mb-6 md:mb-8 pb-4 border-b">
             <FadeIn delay={100}>
-              {title && <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>}
-              {subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
+              {title && (
+                <h1 className={cn(
+                  "font-semibold tracking-tight",
+                  isMobile ? "text-2xl" : "text-3xl"
+                )}>
+                  {title}
+                </h1>
+              )}
+              {subtitle && <p className="text-muted-foreground mt-1 text-sm sm:text-base">{subtitle}</p>}
             </FadeIn>
           </header>
         )}
