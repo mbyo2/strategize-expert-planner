@@ -2,7 +2,7 @@
 import React from 'react';
 import PageLayout from '../components/PageLayout';
 import CustomizableDashboard from '../components/CustomizableDashboard';
-import { InfoCard } from '../components/InfoCard';
+import InfoCard from '../components/InfoCard';
 import { Target, Building, Users, Calendar } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
