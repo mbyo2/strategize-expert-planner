@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Dialog, 
@@ -14,7 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { 
   FileText, 
   FileSpreadsheet, 
-  FilePdf, 
+  FileType, 
   Download,
   Calendar as CalendarIcon
 } from 'lucide-react';
@@ -29,7 +28,7 @@ const reportTypes = [
 
 // Export formats
 const exportFormats = [
-  { id: 'pdf', label: 'PDF', icon: <FilePdf className="h-4 w-4" /> },
+  { id: 'pdf', label: 'PDF', icon: <FileType className="h-4 w-4" /> },
   { id: 'csv', label: 'CSV', icon: <FileSpreadsheet className="h-4 w-4" /> },
 ];
 
