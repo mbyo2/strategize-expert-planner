@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, User, Bell, Shield, Monitor, Mail, Save, Plus, Minus, Moon, Sun, Monitor as Display } from 'lucide-react';
+import { Settings as SettingsIcon, User, Bell, Shield, Monitor, Mail, Save, Plus, Minus, Moon, Sun, Monitor as Display, Palette, Check, RotateCcw, Loader2 } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Slider } from '@/components/ui/slider';
-import { Loader2 } from 'lucide-react';
+import { useTheme } from '@/hooks/useTheme';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 type ServiceStatus = 'connected' | 'disconnected' | 'connecting' | 'disconnecting';
 
@@ -32,8 +33,81 @@ interface IntegrationService {
   connectionDate?: string;
 }
 
+// Preset color schemes
+const colorSchemes = [
+  { 
+    id: 'default', 
+    name: 'Default Blue',
+    primaryColor: 'hsl(214, 80%, 51%)',
+    accentColor: 'hsl(216, 79%, 67%)',
+    colors: {
+      primary: 'hsl(214, 80%, 51%)',
+      accent: 'hsl(216, 79%, 67%)'
+    }
+  },
+  { 
+    id: 'emerald', 
+    name: 'Emerald Green',
+    primaryColor: 'hsl(160, 84%, 39%)',
+    accentColor: 'hsl(160, 84%, 60%)',
+    colors: {
+      primary: 'hsl(160, 84%, 39%)',
+      accent: 'hsl(160, 84%, 60%)'
+    }
+  },
+  { 
+    id: 'ruby', 
+    name: 'Ruby Red',
+    primaryColor: 'hsl(0, 84%, 60%)',
+    accentColor: 'hsl(0, 84%, 75%)',
+    colors: {
+      primary: 'hsl(0, 84%, 60%)',
+      accent: 'hsl(0, 84%, 75%)'
+    }
+  },
+  { 
+    id: 'amber', 
+    name: 'Amber Gold',
+    primaryColor: 'hsl(43, 96%, 56%)',
+    accentColor: 'hsl(43, 96%, 66%)',
+    colors: {
+      primary: 'hsl(43, 96%, 56%)',
+      accent: 'hsl(43, 96%, 66%)'
+    }
+  },
+  { 
+    id: 'violet', 
+    name: 'Violet Purple',
+    primaryColor: 'hsl(270, 76%, 60%)',
+    accentColor: 'hsl(270, 76%, 75%)',
+    colors: {
+      primary: 'hsl(270, 76%, 60%)',
+      accent: 'hsl(270, 76%, 75%)'
+    }
+  },
+  { 
+    id: 'slate', 
+    name: 'Slate Gray',
+    primaryColor: 'hsl(215, 16%, 47%)',
+    accentColor: 'hsl(215, 16%, 65%)',
+    colors: {
+      primary: 'hsl(215, 16%, 47%)',
+      accent: 'hsl(215, 16%, 65%)'
+    }
+  }
+];
+
+// Font families
+const fontFamilies = [
+  { id: 'default', name: 'Default', value: 'system-ui, sans-serif' },
+  { id: 'serif', name: 'Serif', value: 'Georgia, serif' },
+  { id: 'mono', name: 'Monospace', value: 'monospace' },
+  { id: 'rounded', name: 'Rounded', value: '"Nunito", system-ui, sans-serif' }
+];
+
 const Settings = () => {
   const { toast } = useToast();
+  const { theme, setTheme, colorScheme, setColorScheme, fontFamily, setFontFamily, borderRadius, setBorderRadius } = useTheme();
 
   const [profileData, setProfileData] = useState({
     firstName: 'John',
@@ -57,11 +131,19 @@ const Settings = () => {
   });
 
   const [appearanceSettings, setAppearanceSettings] = useState({
-    theme: 'light',
+    theme: theme,
     compactView: false,
     showMetrics: true,
     fontSize: 2,
   });
+
+  const [customColors, setCustomColors] = useState({
+    primary: '',
+    accent: ''
+  });
+
+  const [isCustomColorScheme, setIsCustomColorScheme] = useState(false);
+  const [customizing, setCustomizing] = useState(false);
 
   const [securityDialogOpen, setSecurityDialogOpen] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
@@ -116,6 +198,13 @@ const Settings = () => {
   const [apiKey, setApiKey] = useState('a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6');
 
   useEffect(() => {
+    setAppearanceSettings(prev => ({
+      ...prev,
+      theme: theme
+    }));
+  }, [theme]);
+
+  useEffect(() => {
     if (appearanceSettings.theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else if (appearanceSettings.theme === 'light') {
@@ -143,6 +232,120 @@ const Settings = () => {
     document.body.classList.add(fontSizeMap[appearanceSettings.fontSize as keyof typeof fontSizeMap]);
   }, [appearanceSettings.fontSize]);
 
+  useEffect(() => {
+    // Apply font family to body
+    if (fontFamily) {
+      document.body.style.fontFamily = fontFamilies.find(f => f.id === fontFamily)?.value || 'system-ui, sans-serif';
+    }
+  }, [fontFamily]);
+
+  useEffect(() => {
+    // Update custom colors when color scheme changes
+    const scheme = colorSchemes.find(s => s.id === colorScheme);
+    if (scheme && !isCustomColorScheme) {
+      setCustomColors({
+        primary: scheme.primaryColor,
+        accent: scheme.accentColor
+      });
+    }
+  }, [colorScheme, isCustomColorScheme]);
+
+  // Update root CSS variables when colors change
+  useEffect(() => {
+    function hexToRgb(hex: string) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    }
+
+    function hslToRgb(hsl: string) {
+      // Extract HSL values
+      const hslMatch = hsl.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+      if (!hslMatch) return null;
+
+      const h = parseInt(hslMatch[1]) / 360;
+      const s = parseInt(hslMatch[2]) / 100;
+      const l = parseInt(hslMatch[3]) / 100;
+
+      let r, g, b;
+
+      if (s === 0) {
+        r = g = b = l;
+      } else {
+        const hue2rgb = (p: number, q: number, t: number) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+      }
+
+      return {
+        r: Math.round(r * 255),
+        g: Math.round(g * 255),
+        b: Math.round(b * 255)
+      };
+    }
+
+    function extractColorComponents(color: string) {
+      // Check if it's a hex color
+      if (color.startsWith('#')) {
+        return hexToRgb(color);
+      }
+      // Check if it's an HSL color
+      else if (color.startsWith('hsl')) {
+        return hslToRgb(color);
+      }
+      return null;
+    }
+
+    // Update color scheme variables
+    const root = document.documentElement;
+    
+    // Apply the current color scheme
+    let primaryColor = customColors.primary;
+    let accentColor = customColors.accent;
+    
+    if (!isCustomColorScheme) {
+      const scheme = colorSchemes.find(s => s.id === colorScheme);
+      if (scheme) {
+        primaryColor = scheme.colors.primary;
+        accentColor = scheme.colors.accent;
+      }
+    }
+    
+    if (primaryColor) {
+      const primaryRgb = extractColorComponents(primaryColor);
+      if (primaryRgb) {
+        root.style.setProperty('--primary', `${primaryRgb.r} ${primaryRgb.g} ${primaryRgb.b}`);
+      }
+    }
+    
+    if (accentColor) {
+      const accentRgb = extractColorComponents(accentColor);
+      if (accentRgb) {
+        root.style.setProperty('--accent', `${accentRgb.r} ${accentRgb.g} ${accentRgb.b}`);
+      }
+    }
+    
+    // Apply border radius
+    if (borderRadius !== undefined) {
+      root.style.setProperty('--radius', `${borderRadius * 0.25}rem`);
+    }
+    
+  }, [customColors, isCustomColorScheme, colorScheme, borderRadius]);
+  
   const handleProfileUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -174,6 +377,7 @@ const Settings = () => {
     let description = "Your visual preferences have been saved.";
     
     if (key === 'theme') {
+      setTheme(value);
       description = `Theme switched to ${value} mode.`;
     } else if (key === 'compactView') {
       description = `Compact view ${value ? 'enabled' : 'disabled'}.`;
@@ -182,6 +386,54 @@ const Settings = () => {
     }
 
     toast({ title, description });
+  };
+
+  const handleColorSchemeChange = (schemeId: string) => {
+    setColorScheme(schemeId);
+    setIsCustomColorScheme(false);
+    
+    const scheme = colorSchemes.find(s => s.id === schemeId);
+    toast({
+      title: "Color scheme updated",
+      description: `Applied the ${scheme?.name || 'new'} color scheme.`,
+    });
+  };
+
+  const handleFontFamilyChange = (fontId: string) => {
+    setFontFamily(fontId);
+    
+    const font = fontFamilies.find(f => f.id === fontId);
+    toast({
+      title: "Font updated",
+      description: `Applied the ${font?.name || 'new'} font.`,
+    });
+  };
+
+  const handleBorderRadiusChange = (value: number[]) => {
+    setBorderRadius(value[0]);
+  };
+
+  const applyCustomColors = () => {
+    setIsCustomColorScheme(true);
+    setCustomizing(false);
+    
+    toast({
+      title: "Custom colors applied",
+      description: "Your custom color scheme has been applied.",
+    });
+  };
+
+  const resetToDefaults = () => {
+    setTheme('light');
+    setColorScheme('default');
+    setFontFamily('default');
+    setBorderRadius(0.5);
+    setIsCustomColorScheme(false);
+    
+    toast({
+      title: "Default theme restored",
+      description: "All appearance settings have been reset to defaults.",
+    });
   };
 
   const adjustFontSize = (direction: 'increase' | 'decrease') => {
@@ -373,7 +625,7 @@ const Settings = () => {
             <Shield className="h-4 w-4 mr-2" /> Security
           </TabsTrigger>
           <TabsTrigger value="appearance" className="flex items-center">
-            <Monitor className="h-4 w-4 mr-2" /> Appearance
+            <Palette className="h-4 w-4 mr-2" /> Appearance
           </TabsTrigger>
           <TabsTrigger value="integrations" className="flex items-center">
             <SettingsIcon className="h-4 w-4 mr-2" /> Integrations
@@ -626,604 +878,3 @@ const Settings = () => {
                       id="app-deadlines" 
                       checked={notificationSettings.appDeadlines}
                       onCheckedChange={(checked) => handleNotificationChange('appDeadlines', checked)}
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Notification Delivery</h3>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-baseline gap-2">
-                      <Label className="font-medium">Delivery Frequency</Label>
-                    </div>
-                    
-                    <RadioGroup defaultValue="instant" className="pt-2">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="instant" id="instant" />
-                        <Label htmlFor="instant">Instant</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="daily-digest" id="daily-digest" />
-                        <Label htmlFor="daily-digest">Daily Digest</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="weekly-digest" id="weekly-digest" />
-                        <Label htmlFor="weekly-digest">Weekly Digest</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                </div>
-                
-                <Button>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Preferences
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="security">
-          <Card className="banking-card">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Shield className="h-5 w-5 mr-2" />
-                Security Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Password</h3>
-                  
-                  <Dialog open={securityDialogOpen} onOpenChange={setSecurityDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button>Change Password</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Change Password</DialogTitle>
-                      </DialogHeader>
-                      
-                      <Form {...passwordForm}>
-                        <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
-                          <FormField
-                            control={passwordForm.control}
-                            name="currentPassword"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Current Password</FormLabel>
-                                <FormControl>
-                                  <Input type="password" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={passwordForm.control}
-                            name="newPassword"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>New Password</FormLabel>
-                                <FormControl>
-                                  <Input type="password" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={passwordForm.control}
-                            name="confirmPassword"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Confirm New Password</FormLabel>
-                                <FormControl>
-                                  <Input type="password" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <DialogFooter>
-                            <Button type="submit">Save Changes</Button>
-                          </DialogFooter>
-                        </form>
-                      </Form>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-                
-                <div className="pt-6 border-t space-y-4">
-                  <h3 className="text-lg font-medium">Two-Factor Authentication</h3>
-                  
-                  <div className="flex items-center justify-between py-2">
-                    <div>
-                      <Label htmlFor="twoFactor" className="font-medium">Enable Two-Factor Authentication</Label>
-                      <p className="text-sm text-muted-foreground">Enhance your account security with 2FA</p>
-                    </div>
-                    <Switch id="twoFactor" 
-                      checked={twoFactorEnabled}
-                      onCheckedChange={handle2FAToggle}
-                    />
-                  </div>
-                  
-                  <Dialog open={twoFactorDialogOpen} onOpenChange={setTwoFactorDialogOpen}>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Set Up Two-Factor Authentication</DialogTitle>
-                      </DialogHeader>
-                      
-                      <div className="space-y-4 py-2">
-                        <div className="flex justify-center py-4">
-                          <div className="border p-3 rounded-md bg-gray-50 dark:bg-gray-900">
-                            <div className="w-48 h-48 grid grid-cols-8 grid-rows-8 gap-0.5">
-                              {Array.from({ length: 64 }).map((_, i) => (
-                                <div 
-                                  key={i} 
-                                  className={`${Math.random() > 0.5 ? 'bg-black dark:bg-white' : 'bg-white dark:bg-black'}`}
-                                ></div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="verification-code">Verification Code</Label>
-                          <Input 
-                            id="verification-code" 
-                            placeholder="Enter 6-digit code"
-                            className="font-mono"
-                          />
-                          <p className="text-sm text-muted-foreground">
-                            Scan the QR code with your authenticator app, then enter the verification code.
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setTwoFactorDialogOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button onClick={confirm2FAActivation}>
-                          Verify and Enable
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                  
-                  <Button 
-                    variant="outline"
-                    disabled={!twoFactorEnabled}
-                    onClick={() => {
-                      toast({
-                        title: "2FA Settings",
-                        description: "Manage your two-factor authentication methods and settings.",
-                      });
-                    }}
-                  >
-                    Manage 2FA Settings
-                  </Button>
-                </div>
-                
-                <div className="pt-6 border-t space-y-4">
-                  <h3 className="text-lg font-medium">Login Sessions</h3>
-                  
-                  <div className="space-y-3">
-                    <div className="p-3 border rounded-md">
-                      <div className="flex justify-between">
-                        <div>
-                          <p className="font-medium">Current Session</p>
-                          <p className="text-sm text-muted-foreground">MacBook Pro - Chrome - New York, USA</p>
-                        </div>
-                        <span className="text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded-full h-fit">
-                          Active
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="p-3 border rounded-md">
-                      <div className="flex justify-between">
-                        <div>
-                          <p className="font-medium">iPhone 13 Pro</p>
-                          <p className="text-sm text-muted-foreground">Safari - New York, USA - Last active 2 hours ago</p>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-fit"
-                          onClick={() => {
-                            toast({
-                              title: "Session terminated",
-                              description: "You've been signed out from iPhone 13 Pro",
-                            });
-                          }}
-                        >
-                          Sign Out
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="mt-2"
-                    onClick={() => {
-                      toast({
-                        title: "All sessions terminated",
-                        description: "You've been signed out from all other devices",
-                      });
-                    }}
-                  >
-                    Sign Out All Other Sessions
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="appearance">
-          <Card className="banking-card">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Monitor className="h-5 w-5 mr-2" />
-                Appearance Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Theme Preferences</h3>
-                  
-                  <div className="grid grid-cols-3 gap-4">
-                    <div 
-                      className={`border ${appearanceSettings.theme === 'light' ? 'border-primary' : 'border-muted'} rounded-md p-4 flex flex-col items-center cursor-pointer transition-all hover:bg-accent/10`}
-                      onClick={() => handleAppearanceChange('theme', 'light')}
-                    >
-                      <div className="w-full h-24 bg-white dark:bg-gray-200 rounded-md mb-3 border border-gray-200 flex items-center justify-center">
-                        <Sun className="h-8 w-8 text-orange-400" />
-                      </div>
-                      <span className="font-medium">Light</span>
-                    </div>
-                    
-                    <div 
-                      className={`border ${appearanceSettings.theme === 'dark' ? 'border-primary' : 'border-muted'} rounded-md p-4 flex flex-col items-center cursor-pointer transition-all hover:bg-accent/10`}
-                      onClick={() => handleAppearanceChange('theme', 'dark')}
-                    >
-                      <div className="w-full h-24 bg-gray-900 rounded-md mb-3 border border-gray-700 flex items-center justify-center">
-                        <Moon className="h-8 w-8 text-indigo-300" />
-                      </div>
-                      <span className="font-medium">Dark</span>
-                    </div>
-                    
-                    <div 
-                      className={`border ${appearanceSettings.theme === 'system' ? 'border-primary' : 'border-muted'} rounded-md p-4 flex flex-col items-center cursor-pointer transition-all hover:bg-accent/10`}
-                      onClick={() => handleAppearanceChange('theme', 'system')}
-                    >
-                      <div className="w-full h-24 bg-gradient-to-b from-white to-gray-900 rounded-md mb-3 border border-gray-300 flex items-center justify-center">
-                        <Display className="h-8 w-8 text-blue-500" />
-                      </div>
-                      <span className="font-medium">System</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="pt-6 border-t space-y-4">
-                  <h3 className="text-lg font-medium">Dashboard Layout</h3>
-                  
-                  <div className="flex items-center justify-between py-2">
-                    <div>
-                      <Label htmlFor="compactView" className="font-medium">Compact View</Label>
-                      <p className="text-sm text-muted-foreground">Display more information with reduced spacing</p>
-                    </div>
-                    <Switch 
-                      id="compactView" 
-                      checked={appearanceSettings.compactView}
-                      onCheckedChange={(checked) => handleAppearanceChange('compactView', checked)}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between py-2">
-                    <div>
-                      <Label htmlFor="showMetrics" className="font-medium">Show Key Metrics</Label>
-                      <p className="text-sm text-muted-foreground">Display performance metrics at the top of dashboard</p>
-                    </div>
-                    <Switch 
-                      id="showMetrics" 
-                      checked={appearanceSettings.showMetrics}
-                      onCheckedChange={(checked) => handleAppearanceChange('showMetrics', checked)}
-                    />
-                  </div>
-                </div>
-                
-                <div className="pt-6 border-t space-y-4">
-                  <h3 className="text-lg font-medium">Font Size</h3>
-                  
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <Button 
-                        variant="outline" 
-                        className="py-1 px-2 h-auto text-sm"
-                        onClick={() => adjustFontSize('decrease')}
-                        disabled={appearanceSettings.fontSize <= 1}
-                      >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                      <div className="flex-grow">
-                        <Slider 
-                          value={[appearanceSettings.fontSize]} 
-                          min={1} 
-                          max={3} 
-                          step={1}
-                          onValueChange={(value) => handleAppearanceChange('fontSize', value[0])}
-                        />
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        className="py-1 px-2 h-auto text-sm"
-                        onClick={() => adjustFontSize('increase')}
-                        disabled={appearanceSettings.fontSize >= 3}
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    
-                    <div className="font-medium text-center">
-                      {appearanceSettings.fontSize === 1 && "Small"}
-                      {appearanceSettings.fontSize === 2 && "Medium"}
-                      {appearanceSettings.fontSize === 3 && "Large"}
-                    </div>
-                    
-                    <div className="p-4 border rounded-md">
-                      <p className={`
-                        ${appearanceSettings.fontSize === 1 ? 'text-sm' : ''}
-                        ${appearanceSettings.fontSize === 2 ? 'text-base' : ''}
-                        ${appearanceSettings.fontSize === 3 ? 'text-lg' : ''}
-                      `}>
-                        This is a preview of your selected font size. Adjust until comfortable.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="pt-6 border-t space-y-4">
-                  <h3 className="text-lg font-medium">Dashboard Widgets</h3>
-                  
-                  <div className="space-y-3">
-                    <p className="text-sm text-muted-foreground">Select which widgets to display on your dashboard</p>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="widget-goals" defaultChecked />
-                        <Label htmlFor="widget-goals">Goals Progress</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="widget-analytics" defaultChecked />
-                        <Label htmlFor="widget-analytics">Analytics</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="widget-calendar" defaultChecked />
-                        <Label htmlFor="widget-calendar">Calendar</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="widget-notifications" defaultChecked />
-                        <Label htmlFor="widget-notifications">Recent Notifications</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="widget-tasks" defaultChecked />
-                        <Label htmlFor="widget-tasks">Active Tasks</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="widget-resources" defaultChecked />
-                        <Label htmlFor="widget-resources">Resource Allocation</Label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <Button
-                  onClick={() => {
-                    toast({
-                      title: "Appearance settings saved",
-                      description: "Your visual preferences have been updated.",
-                    });
-                  }}
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Appearance Settings
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="integrations">
-          <Card className="banking-card">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <SettingsIcon className="h-5 w-5 mr-2" />
-                Integrations
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Connected Services</h3>
-                  
-                  {connectedServices.length === 0 ? (
-                    <div className="text-center py-6 text-muted-foreground">
-                      <p>No services connected. Connect a service from the options below.</p>
-                    </div>
-                  ) : (
-                    connectedServices.map(service => (
-                      <div key={service.id} className="border rounded-md p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-md flex items-center justify-center">
-                            {service.icon}
-                          </div>
-                          <div>
-                            <p className="font-medium">{service.name}</p>
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm text-muted-foreground">{service.description}</p>
-                              {service.connectionDate && (
-                                <span className="text-xs text-muted-foreground">
-                                  Connected {new Date(service.connectionDate).toLocaleDateString()}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleDisconnectService(service.id)}
-                            disabled={service.status === 'disconnecting'}
-                          >
-                            {service.status === 'disconnecting' ? (
-                              <>
-                                <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-                                Disconnecting...
-                              </>
-                            ) : (
-                              'Disconnect'
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                
-                <div className="pt-6 border-t space-y-4">
-                  <h3 className="text-lg font-medium">Available Integrations</h3>
-                  
-                  {availableServices.map(service => (
-                    <div key={service.id} className="border rounded-md p-4 flex items-center justify-between bg-muted/10">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-green-100 dark:bg-green-900/30 rounded-md flex items-center justify-center">
-                          {service.icon}
-                        </div>
-                        <div>
-                          <p className="font-medium">{service.name}</p>
-                          <p className="text-sm text-muted-foreground">{service.description}</p>
-                        </div>
-                      </div>
-                      <div>
-                        <Button 
-                          size="sm"
-                          onClick={() => handleConnectService(service.id)}
-                          disabled={service.status === 'connecting'}
-                        >
-                          {service.status === 'connecting' ? (
-                            <>
-                              <Loader2 className="h-3 w-3 mr-2 animate-spin" />
-                              Connecting...
-                            </>
-                          ) : (
-                            'Connect'
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="pt-6 border-t space-y-4">
-                  <h3 className="text-lg font-medium">API Access</h3>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="api-key">API Key</Label>
-                    <div className="flex gap-2">
-                      <Input 
-                        id="api-key" 
-                        type={apiKeyVisible ? "text" : "password"}
-                        value={apiKeyVisible ? apiKey : "••••••••••••••••••••••••••••••"} 
-                        readOnly 
-                        className="flex-grow font-mono" 
-                      />
-                      <Button 
-                        variant="outline"
-                        onClick={() => setApiKeyVisible(!apiKeyVisible)}
-                      >
-                        {apiKeyVisible ? 'Hide' : 'Show'}
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        onClick={copyApiKey}
-                      >
-                        Copy
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        onClick={regenerateApiKey}
-                      >
-                        Regenerate
-                      </Button>
-                    </div>
-                    <p className="text-sm text-muted-foreground">This key provides access to the API. Keep it secure and do not share it.</p>
-                  </div>
-                  
-                  <div className="space-y-3 pt-4">
-                    <h4 className="text-md font-medium">API Usage</h4>
-                    <div className="bg-muted/30 border rounded-md p-4">
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Requests this month</span>
-                          <span className="font-medium">1,248 / 5,000</span>
-                        </div>
-                        <div className="w-full bg-muted rounded-full h-2.5 dark:bg-muted/50">
-                          <div className="bg-primary h-2.5 rounded-full" style={{ width: '25%' }}></div>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          API usage resets on the 1st of each month. Need more requests? 
-                          <Button variant="link" className="h-auto p-0 px-1">
-                            Upgrade your plan
-                          </Button>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-3 pt-4">
-                    <h4 className="text-md font-medium">Webhooks</h4>
-                    <div className="border rounded-md p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <p className="font-medium">Notification webhook</p>
-                          <p className="text-sm text-muted-foreground">https://api.example.com/webhooks/notifications</p>
-                        </div>
-                        <Button variant="outline" size="sm">Edit</Button>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          Test webhook
-                        </Button>
-                        <Button variant="outline" size="sm" className="text-destructive">
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <Button variant="outline" size="sm" className="mt-2">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add webhook
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </PageLayout>
-  );
-};
-
-export default Settings;

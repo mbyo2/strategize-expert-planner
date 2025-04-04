@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ThemeProvider } from "@/hooks/useTheme";
 import AuthGuard from "@/components/AuthGuard";
 import Index from "./pages/Index";
 import Industry from "./pages/Industry";
@@ -26,35 +27,37 @@ const queryClient = new QueryClient();
 // Intantiko - Strategic Planning Software
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/access-denied" element={<AccessDenied />} />
-            
-            {/* Protected routes */}
-            <Route path="/" element={<AuthGuard><Index /></AuthGuard>} />
-            <Route path="/industry" element={<AuthGuard requiredRoles={['analyst', 'manager', 'admin']}><Industry /></AuthGuard>} />
-            <Route path="/planning" element={<AuthGuard requiredRoles={['manager', 'admin']}><Planning /></AuthGuard>} />
-            <Route path="/goals" element={<AuthGuard><Goals /></AuthGuard>} />
-            <Route path="/resources" element={<AuthGuard requiredRoles={['analyst', 'manager', 'admin']}><Resources /></AuthGuard>} />
-            <Route path="/teams" element={<AuthGuard requiredRoles={['manager', 'admin']}><Teams /></AuthGuard>} />
-            <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
-            <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
-            
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/access-denied" element={<AccessDenied />} />
+              
+              {/* Protected routes */}
+              <Route path="/" element={<AuthGuard><Index /></AuthGuard>} />
+              <Route path="/industry" element={<AuthGuard requiredRoles={['analyst', 'manager', 'admin']}><Industry /></AuthGuard>} />
+              <Route path="/planning" element={<AuthGuard requiredRoles={['manager', 'admin']}><Planning /></AuthGuard>} />
+              <Route path="/goals" element={<AuthGuard><Goals /></AuthGuard>} />
+              <Route path="/resources" element={<AuthGuard requiredRoles={['analyst', 'manager', 'admin']}><Resources /></AuthGuard>} />
+              <Route path="/teams" element={<AuthGuard requiredRoles={['manager', 'admin']}><Teams /></AuthGuard>} />
+              <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
+              <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
+              
+              {/* Catch-all route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
