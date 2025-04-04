@@ -71,10 +71,10 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           .filter(member => member.team_id === team.id)
           .map(member => ({
             id: member.id,
-            name: member.profiles.name,
-            email: member.profiles.email,
+            name: member.profiles?.name || '',
+            email: member.profiles?.email || '',
             role: member.role,
-            avatar: member.profiles.avatar,
+            avatar: member.profiles?.avatar,
             department: member.department,
             position: member.position,
             joinedDate: new Date(member.joined_date).toISOString().split('T')[0]
@@ -117,7 +117,7 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (error) throw error;
       
       // Add initial members if provided
-      if (team.members && team.members.length > 0) {
+      if (team.members && team.members.length > 0 && data) {
         const memberPromises = team.members.map(member => 
           addMember(data.id, member)
         );

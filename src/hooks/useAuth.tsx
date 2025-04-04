@@ -2,7 +2,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Session } from '@supabase/supabase-js';
+import { Session } from '@supabase/supabase-js';
 
 // Define user roles
 export type UserRole = 'admin' | 'manager' | 'analyst' | 'viewer';
@@ -113,19 +113,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       if (roleError && roleError.code !== 'PGRST116') throw roleError;
       
-      const role = roleData?.role || 'viewer';
+      const role = roleData?.role as UserRole || 'viewer';
       
       // Combine profile and role data
       const userData: User = {
         id: userId,
-        name: profile.name || 'Unnamed User',
-        email: profile.email || '',
-        role: role as UserRole,
-        avatar: profile.avatar,
-        jobTitle: profile.job_title,
-        department: profile.department,
-        company: profile.company,
-        bio: profile.bio
+        name: profile?.name || 'Unnamed User',
+        email: profile?.email || '',
+        role: role,
+        avatar: profile?.avatar,
+        jobTitle: profile?.job_title,
+        department: profile?.department,
+        company: profile?.company,
+        bio: profile?.bio
       };
       
       setUser(userData);
@@ -225,7 +225,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     try {
       // Format the data for the database
-      const dbData = {
+      const dbData: any = {
         name: profileData.name,
         email: profileData.email,
         avatar: profileData.avatar,
