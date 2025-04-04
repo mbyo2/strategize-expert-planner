@@ -2,6 +2,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth, UserRole } from '@/hooks/useAuth';
+import AccessDenied from '@/pages/AccessDenied';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -19,20 +20,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles = [] }) =
 
   // If roles are specified, check if user has permission
   if (requiredRoles.length > 0 && !hasPermission(requiredRoles)) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen p-4">
-        <h1 className="text-2xl font-semibold mb-4">Access Denied</h1>
-        <p className="text-muted-foreground mb-2">
-          You don't have the required permissions to access this page.
-        </p>
-        <p className="text-muted-foreground">
-          Current role: <span className="font-medium">{user?.role}</span>
-        </p>
-        <p className="text-muted-foreground mt-4">
-          Required role: <span className="font-medium">{requiredRoles.join(' or ')}</span>
-        </p>
-      </div>
-    );
+    return <AccessDenied requiredRoles={requiredRoles} />;
   }
 
   return <>{children}</>;
