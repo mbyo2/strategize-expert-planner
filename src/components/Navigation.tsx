@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from '@/components/ui/navigation-menu';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useMobile } from '@/hooks/use-mobile';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, UserRole } from '@/hooks/useAuth';
 import { BarChart3, LineChart, Target, Briefcase, Settings, Users } from 'lucide-react';
 
 const Navigation = () => {
@@ -21,37 +20,37 @@ const Navigation = () => {
       title: 'Dashboard',
       path: '/',
       icon: <LineChart className="h-4 w-4 mr-2" />,
-      roles: [] // Available to all authenticated users
+      roles: [] as UserRole[] // Available to all authenticated users
     },
     {
       title: 'Industry Analysis',
       path: '/industry',
       icon: <BarChart3 className="h-4 w-4 mr-2" />,
-      roles: ['analyst', 'manager', 'admin']
+      roles: ['analyst', 'manager', 'admin'] as UserRole[]
     },
     {
       title: 'Strategic Planning',
       path: '/planning',
       icon: <Briefcase className="h-4 w-4 mr-2" />,
-      roles: ['manager', 'admin']
+      roles: ['manager', 'admin'] as UserRole[]
     },
     {
       title: 'Goals',
       path: '/goals',
       icon: <Target className="h-4 w-4 mr-2" />,
-      roles: [] // Available to all authenticated users
+      roles: [] as UserRole[] // Available to all authenticated users
     },
     {
       title: 'Teams',
       path: '/teams',
       icon: <Users className="h-4 w-4 mr-2" />,
-      roles: ['manager', 'admin']
+      roles: ['manager', 'admin'] as UserRole[]
     },
     {
       title: 'Settings',
       path: '/settings',
       icon: <Settings className="h-4 w-4 mr-2" />,
-      roles: [] // Available to all authenticated users
+      roles: [] as UserRole[] // Available to all authenticated users
     }
   ];
 
@@ -103,7 +102,7 @@ const Navigation = () => {
       <NavigationMenuList>
         {filteredMenuItems.map((item) => (
           <NavigationMenuItem key={item.path}>
-            <Link to={item.path} legacyBehavior passHref>
+            <Link to={item.path}>
               <NavigationMenuLink
                 className={cn(
                   navigationMenuTriggerStyle(),

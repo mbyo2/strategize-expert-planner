@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 const MOBILE_BREAKPOINT = 768
@@ -16,4 +17,11 @@ export function useIsMobile() {
   }, [])
 
   return !!isMobile
+}
+
+// Create a useMobile hook that returns an object with isMobile property
+// to maintain compatibility with the way it's used in Navigation.tsx
+export function useMobile() {
+  const isMobile = useIsMobile()
+  return { isMobile }
 }
