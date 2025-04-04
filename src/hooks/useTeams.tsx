@@ -45,7 +45,7 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       
       if (teamsError) throw teamsError;
       
-      // Get team members for all teams
+      // Get team members with profiles data
       const { data: membersData, error: membersError } = await supabase
         .from('team_members')
         .select(`
@@ -55,30 +55,43 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           role,
           department,
           position,
-          joined_date,
-          profiles:user_id (
-            name,
-            email,
-            avatar
-          )
+          joined_date
         `);
       
       if (membersError) throw membersError;
+      
+      // Fetch profiles separately
+      const userIds = membersData.map(member => member.user_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, email, avatar')
+        .in('id', userIds);
+        
+      if (profilesError) throw profilesError;
+      
+      // Create a map for quick profile lookup
+      const profilesMap = new Map();
+      profilesData?.forEach(profile => {
+        profilesMap.set(profile.id, profile);
+      });
       
       // Process and combine the data
       const processedTeams: Team[] = teamsData.map(team => {
         const teamMembers = membersData
           .filter(member => member.team_id === team.id)
-          .map(member => ({
-            id: member.id,
-            name: member.profiles?.name || '',
-            email: member.profiles?.email || '',
-            role: member.role,
-            avatar: member.profiles?.avatar,
-            department: member.department,
-            position: member.position,
-            joinedDate: new Date(member.joined_date).toISOString().split('T')[0]
-          }));
+          .map(member => {
+            const profile = profilesMap.get(member.user_id);
+            return {
+              id: member.id,
+              name: profile?.name || '',
+              email: profile?.email || '',
+              role: member.role,
+              avatar: profile?.avatar,
+              department: member.department,
+              position: member.position,
+              joinedDate: new Date(member.joined_date).toISOString().split('T')[0]
+            };
+          });
         
         return {
           id: team.id,
