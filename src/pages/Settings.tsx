@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, User, Bell, Shield, Monitor, Mail, Save, Plus, Minus, Moon, Sun, Monitor as Display, Palette, Check, RotateCcw, Loader2, Plug, Eye, EyeOff, Key, Lock, ArrowRight, AlertTriangle, RefreshCw } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
@@ -875,4 +876,642 @@ const Settings = () => {
                       <p className="text-sm text-muted-foreground">Reminders about approaching deadlines</p>
                     </div>
                     <Switch 
-                      id="app-deadlines
+                      id="app-deadlines" 
+                      checked={notificationSettings.appDeadlines}
+                      onCheckedChange={(checked) => handleNotificationChange('appDeadlines', checked)}
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="security">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Lock className="h-5 w-5 mr-2" />
+                  Password
+                </CardTitle>
+                <CardDescription>
+                  Change your password or enable two-factor authentication
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h4 className="font-medium">Password</h4>
+                      <p className="text-sm text-muted-foreground">Last changed 3 months ago</p>
+                    </div>
+                    <Dialog open={securityDialogOpen} onOpenChange={setSecurityDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline">Change Password</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Change Password</DialogTitle>
+                        </DialogHeader>
+                        
+                        <Form {...passwordForm}>
+                          <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
+                            <FormField
+                              control={passwordForm.control}
+                              name="currentPassword"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Current Password</FormLabel>
+                                  <FormControl>
+                                    <Input type="password" placeholder="Enter current password" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={passwordForm.control}
+                              name="newPassword"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>New Password</FormLabel>
+                                  <FormControl>
+                                    <Input type="password" placeholder="Enter new password" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={passwordForm.control}
+                              name="confirmPassword"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Confirm New Password</FormLabel>
+                                  <FormControl>
+                                    <Input type="password" placeholder="Confirm new password" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <div className="flex justify-between pt-4">
+                              <Button 
+                                variant="outline" 
+                                type="button" 
+                                onClick={() => setSecurityDialogOpen(false)}>
+                                Cancel
+                              </Button>
+                              <Button type="submit">
+                                Update Password
+                              </Button>
+                            </div>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                  
+                  <div className="flex justify-between items-center pt-4 border-t">
+                    <div>
+                      <h4 className="font-medium">Two-Factor Authentication</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {twoFactorEnabled 
+                          ? "Your account is protected with 2FA" 
+                          : "Add an extra layer of security"}
+                      </p>
+                    </div>
+                    <Dialog open={twoFactorDialogOpen} onOpenChange={setTwoFactorDialogOpen}>
+                      <Switch 
+                        checked={twoFactorEnabled}
+                        onCheckedChange={handle2FAToggle}
+                      />
+                      
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Enable Two-Factor Authentication</DialogTitle>
+                        </DialogHeader>
+                        
+                        <div className="space-y-4 py-4">
+                          <div className="flex justify-center">
+                            <div className="border border-border p-4 rounded-md">
+                              {/* Placeholder for QR code */}
+                              <div className="w-48 h-48 bg-muted flex items-center justify-center">
+                                <Lock className="h-16 w-16 text-muted-foreground" />
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="verification-code">Verification Code</Label>
+                            <Input 
+                              id="verification-code" 
+                              type="text" 
+                              placeholder="Enter the 6-digit code"
+                              className="text-center text-xl tracking-widest"
+                              maxLength={6}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Scan the QR code with your authentication app and enter the verification code to enable 2FA.
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setTwoFactorDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button onClick={confirm2FAActivation}>
+                            Enable 2FA
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Shield className="h-5 w-5 mr-2" />
+                  Security Settings
+                </CardTitle>
+                <CardDescription>
+                  Manage sessions and API access
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <h4 className="font-medium">Active Sessions</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-muted/50 rounded-md">
+                      <div>
+                        <p className="font-medium">Current Device</p>
+                        <p className="text-xs text-muted-foreground">MacBook Pro • San Francisco, CA</p>
+                        <p className="text-xs text-muted-foreground">Last active: Just now</p>
+                      </div>
+                      <Button variant="outline" size="sm" disabled>
+                        Current
+                      </Button>
+                    </div>
+                    
+                    <div className="flex justify-between items-center p-3 bg-muted/20 rounded-md">
+                      <div>
+                        <p className="font-medium">Chrome • Windows</p>
+                        <p className="text-xs text-muted-foreground">New York, NY</p>
+                        <p className="text-xs text-muted-foreground">Last active: 2 days ago</p>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleSessionLogout('session-1')}
+                      >
+                        Log out
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4 pt-4 border-t">
+                  <h4 className="font-medium">API Key</h4>
+                  
+                  <div className="space-y-2">
+                    <div className="flex">
+                      <Input 
+                        type={apiKeyVisible ? "text" : "password"} 
+                        value={apiKey}
+                        readOnly
+                        className="font-mono text-sm"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setApiKeyVisible(!apiKeyVisible)}
+                        className="ml-2"
+                      >
+                        {apiKeyVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={copyApiKey}
+                        className="flex-1"
+                      >
+                        Copy
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={regenerateApiKey}
+                        className="flex-1"
+                      >
+                        <RefreshCw className="h-3 w-3 mr-2" />
+                        Regenerate
+                      </Button>
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground flex items-start">
+                      <AlertTriangle className="h-3 w-3 mr-1 mt-0.5 text-yellow-500" />
+                      Keep your API key secure. Don't share it or expose it in client-side code.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="appearance">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Sun className="h-5 w-5 mr-2" />
+                  Display
+                </CardTitle>
+                <CardDescription>
+                  Customize the appearance of the application
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Theme</h4>
+                    <ToggleGroup 
+                      type="single" 
+                      value={appearanceSettings.theme}
+                      onValueChange={(value) => value && handleAppearanceChange('theme', value)}
+                      className="justify-start"
+                    >
+                      <ToggleGroupItem value="light" aria-label="Light mode">
+                        <Sun className="h-4 w-4 mr-2" />
+                        Light
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="dark" aria-label="Dark mode">
+                        <Moon className="h-4 w-4 mr-2" />
+                        Dark
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="system" aria-label="System preference">
+                        <Display className="h-4 w-4 mr-2" />
+                        System
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <h4 className="font-medium">Font Size</h4>
+                      <div className="flex items-center space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-6 w-6"
+                          onClick={() => adjustFontSize('decrease')}
+                          disabled={appearanceSettings.fontSize <= 1}
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                        <span className="w-4 text-center">{appearanceSettings.fontSize}</span>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => adjustFontSize('increase')}
+                          disabled={appearanceSettings.fontSize >= 3}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Font Family</h4>
+                    <RadioGroup 
+                      value={fontFamily} 
+                      onValueChange={handleFontFamilyChange}
+                      className="flex flex-col space-y-2"
+                    >
+                      {fontFamilies.map(font => (
+                        <div key={font.id} className="flex items-center space-x-2">
+                          <RadioGroupItem value={font.id} id={`font-${font.id}`} />
+                          <Label 
+                            htmlFor={`font-${font.id}`}
+                            style={{ fontFamily: font.value }}
+                            className="text-base"
+                          >
+                            {font.name}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium">Compact View</h4>
+                      <Switch 
+                        checked={appearanceSettings.compactView}
+                        onCheckedChange={(checked) => handleAppearanceChange('compactView', checked)}
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Reduces spacing and padding for a denser layout
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium">Show Metrics</h4>
+                      <Switch 
+                        checked={appearanceSettings.showMetrics}
+                        onCheckedChange={(checked) => handleAppearanceChange('showMetrics', checked)}
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Display performance metrics on dashboards
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Palette className="h-5 w-5 mr-2" />
+                  Color Scheme
+                </CardTitle>
+                <CardDescription>
+                  Customize the application color scheme
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-3 gap-2">
+                  {colorSchemes.map(scheme => (
+                    <button
+                      key={scheme.id}
+                      className={cn(
+                        "relative p-2 rounded-md border-2 flex flex-col items-center space-y-1",
+                        colorScheme === scheme.id && !isCustomColorScheme 
+                          ? "border-primary" 
+                          : "border-transparent hover:border-border"
+                      )}
+                      onClick={() => handleColorSchemeChange(scheme.id)}
+                    >
+                      <div className="flex space-x-1">
+                        <div 
+                          className="h-6 w-6 rounded-full" 
+                          style={{ backgroundColor: scheme.primaryColor }} 
+                        />
+                        <div 
+                          className="h-6 w-6 rounded-full" 
+                          style={{ backgroundColor: scheme.accentColor }} 
+                        />
+                      </div>
+                      <span className="text-xs truncate max-w-full">{scheme.name}</span>
+                      {colorScheme === scheme.id && !isCustomColorScheme && (
+                        <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full h-5 w-5 flex items-center justify-center">
+                          <Check className="h-3 w-3" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                  
+                  <button
+                    className={cn(
+                      "relative p-2 rounded-md border-2 flex flex-col items-center space-y-1",
+                      isCustomColorScheme 
+                        ? "border-primary" 
+                        : "border-transparent hover:border-border"
+                    )}
+                    onClick={() => setCustomizing(true)}
+                  >
+                    <div className="flex space-x-1">
+                      <div 
+                        className="h-6 w-6 rounded-full bg-gradient-to-tr from-blue-500 via-purple-500 to-red-500" 
+                      />
+                      <div 
+                        className="h-6 w-6 rounded-full border border-border flex items-center justify-center" 
+                      >
+                        <Plus className="h-3 w-3" />
+                      </div>
+                    </div>
+                    <span className="text-xs">Custom</span>
+                    {isCustomColorScheme && (
+                      <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full h-5 w-5 flex items-center justify-center">
+                        <Check className="h-3 w-3" />
+                      </div>
+                    )}
+                  </button>
+                </div>
+                
+                <Drawer open={customizing} onOpenChange={setCustomizing}>
+                  <DrawerContent>
+                    <DrawerHeader>
+                      <DrawerTitle>Customize Colors</DrawerTitle>
+                      <DrawerDescription>
+                        Select custom colors for your application
+                      </DrawerDescription>
+                    </DrawerHeader>
+                    <div className="p-4 space-y-6">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Primary Color</Label>
+                          <div className="flex space-x-2">
+                            <div
+                              className="h-10 w-10 rounded-md border"
+                              style={{ backgroundColor: customColors.primary }}
+                            />
+                            <Input
+                              value={customColors.primary}
+                              onChange={(e) => setCustomColors({...customColors, primary: e.target.value})}
+                              placeholder="hsl(214, 80%, 51%)"
+                              className="flex-1"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Accent Color</Label>
+                          <div className="flex space-x-2">
+                            <div
+                              className="h-10 w-10 rounded-md border"
+                              style={{ backgroundColor: customColors.accent }}
+                            />
+                            <Input
+                              value={customColors.accent}
+                              onChange={(e) => setCustomColors({...customColors, accent: e.target.value})}
+                              placeholder="hsl(216, 79%, 67%)"
+                              className="flex-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Border Radius</Label>
+                        <div className="py-4">
+                          <Slider
+                            defaultValue={[borderRadius ?? 0.5]}
+                            max={1}
+                            step={0.05}
+                            onValueChange={handleBorderRadiusChange}
+                          />
+                        </div>
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>None</span>
+                          <span>Rounded</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between pt-4">
+                        <Button
+                          variant="outline"
+                          onClick={() => setCustomizing(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button onClick={applyCustomColors}>
+                          Apply Colors
+                        </Button>
+                      </div>
+                    </div>
+                  </DrawerContent>
+                </Drawer>
+                
+                <div className="pt-4">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={resetToDefaults}
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Reset to Defaults
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="integrations">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Plug className="h-5 w-5 mr-2" />
+                Connected Services
+              </CardTitle>
+              <CardDescription>
+                Manage your connected applications and services
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Connected Services</h3>
+                  
+                  {connectedServices.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Plug className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>No services connected yet</p>
+                      <p className="text-sm">Connect your first service below</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {connectedServices.map((service) => (
+                        <div key={service.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="flex-shrink-0">
+                              {service.icon}
+                            </div>
+                            <div>
+                              <h4 className="font-medium">{service.name}</h4>
+                              <p className="text-sm text-muted-foreground">{service.description}</p>
+                              {service.connectionDate && (
+                                <p className="text-xs text-muted-foreground">
+                                  Connected on {new Date(service.connectionDate).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDisconnectService(service.id)}
+                            disabled={service.status === 'disconnecting'}
+                          >
+                            {service.status === 'disconnecting' ? (
+                              <>
+                                <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                                Disconnecting
+                              </>
+                            ) : (
+                              'Disconnect'
+                            )}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-4 pt-4 border-t">
+                  <h3 className="text-lg font-medium">Available Integrations</h3>
+                  
+                  <div className="space-y-3">
+                    {availableServices.map((service) => (
+                      <div key={service.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0">
+                            {service.icon}
+                          </div>
+                          <div>
+                            <h4 className="font-medium">{service.name}</h4>
+                            <p className="text-sm text-muted-foreground">{service.description}</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleConnectService(service.id)}
+                          disabled={service.status === 'connecting'}
+                        >
+                          {service.status === 'connecting' ? (
+                            <>
+                              <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                              Connecting
+                            </>
+                          ) : (
+                            <>
+                              <ArrowRight className="h-3 w-3 mr-2" />
+                              Connect
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </PageLayout>
+  );
+};
+
+export default Settings;
