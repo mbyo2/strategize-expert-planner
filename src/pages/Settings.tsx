@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, User, Bell, Shield, Monitor, Mail, Save, Plus, Minus, Moon, Sun, Monitor as Display, Palette, Check, RotateCcw, Loader2 } from 'lucide-react';
+import { Settings as SettingsIcon, User, Bell, Shield, Monitor, Mail, Save, Plus, Minus, Moon, Sun, Monitor as Display, Palette, Check, RotateCcw, Loader2, Plug, Eye, EyeOff, Key, Lock, ArrowRight, AlertTriangle, RefreshCw } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,8 @@ import * as z from 'zod';
 import { Slider } from '@/components/ui/slider';
 import { useTheme } from '@/hooks/useTheme';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 
 type ServiceStatus = 'connected' | 'disconnected' | 'connecting' | 'disconnecting';
 
@@ -576,6 +578,14 @@ const Settings = () => {
     }, 1500);
   };
 
+  const handleSessionLogout = (sessionId: string) => {
+    // Simulating session logout
+    toast({
+      title: "Session terminated",
+      description: "The selected device session has been logged out.",
+    });
+  };
+
   const regenerateApiKey = () => {
     const newKey = Array.from({ length: 32 }, () => 
       Math.floor(Math.random() * 16).toString(16)
@@ -618,7 +628,7 @@ const Settings = () => {
             <Palette className="h-4 w-4 mr-2" /> Appearance
           </TabsTrigger>
           <TabsTrigger value="integrations" className="flex items-center">
-            <SettingsIcon className="h-4 w-4 mr-2" /> Integrations
+            <Plug className="h-4 w-4 mr-2" /> Integrations
           </TabsTrigger>
         </TabsList>
         
@@ -865,31 +875,4 @@ const Settings = () => {
                       <p className="text-sm text-muted-foreground">Reminders about approaching deadlines</p>
                     </div>
                     <Switch 
-                      id="app-deadlines" 
-                      checked={notificationSettings.appDeadlines}
-                      onCheckedChange={(checked) => handleNotificationChange('appDeadlines', checked)}
-                    />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="security">
-          {/* Security tab content goes here */}
-        </TabsContent>
-        
-        <TabsContent value="appearance">
-          {/* Appearance tab content goes here */}
-        </TabsContent>
-        
-        <TabsContent value="integrations">
-          {/* Integrations tab content goes here */}
-        </TabsContent>
-      </Tabs>
-    </PageLayout>
-  );
-};
-
-export default Settings;
+                      id="app-deadlines
