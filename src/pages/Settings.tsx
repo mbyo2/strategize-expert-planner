@@ -233,14 +233,12 @@ const Settings = () => {
   }, [appearanceSettings.fontSize]);
 
   useEffect(() => {
-    // Apply font family to body
     if (fontFamily) {
       document.body.style.fontFamily = fontFamilies.find(f => f.id === fontFamily)?.value || 'system-ui, sans-serif';
     }
   }, [fontFamily]);
 
   useEffect(() => {
-    // Update custom colors when color scheme changes
     const scheme = colorSchemes.find(s => s.id === colorScheme);
     if (scheme && !isCustomColorScheme) {
       setCustomColors({
@@ -250,7 +248,6 @@ const Settings = () => {
     }
   }, [colorScheme, isCustomColorScheme]);
 
-  // Update root CSS variables when colors change
   useEffect(() => {
     function hexToRgb(hex: string) {
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -262,7 +259,6 @@ const Settings = () => {
     }
 
     function hslToRgb(hsl: string) {
-      // Extract HSL values
       const hslMatch = hsl.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
       if (!hslMatch) return null;
 
@@ -299,21 +295,17 @@ const Settings = () => {
     }
 
     function extractColorComponents(color: string) {
-      // Check if it's a hex color
       if (color.startsWith('#')) {
         return hexToRgb(color);
       }
-      // Check if it's an HSL color
       else if (color.startsWith('hsl')) {
         return hslToRgb(color);
       }
       return null;
     }
 
-    // Update color scheme variables
     const root = document.documentElement;
     
-    // Apply the current color scheme
     let primaryColor = customColors.primary;
     let accentColor = customColors.accent;
     
@@ -339,13 +331,11 @@ const Settings = () => {
       }
     }
     
-    // Apply border radius
     if (borderRadius !== undefined) {
       root.style.setProperty('--radius', `${borderRadius * 0.25}rem`);
     }
-    
   }, [customColors, isCustomColorScheme, colorScheme, borderRadius]);
-  
+
   const handleProfileUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -878,3 +868,28 @@ const Settings = () => {
                       id="app-deadlines" 
                       checked={notificationSettings.appDeadlines}
                       onCheckedChange={(checked) => handleNotificationChange('appDeadlines', checked)}
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="security">
+          {/* Security tab content goes here */}
+        </TabsContent>
+        
+        <TabsContent value="appearance">
+          {/* Appearance tab content goes here */}
+        </TabsContent>
+        
+        <TabsContent value="integrations">
+          {/* Integrations tab content goes here */}
+        </TabsContent>
+      </Tabs>
+    </PageLayout>
+  );
+};
+
+export default Settings;
