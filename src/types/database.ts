@@ -1,3 +1,4 @@
+
 import { Database as SupabaseDatabase } from "@/integrations/supabase/types";
 
 // Extend Database types with our custom tables

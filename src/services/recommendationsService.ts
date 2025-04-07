@@ -24,7 +24,11 @@ export const fetchRecommendations = async (): Promise<Recommendation[]> => {
       throw error;
     }
 
-    return data || [];
+    // Cast the data to the correct type
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as Recommendation['status']
+    }));
   } catch (error) {
     console.error('Failed to fetch recommendations:', error);
     toast.error('Failed to load recommendations');
@@ -45,7 +49,11 @@ export const fetchTopRecommendations = async (limit: number = 3): Promise<Recomm
       throw error;
     }
 
-    return data || [];
+    // Cast the data to the correct type
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as Recommendation['status']
+    }));
   } catch (error) {
     console.error('Failed to fetch top recommendations:', error);
     toast.error('Failed to load recommendations');

@@ -24,7 +24,11 @@ export const fetchStrategyReviews = async (): Promise<StrategyReview[]> => {
       throw error;
     }
 
-    return data || [];
+    // Cast the data to the correct type
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as StrategyReview['status']
+    }));
   } catch (error) {
     console.error('Failed to fetch strategy reviews:', error);
     toast.error('Failed to load strategy reviews');
@@ -46,7 +50,11 @@ export const fetchUpcomingStrategyReviews = async (limit: number = 1): Promise<S
       throw error;
     }
 
-    return data || [];
+    // Cast the data to the correct type
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as StrategyReview['status']
+    }));
   } catch (error) {
     console.error('Failed to fetch upcoming strategy reviews:', error);
     toast.error('Failed to load strategy reviews');

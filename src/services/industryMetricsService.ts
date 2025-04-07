@@ -26,7 +26,11 @@ export const fetchIndustryMetrics = async (): Promise<IndustryMetric[]> => {
       throw error;
     }
 
-    return data || [];
+    // Cast the data to the correct type
+    return (data || []).map(item => ({
+      ...item,
+      trend: item.trend as IndustryMetric['trend']
+    }));
   } catch (error) {
     console.error('Failed to fetch industry metrics:', error);
     toast.error('Failed to load industry metrics');
@@ -47,7 +51,11 @@ export const fetchIndustryMetricsByCategory = async (category: string): Promise<
       throw error;
     }
 
-    return data || [];
+    // Cast the data to the correct type
+    return (data || []).map(item => ({
+      ...item,
+      trend: item.trend as IndustryMetric['trend']
+    }));
   } catch (error) {
     console.error(`Failed to fetch industry metrics for category ${category}:`, error);
     toast.error('Failed to load industry metrics');

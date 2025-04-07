@@ -131,7 +131,7 @@ const Planning = () => {
         const newInitiative = await createPlanningInitiative({
           name: data.name,
           description: data.description,
-          status: data.status || 'planning',
+          status: data.status,
           progress: data.progress || 0,
           start_date: data.start_date,
           end_date: data.end_date,

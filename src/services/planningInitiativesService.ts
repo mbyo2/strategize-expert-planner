@@ -27,7 +27,11 @@ export const fetchPlanningInitiatives = async (): Promise<PlanningInitiative[]> 
       throw error;
     }
 
-    return data || [];
+    // Cast the data to the correct type
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as PlanningInitiative['status']
+    }));
   } catch (error) {
     console.error('Failed to fetch planning initiatives:', error);
     toast.error('Failed to load planning initiatives');
@@ -49,7 +53,10 @@ export const createPlanningInitiative = async (initiative: Omit<PlanningInitiati
     }
 
     toast.success('Planning initiative created successfully');
-    return data;
+    return {
+      ...data,
+      status: data.status as PlanningInitiative['status']
+    };
   } catch (error) {
     console.error('Failed to create planning initiative:', error);
     toast.error('Failed to create planning initiative');
@@ -72,7 +79,10 @@ export const updatePlanningInitiative = async (id: string, updates: Partial<Plan
     }
 
     toast.success('Planning initiative updated successfully');
-    return data;
+    return {
+      ...data,
+      status: data.status as PlanningInitiative['status']
+    };
   } catch (error) {
     console.error('Failed to update planning initiative:', error);
     toast.error('Failed to update planning initiative');

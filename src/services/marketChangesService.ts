@@ -24,7 +24,11 @@ export const fetchMarketChanges = async (): Promise<MarketChange[]> => {
       throw error;
     }
 
-    return data || [];
+    // Cast the data to the correct type
+    return (data || []).map(item => ({
+      ...item,
+      impact_level: item.impact_level as MarketChange['impact_level']
+    }));
   } catch (error) {
     console.error('Failed to fetch market changes:', error);
     toast.error('Failed to load market changes');
@@ -45,7 +49,11 @@ export const fetchRecentMarketChanges = async (limit: number = 3): Promise<Marke
       throw error;
     }
 
-    return data || [];
+    // Cast the data to the correct type
+    return (data || []).map(item => ({
+      ...item,
+      impact_level: item.impact_level as MarketChange['impact_level']
+    }));
   } catch (error) {
     console.error('Failed to fetch recent market changes:', error);
     toast.error('Failed to load market changes');
