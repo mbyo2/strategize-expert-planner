@@ -26,7 +26,7 @@ import {
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { File as FileIcon, FilePdf, FileText, FilePresentation, FileSpreadsheet, FileImage } from 'lucide-react';
+import { File as FileIcon, FileText, FileSpreadsheet, FileImage } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Define the schema for the form
@@ -66,14 +66,7 @@ const Resources: React.FC = () => {
     // Here, you would typically handle the form submission,
     // such as sending the data to an API.
     console.log(values)
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(values, null, 2)}</code>
-        </pre>
-      ),
-    })
+    toast(`You submitted: ${values.title}`);
   }
 
   useEffect(() => {
@@ -124,13 +117,13 @@ const Resources: React.FC = () => {
   const getTypeIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case 'pdf':
-        return <FilePdf className="h-5 w-5" />;
+        return <FileText className="h-5 w-5" />;
       case 'doc':
       case 'docx':
         return <FileText className="h-5 w-5" />;
       case 'ppt':
       case 'pptx':
-        return <FilePresentation className="h-5 w-5" />;
+        return <FileText className="h-5 w-5" />;
       case 'xls':
       case 'xlsx':
       case 'csv':

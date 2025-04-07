@@ -487,7 +487,11 @@ const Planning = () => {
         </TabsContent>
         
         <TabsContent value="strategy">
-          <StrategySectionProps title="Strategy Framework" />
+          <StrategySection title="Strategy Framework">
+            <div className="p-4">
+              <p>Strategic framework content will be displayed here.</p>
+            </div>
+          </StrategySection>
         </TabsContent>
       </Tabs>
       
