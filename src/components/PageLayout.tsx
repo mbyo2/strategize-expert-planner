@@ -12,9 +12,10 @@ interface PageLayoutProps {
   title?: string;
   subtitle?: string;
   className?: string;
+  icon?: React.ReactNode;
 }
 
-const PageLayout: React.FC<PageLayoutProps> = ({ children, title, subtitle, className }) => {
+const PageLayout: React.FC<PageLayoutProps> = ({ children, title, subtitle, className, icon }) => {
   const isMobile = useIsMobile();
   
   return (
@@ -28,9 +29,10 @@ const PageLayout: React.FC<PageLayoutProps> = ({ children, title, subtitle, clas
             <FadeIn delay={100}>
               {title && (
                 <h1 className={cn(
-                  "font-semibold tracking-tight",
+                  "font-semibold tracking-tight flex items-center",
                   isMobile ? "text-2xl" : "text-3xl"
                 )}>
+                  {icon && <span className="mr-2">{icon}</span>}
                   {title}
                 </h1>
               )}
