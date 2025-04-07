@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
 import { StrategicGoal, fetchStrategicGoals } from '@/services/strategicGoalsService';
+import { customSupabase } from "@/integrations/supabase/customClient";
 
 export const useRealTimeStrategicGoals = () => {
   const [goals, setGoals] = useState<StrategicGoal[]>([]);
@@ -26,7 +26,7 @@ export const useRealTimeStrategicGoals = () => {
     loadGoals();
 
     // Set up real-time subscription
-    const channel = supabase
+    const channel = customSupabase
       .channel('strategic-goals-changes')
       .on(
         'postgres_changes',
@@ -45,7 +45,7 @@ export const useRealTimeStrategicGoals = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      customSupabase.removeChannel(channel);
     };
   }, []);
 

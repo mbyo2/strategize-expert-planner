@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import PageLayout from '../components/PageLayout';
 import CustomizableDashboard from '../components/CustomizableDashboard';
@@ -50,12 +49,12 @@ const Index = () => {
         );
         
         let industryPosition = 'Top 15%';
-        let industryTrend = 'neutral';
+        let industryTrend: 'up' | 'down' | 'neutral' = 'neutral';
         let industryValue = '';
         
         if (marketShareMetric) {
           industryPosition = `${marketShareMetric.value}%`;
-          industryTrend = marketShareMetric.trend as any || 'neutral';
+          industryTrend = marketShareMetric.trend || 'neutral';
           industryValue = `${marketShareMetric.change_percentage || 0}% YoY`;
         }
         
@@ -73,7 +72,7 @@ const Index = () => {
           goalsCount,
           completedGoals,
           industryPosition,
-          industryTrend: industryTrend || 'neutral',
+          industryTrend,
           industryValue,
           teamAlignment: 87, // This would normally come from a team alignment API
           teamAlignmentTrend: 'neutral',

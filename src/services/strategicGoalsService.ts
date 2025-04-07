@@ -1,6 +1,6 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { customSupabase } from "@/integrations/supabase/customClient";
 
 export interface StrategicGoal {
   id: string;
@@ -17,9 +17,9 @@ export interface StrategicGoal {
   current_value?: number;
 }
 
-export const fetchStrategicGoals = async () => {
+export const fetchStrategicGoals = async (): Promise<StrategicGoal[]> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await customSupabase
       .from('strategic_goals')
       .select('*')
       .order('created_at', { ascending: false });
@@ -39,7 +39,7 @@ export const fetchStrategicGoals = async () => {
 
 export const createStrategicGoal = async (goal: Omit<StrategicGoal, 'id' | 'created_at' | 'updated_at'>) => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await customSupabase
       .from('strategic_goals')
       .insert([goal])
       .select()
@@ -61,7 +61,7 @@ export const createStrategicGoal = async (goal: Omit<StrategicGoal, 'id' | 'crea
 
 export const updateStrategicGoal = async (id: string, updates: Partial<StrategicGoal>) => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await customSupabase
       .from('strategic_goals')
       .update(updates)
       .eq('id', id)
@@ -84,7 +84,7 @@ export const updateStrategicGoal = async (id: string, updates: Partial<Strategic
 
 export const deleteStrategicGoal = async (id: string) => {
   try {
-    const { error } = await supabase
+    const { error } = await customSupabase
       .from('strategic_goals')
       .delete()
       .eq('id', id);

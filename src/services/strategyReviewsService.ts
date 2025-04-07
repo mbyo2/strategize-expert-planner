@@ -1,6 +1,6 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { customSupabase } from "@/integrations/supabase/customClient";
 
 export interface StrategyReview {
   id: string;
@@ -12,9 +12,9 @@ export interface StrategyReview {
   status: 'scheduled' | 'completed' | 'cancelled';
 }
 
-export const fetchStrategyReviews = async () => {
+export const fetchStrategyReviews = async (): Promise<StrategyReview[]> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await customSupabase
       .from('strategy_reviews')
       .select('*')
       .order('scheduled_date', { ascending: true });
@@ -32,9 +32,9 @@ export const fetchStrategyReviews = async () => {
   }
 };
 
-export const fetchUpcomingStrategyReviews = async (limit: number = 1) => {
+export const fetchUpcomingStrategyReviews = async (limit: number = 1): Promise<StrategyReview[]> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await customSupabase
       .from('strategy_reviews')
       .select('*')
       .eq('status', 'scheduled')

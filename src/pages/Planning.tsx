@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import PageLayout from '@/components/PageLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -130,7 +129,12 @@ const Planning = () => {
       } else {
         // Create new initiative
         const newInitiative = await createPlanningInitiative({
-          ...data,
+          name: data.name,
+          description: data.description,
+          status: data.status || 'planning',
+          progress: data.progress || 0,
+          start_date: data.start_date,
+          end_date: data.end_date,
           owner_id: user.id,
         });
         
@@ -483,7 +487,7 @@ const Planning = () => {
         </TabsContent>
         
         <TabsContent value="strategy">
-          <StrategySection />
+          <StrategySectionProps title="Strategy Framework" />
         </TabsContent>
       </Tabs>
       

@@ -1,6 +1,6 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { customSupabase } from "@/integrations/supabase/customClient";
 
 export interface CompanyStrategy {
   id: string;
@@ -10,9 +10,9 @@ export interface CompanyStrategy {
   updated_by?: string;
 }
 
-export const fetchCompanyStrategy = async () => {
+export const fetchCompanyStrategy = async (): Promise<CompanyStrategy | null> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await customSupabase
       .from('company_strategy')
       .select('*')
       .order('updated_at', { ascending: false })
@@ -38,7 +38,7 @@ export const updateCompanyStrategy = async (updates: { vision?: string; mission?
     
     if (existingStrategy) {
       // Update existing record
-      const { data, error } = await supabase
+      const { data, error } = await customSupabase
         .from('company_strategy')
         .update({ ...updates, updated_by: userId })
         .eq('id', existingStrategy.id)
@@ -54,7 +54,7 @@ export const updateCompanyStrategy = async (updates: { vision?: string; mission?
       return data;
     } else {
       // Create new record
-      const { data, error } = await supabase
+      const { data, error } = await customSupabase
         .from('company_strategy')
         .insert([{ ...updates, updated_by: userId }])
         .select()

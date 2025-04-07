@@ -166,8 +166,15 @@ const Goals = () => {
       } else {
         // Create new goal
         await createStrategicGoal({
-          ...data,
+          name: data.name,
+          description: data.description,
+          progress: data.progress || 0,
+          status: data.status || 'planned',
+          start_date: data.start_date,
+          due_date: data.due_date,
           user_id: user.id,
+          target_value: data.target_value,
+          current_value: data.current_value,
         });
         toast.success('Goal created successfully');
       }

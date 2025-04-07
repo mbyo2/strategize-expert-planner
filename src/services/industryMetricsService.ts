@@ -1,6 +1,6 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { customSupabase } from "@/integrations/supabase/customClient";
 
 export interface IndustryMetric {
   id: string;
@@ -14,9 +14,9 @@ export interface IndustryMetric {
   source?: string;
 }
 
-export const fetchIndustryMetrics = async () => {
+export const fetchIndustryMetrics = async (): Promise<IndustryMetric[]> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await customSupabase
       .from('industry_metrics')
       .select('*')
       .order('category', { ascending: true });
@@ -34,9 +34,9 @@ export const fetchIndustryMetrics = async () => {
   }
 };
 
-export const fetchIndustryMetricsByCategory = async (category: string) => {
+export const fetchIndustryMetricsByCategory = async (category: string): Promise<IndustryMetric[]> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await customSupabase
       .from('industry_metrics')
       .select('*')
       .eq('category', category)

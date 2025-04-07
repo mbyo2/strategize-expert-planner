@@ -1,467 +1,278 @@
-
 import React, { useState, useEffect } from 'react';
 import PageLayout from '@/components/PageLayout';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, FileCog, FileSpreadsheet, FileText, Link2, ExternalLink, ArrowUpRight, Plus } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { File as FileIcon, FilePdf, FileText, FilePresentation, FileSpreadsheet, FileImage } from 'lucide-react';
 import { toast } from 'sonner';
+
+// Define the schema for the form
+const formSchema = z.object({
+  title: z.string().min(2, {
+    message: "Title must be at least 2 characters.",
+  }),
+  description: z.string().optional(),
+  url: z.string().url({ message: "Please enter a valid URL." }),
+  type: z.string().optional(),
+})
 
 interface Resource {
   id: string;
   title: string;
   description?: string;
-  type: 'document' | 'spreadsheet' | 'presentation' | 'link';
   url: string;
-  author: {
-    name: string;
-    avatar?: string;
-  };
-  createdAt: Date;
-  tags: string[];
-  featured: boolean;
+  type?: string;
 }
 
-const ResourceListSkeleton = () => (
-  <div className="space-y-4">
-    {Array.from({ length: 5 }).map((_, i) => (
-      <div key={i} className="flex items-start space-x-4 p-4 border rounded-lg">
-        <Skeleton className="h-10 w-10 rounded-md" />
-        <div className="space-y-2 flex-1">
-          <Skeleton className="h-5 w-3/4" />
-          <Skeleton className="h-4 w-full" />
-          <div className="flex space-x-2 mt-2">
-            <Skeleton className="h-6 w-16 rounded-full" />
-            <Skeleton className="h-6 w-16 rounded-full" />
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-);
-
-const Resources = () => {
+const Resources: React.FC = () => {
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddResourceDialog, setShowAddResourceDialog] = useState(false);
-  const [newResource, setNewResource] = useState({
-    title: '',
-    description: '',
-    type: 'document',
-    url: '',
-    tags: '',
-  });
+  const [open, setOpen] = React.useState(false)
 
-  // Mock data fetch
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      url: "",
+      type: "",
+    },
+  })
+
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    // Here, you would typically handle the form submission,
+    // such as sending the data to an API.
+    console.log(values)
+    toast({
+      title: "You submitted the following values:",
+      description: (
+        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+          <code className="text-white">{JSON.stringify(values, null, 2)}</code>
+        </pre>
+      ),
+    })
+  }
+
   useEffect(() => {
-    const fetchResources = async () => {
-      try {
-        setLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        const mockResources: Resource[] = [
-          {
-            id: '1',
-            title: 'Strategic Planning Framework',
-            description: 'Comprehensive guide to our strategic planning methodology and process',
-            type: 'document',
-            url: '#',
-            author: {
-              name: 'Sarah Johnson',
-              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah',
-            },
-            createdAt: new Date(2024, 3, 12),
-            tags: ['Framework', 'Planning'],
-            featured: true,
-          },
-          {
-            id: '2',
-            title: 'Industry Competitive Analysis',
-            description: 'Q1 2024 competitive analysis of key industry players and market trends',
-            type: 'spreadsheet',
-            url: '#',
-            author: {
-              name: 'Michael Chen',
-              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=michael',
-            },
-            createdAt: new Date(2024, 3, 5),
-            tags: ['Analysis', 'Competition'],
-            featured: true,
-          },
-          {
-            id: '3',
-            title: 'Strategic Goals Tracker',
-            description: 'Live tracking spreadsheet for all strategic goals and KPIs',
-            type: 'spreadsheet',
-            url: '#',
-            author: {
-              name: 'Alicia Martinez',
-              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=alicia',
-            },
-            createdAt: new Date(2024, 2, 28),
-            tags: ['Goals', 'KPIs'],
-            featured: false,
-          },
-          {
-            id: '4',
-            title: 'McKinsey Strategic Thinking Article',
-            description: 'External resource on strategic thinking frameworks from McKinsey',
-            type: 'link',
-            url: 'https://www.mckinsey.com/business-functions/strategy-and-corporate-finance/our-insights',
-            author: {
-              name: 'Robert Wilson',
-              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=robert',
-            },
-            createdAt: new Date(2024, 2, 15),
-            tags: ['External', 'Research'],
-            featured: false,
-          },
-          {
-            id: '5',
-            title: 'Q4 Strategy Presentation',
-            description: 'Executive presentation on Q4 strategic initiatives and outcomes',
-            type: 'presentation',
-            url: '#',
-            author: {
-              name: 'Emily Wong',
-              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=emily',
-            },
-            createdAt: new Date(2024, 1, 10),
-            tags: ['Presentation', 'Executive'],
-            featured: false,
-          },
-        ];
-        
-        setResources(mockResources);
-      } catch (error) {
-        console.error('Error fetching resources:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchResources();
+    // Simulate loading resources from an API
+    setTimeout(() => {
+      setResources([
+        {
+          id: '1',
+          title: 'Strategic Planning Guide',
+          description: 'A comprehensive guide to strategic planning.',
+          url: 'https://example.com/strategic-planning-guide.pdf',
+          type: 'pdf',
+        },
+        {
+          id: '2',
+          title: 'Market Analysis Report 2024',
+          description: 'Detailed analysis of the current market trends.',
+          url: 'https://example.com/market-analysis-2024.pdf',
+          type: 'pdf',
+        },
+        {
+          id: '3',
+          title: 'Team Alignment Workshop Slides',
+          description: 'Slides from the team alignment workshop.',
+          url: 'https://example.com/team-alignment-slides.ppt',
+          type: 'ppt',
+        },
+        {
+          id: '4',
+          title: 'Competitive Analysis Spreadsheet',
+          description: 'A spreadsheet comparing our company with competitors.',
+          url: 'https://example.com/competitive-analysis.xlsx',
+          type: 'xlsx',
+        },
+        {
+          id: '5',
+          title: 'New Product Launch Strategy',
+          description: 'A document outlining the strategy for launching our new product.',
+          url: 'https://example.com/new-product-launch-strategy.doc',
+          type: 'doc',
+        },
+      ]);
+      setLoading(false);
+    }, 500);
   }, []);
 
-  const handleAddResource = () => {
-    // Validate form
-    if (!newResource.title || !newResource.url) {
-      toast.error('Please provide at least a title and URL');
-      return;
-    }
-    
-    // Create new resource
-    const resource: Resource = {
-      id: Date.now().toString(),
-      title: newResource.title,
-      description: newResource.description,
-      type: newResource.type as any,
-      url: newResource.url,
-      author: {
-        name: 'Current User',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user',
-      },
-      createdAt: new Date(),
-      tags: newResource.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-      featured: false,
-    };
-    
-    setResources([resource, ...resources]);
-    setShowAddResourceDialog(false);
-    setNewResource({
-      title: '',
-      description: '',
-      type: 'document',
-      url: '',
-      tags: '',
-    });
-    
-    toast.success('Resource added successfully');
-  };
-
+  // Function to determine the icon based on the file type
   const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'document':
-        return <FileText className="h-10 w-10 text-blue-500" />;
-      case 'spreadsheet':
-        return <FileSpreadsheet className="h-10 w-10 text-green-500" />;
-      case 'presentation':
-        return <FileCog className="h-10 w-10 text-amber-500" />;
-      case 'link':
-        return <Link2 className="h-10 w-10 text-purple-500" />;
+    switch (type.toLowerCase()) {
+      case 'pdf':
+        return <FilePdf className="h-5 w-5" />;
+      case 'doc':
+      case 'docx':
+        return <FileText className="h-5 w-5" />;
+      case 'ppt':
+      case 'pptx':
+        return <FilePresentation className="h-5 w-5" />;
+      case 'xls':
+      case 'xlsx':
+      case 'csv':
+        return <FileSpreadsheet className="h-5 w-5" />;
+      case 'img':
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+        return <FileImage className="h-5 w-5" />;
       default:
-        return <FileText className="h-10 w-10 text-gray-500" />;
+        return <FileIcon className="h-5 w-5" />;
     }
   };
 
   return (
     <PageLayout
-      title="Strategic Resources"
-      subtitle="Access and manage strategic planning documents and resources"
-      icon={<FileCog className="h-6 w-6" />}
+      title="Resources"
+      subtitle="Access valuable resources to support your strategic initiatives"
     >
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-xl font-semibold">Resource Library</h2>
-          <p className="text-muted-foreground">Access key strategic documents and resources</p>
-        </div>
-        <Button onClick={() => setShowAddResourceDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Resource
-        </Button>
+      <div className="md:flex justify-between items-center mb-4">
+        <div />
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline">Add Resource</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Add Resource</DialogTitle>
+              <DialogDescription>
+                Add a new resource to the list.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Resource Title" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Resource Description"
+                          className="resize-none"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Resource URL" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end">
+                  <Button type="submit">Add Resource</Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <Tabs defaultValue="all">
-        <TabsList className="mb-6">
-          <TabsTrigger value="all">All Resources</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="spreadsheets">Spreadsheets</TabsTrigger>
-          <TabsTrigger value="links">External Links</TabsTrigger>
-          <TabsTrigger value="featured">Featured</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="all">
-          {loading ? (
-            <ResourceListSkeleton />
-          ) : (
-            <div className="space-y-4">
-              {resources.map(resource => (
-                <ResourceCard key={resource.id} resource={resource} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="documents">
-          {loading ? (
-            <ResourceListSkeleton />
-          ) : (
-            <div className="space-y-4">
-              {resources
-                .filter(r => r.type === 'document')
-                .map(resource => (
-                  <ResourceCard key={resource.id} resource={resource} />
-                ))}
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="spreadsheets">
-          {loading ? (
-            <ResourceListSkeleton />
-          ) : (
-            <div className="space-y-4">
-              {resources
-                .filter(r => r.type === 'spreadsheet')
-                .map(resource => (
-                  <ResourceCard key={resource.id} resource={resource} />
-                ))}
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="links">
-          {loading ? (
-            <ResourceListSkeleton />
-          ) : (
-            <div className="space-y-4">
-              {resources
-                .filter(r => r.type === 'link')
-                .map(resource => (
-                  <ResourceCard key={resource.id} resource={resource} />
-                ))}
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="featured">
-          {loading ? (
-            <ResourceListSkeleton />
-          ) : (
-            <div className="space-y-4">
-              {resources
-                .filter(r => r.featured)
-                .map(resource => (
-                  <ResourceCard key={resource.id} resource={resource} />
-                ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-      
-      <Dialog open={showAddResourceDialog} onOpenChange={setShowAddResourceDialog}>
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle>Add New Resource</DialogTitle>
-            <DialogDescription>
-              Add a document, spreadsheet, or external link to the resource library.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                placeholder="Strategic Framework Document"
-                value={newResource.title}
-                onChange={(e) => setNewResource({...newResource, title: e.target.value})}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                placeholder="Brief description of the resource"
-                value={newResource.description}
-                onChange={(e) => setNewResource({...newResource, description: e.target.value})}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="type">Resource Type</Label>
-              <select
-                id="type"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={newResource.type}
-                onChange={(e) => setNewResource({...newResource, type: e.target.value})}
-              >
-                <option value="document">Document</option>
-                <option value="spreadsheet">Spreadsheet</option>
-                <option value="presentation">Presentation</option>
-                <option value="link">External Link</option>
-              </select>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="url">URL</Label>
-              <Input
-                id="url"
-                placeholder="https://example.com/document"
-                value={newResource.url}
-                onChange={(e) => setNewResource({...newResource, url: e.target.value})}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="tags">Tags (comma separated)</Label>
-              <Input
-                id="tags"
-                placeholder="Strategy, Planning, Framework"
-                value={newResource.tags}
-                onChange={(e) => setNewResource({...newResource, tags: e.target.value})}
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddResourceDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddResource}>
-              Add Resource
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </PageLayout>
-  );
-};
-
-const ResourceCard: React.FC<{ resource: Resource }> = ({ resource }) => {
-  const { title, description, type, url, author, createdAt, tags } = resource;
-  
-  const handleDownload = () => {
-    toast.info('Downloading resource...');
-    setTimeout(() => {
-      toast.success('Download complete');
-    }, 1500);
-  };
-
-  const handleOpen = () => {
-    if (type === 'link') {
-      window.open(url, '_blank');
-    } else {
-      toast.info('Opening resource...');
-    }
-  };
-  
-  return (
-    <div className="flex p-4 border rounded-lg">
-      <div className="mr-4 flex-shrink-0">
-        {getTypeIcon(type)}
-      </div>
-      
-      <div className="flex-1">
-        <div className="flex justify-between">
-          <h3 className="text-lg font-medium">{title}</h3>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">...</Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleOpen}>
-                Open
-              </DropdownMenuItem>
-              {type !== 'link' && (
-                <DropdownMenuItem onClick={handleDownload}>
-                  Download
-                </DropdownMenuItem>
+      <Card>
+        <CardHeader>
+          <CardTitle>Available Resources</CardTitle>
+          <CardDescription>
+            Browse the resources to find valuable information and tools.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>URL</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center">
+                    Loading resources...
+                  </TableCell>
+                </TableRow>
+              ) : resources.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center">
+                    No resources available.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                resources.map((resource) => (
+                  <TableRow key={resource.id}>
+                    <TableCell className="font-medium">{resource.title}</TableCell>
+                    <TableCell>{resource.description}</TableCell>
+                    <TableCell className="flex items-center">
+                      {getTypeIcon(resource.type || '')}
+                    </TableCell>
+                    <TableCell>
+                      <a
+                        href={resource.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline"
+                      >
+                        View
+                      </a>
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
-              <DropdownMenuItem>
-                Share
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        
-        {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
-        
-        <div className="flex flex-wrap gap-2 mt-3">
-          {tags.map(tag => (
-            <Badge key={tag} variant="outline">{tag}</Badge>
-          ))}
-        </div>
-        
-        <div className="flex justify-between items-center mt-4">
-          <div className="flex items-center text-xs text-muted-foreground">
-            <Avatar className="h-6 w-6 mr-2">
-              <AvatarImage src={author.avatar} />
-              <AvatarFallback>{author.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            Added by {author.name} • {format(createdAt, 'MMM d, yyyy')}
-          </div>
-          
-          <div className="flex gap-2">
-            {type === 'link' ? (
-              <Button size="sm" variant="outline" onClick={handleOpen}>
-                Visit <ExternalLink className="ml-1 h-3 w-3" />
-              </Button>
-            ) : (
-              <>
-                <Button size="sm" variant="outline" onClick={handleOpen}>
-                  Open
-                </Button>
-                <Button size="sm" variant="outline" onClick={handleDownload}>
-                  <Download className="h-3 w-3" />
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </PageLayout>
   );
 };
 

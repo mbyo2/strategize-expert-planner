@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
 import { MarketChange, fetchMarketChanges } from '@/services/marketChangesService';
+import { customSupabase } from "@/integrations/supabase/customClient";
 
 export const useRealTimeMarketChanges = () => {
   const [marketChanges, setMarketChanges] = useState<MarketChange[]>([]);
@@ -26,7 +26,7 @@ export const useRealTimeMarketChanges = () => {
     loadMarketChanges();
 
     // Set up real-time subscription
-    const channel = supabase
+    const channel = customSupabase
       .channel('market-changes-changes')
       .on(
         'postgres_changes',
@@ -45,7 +45,7 @@ export const useRealTimeMarketChanges = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      customSupabase.removeChannel(channel);
     };
   }, []);
 

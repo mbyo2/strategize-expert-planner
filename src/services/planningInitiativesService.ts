@@ -1,6 +1,6 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { customSupabase } from "@/integrations/supabase/customClient";
 
 export interface PlanningInitiative {
   id: string;
@@ -15,9 +15,9 @@ export interface PlanningInitiative {
   owner_id?: string;
 }
 
-export const fetchPlanningInitiatives = async () => {
+export const fetchPlanningInitiatives = async (): Promise<PlanningInitiative[]> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await customSupabase
       .from('planning_initiatives')
       .select('*')
       .order('created_at', { ascending: false });
@@ -37,7 +37,7 @@ export const fetchPlanningInitiatives = async () => {
 
 export const createPlanningInitiative = async (initiative: Omit<PlanningInitiative, 'id' | 'created_at' | 'updated_at'>) => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await customSupabase
       .from('planning_initiatives')
       .insert([initiative])
       .select()
@@ -59,7 +59,7 @@ export const createPlanningInitiative = async (initiative: Omit<PlanningInitiati
 
 export const updatePlanningInitiative = async (id: string, updates: Partial<PlanningInitiative>) => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await customSupabase
       .from('planning_initiatives')
       .update(updates)
       .eq('id', id)
@@ -82,7 +82,7 @@ export const updatePlanningInitiative = async (id: string, updates: Partial<Plan
 
 export const deletePlanningInitiative = async (id: string) => {
   try {
-    const { error } = await supabase
+    const { error } = await customSupabase
       .from('planning_initiatives')
       .delete()
       .eq('id', id);
