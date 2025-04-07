@@ -15,6 +15,7 @@ import Resources from "./pages/Resources";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import Teams from "./pages/Teams";
+import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/teams" element={<AuthGuard requiredRoles={['manager', 'admin']}><Teams /></AuthGuard>} />
               <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
               <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
+              <Route path="/admin" element={<AuthGuard requiredRoles={['admin']}><Admin /></AuthGuard>} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
