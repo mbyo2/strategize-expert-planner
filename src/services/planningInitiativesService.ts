@@ -1,19 +1,7 @@
 
 import { toast } from "sonner";
 import { customSupabase } from "@/integrations/supabase/customClient";
-
-export interface PlanningInitiative {
-  id: string;
-  name: string;
-  description?: string;
-  status: 'planning' | 'in-progress' | 'completed' | 'cancelled';
-  progress: number;
-  start_date?: string;
-  end_date?: string;
-  created_at: string;
-  updated_at: string;
-  owner_id?: string;
-}
+import { PlanningInitiative } from "@/types/database";
 
 export const fetchPlanningInitiatives = async (): Promise<PlanningInitiative[]> => {
   try {
@@ -53,6 +41,8 @@ export const createPlanningInitiative = async (initiative: Omit<PlanningInitiati
     }
 
     toast.success('Planning initiative created successfully');
+    
+    // Cast the data to the correct type
     return {
       ...data,
       status: data.status as PlanningInitiative['status']
@@ -79,6 +69,8 @@ export const updatePlanningInitiative = async (id: string, updates: Partial<Plan
     }
 
     toast.success('Planning initiative updated successfully');
+    
+    // Cast the data to the correct type
     return {
       ...data,
       status: data.status as PlanningInitiative['status']
