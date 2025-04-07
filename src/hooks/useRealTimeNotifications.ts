@@ -2,17 +2,9 @@
 import { useState, useEffect } from 'react';
 import { customSupabase } from "@/integrations/supabase/customClient";
 import { toast } from "sonner";
+import { Notification } from '@/types/database';
 
-export type Notification = {
-  id: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  timestamp: string;
-  isRead: boolean;
-  relatedEntityId?: string;
-  relatedEntityType?: string;
-  userId?: string;
-};
+export type { Notification };
 
 export const useRealTimeNotifications = (userId?: string) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -25,6 +17,8 @@ export const useRealTimeNotifications = (userId?: string) => {
     const fetchNotifications = async () => {
       try {
         setLoading(true);
+        
+        // Create typed query
         let query = customSupabase
           .from('notifications')
           .select('*')
@@ -41,11 +35,7 @@ export const useRealTimeNotifications = (userId?: string) => {
           throw fetchError;
         }
         
-        const typedNotifications = (data || []).map(item => ({
-          ...item,
-          type: item.type as 'info' | 'success' | 'warning' | 'error',
-          isRead: item.isRead || false,
-        }));
+        const typedNotifications = (data || []) as Notification[];
         
         setNotifications(typedNotifications);
         const unread = typedNotifications.filter(n => !n.isRead).length;
@@ -92,7 +82,7 @@ export const useRealTimeNotifications = (userId?: string) => {
           } else if (payload.eventType === 'UPDATE') {
             // Update the notification in the list
             setNotifications(prev => 
-              prev.map(n => n.id === payload.new.id ? { ...payload.new, type: payload.new.type as 'info' | 'success' | 'warning' | 'error' } : n)
+              prev.map(n => n.id === payload.new.id ? (payload.new as Notification) : n)
             );
             
             // Recalculate unread count
@@ -124,7 +114,7 @@ export const useRealTimeNotifications = (userId?: string) => {
     try {
       const { error } = await customSupabase
         .from('notifications')
-        .update({ isRead: true })
+        .update({ isRead: true } as any)
         .eq('id', notificationId);
       
       if (error) {
@@ -150,7 +140,7 @@ export const useRealTimeNotifications = (userId?: string) => {
     try {
       let query = customSupabase
         .from('notifications')
-        .update({ isRead: true })
+        .update({ isRead: true } as any)
         .eq('isRead', false);
       
       // Add user filter if provided

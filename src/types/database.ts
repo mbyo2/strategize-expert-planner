@@ -5,6 +5,41 @@ import { Database as SupabaseDatabase } from "@/integrations/supabase/types";
 export interface Database extends SupabaseDatabase {
   public: {
     Tables: SupabaseDatabase['public']['Tables'] & {
+      notifications: {
+        Row: {
+          id: string;
+          message: string;
+          type: 'info' | 'success' | 'warning' | 'error';
+          timestamp: string;
+          isRead: boolean;
+          userId?: string;
+          relatedEntityId?: string;
+          relatedEntityType?: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          message: string;
+          type: 'info' | 'success' | 'warning' | 'error';
+          timestamp?: string;
+          isRead?: boolean;
+          userId?: string;
+          relatedEntityId?: string;
+          relatedEntityType?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          message?: string;
+          type?: 'info' | 'success' | 'warning' | 'error';
+          timestamp?: string;
+          isRead?: boolean;
+          userId?: string;
+          relatedEntityId?: string;
+          relatedEntityType?: string;
+          created_at?: string;
+        };
+      };
       // Additional custom tables can be added here
     };
     Views: SupabaseDatabase['public']['Views'];
@@ -44,4 +79,16 @@ export interface CompanyStrategy {
   mission?: string;
   updated_at: string;
   updated_by?: string;
+}
+
+export interface Notification {
+  id: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  timestamp: string;
+  isRead: boolean;
+  userId?: string;
+  relatedEntityId?: string;
+  relatedEntityType?: string;
+  created_at?: string;
 }

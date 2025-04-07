@@ -1,8 +1,8 @@
 
 import { customSupabase } from "@/integrations/supabase/customClient";
-import { Notification } from "@/hooks/useRealTimeNotifications";
+import { Notification } from "@/types/database";
 
-export type CreateNotificationParams = Omit<Notification, 'id' | 'timestamp' | 'isRead'> & {
+export type CreateNotificationParams = Omit<Notification, 'id' | 'timestamp' | 'isRead' | 'created_at'> & {
   userId?: string;
 };
 
@@ -17,7 +17,7 @@ export const createNotification = async (notification: CreateNotificationParams)
 
     const { data, error } = await customSupabase
       .from('notifications')
-      .insert(newNotification)
+      .insert(newNotification as any)
       .select()
       .single();
 
@@ -38,7 +38,7 @@ export const createGlobalNotification = async (
   message: string, 
   type: 'info' | 'success' | 'warning' | 'error' = 'info',
   options?: {
-    roles?: string[];
+    roles?: ('admin' | 'manager' | 'analyst' | 'viewer')[];
     relatedEntityId?: string;
     relatedEntityType?: string;
   }
@@ -85,7 +85,7 @@ export const createGlobalNotification = async (
     if (notifications.length > 0) {
       const { error } = await customSupabase
         .from('notifications')
-        .insert(notifications);
+        .insert(notifications as any);
       
       if (error) {
         throw error;
@@ -124,7 +124,7 @@ export const notifyEvent = async (
   eventType: 'strategy_review_created' | 'strategy_review_updated' | 'goal_achieved' | 'initiative_completed' | 'market_change_detected',
   entityId: string,
   entityType: string,
-  affectedRoles?: string[]
+  affectedRoles?: ('admin' | 'manager' | 'analyst' | 'viewer')[]
 ): Promise<boolean> => {
   let message = '';
   let type: 'info' | 'success' | 'warning' | 'error' = 'info';

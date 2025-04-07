@@ -99,6 +99,42 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          isread: boolean
+          message: string
+          relatedentityid: string | null
+          relatedentitytype: string | null
+          timestamp: string
+          type: string
+          userid: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          isread?: boolean
+          message: string
+          relatedentityid?: string | null
+          relatedentitytype?: string | null
+          timestamp?: string
+          type: string
+          userid?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          isread?: boolean
+          message?: string
+          relatedentityid?: string | null
+          relatedentitytype?: string | null
+          timestamp?: string
+          type?: string
+          userid?: string | null
+        }
+        Relationships: []
+      }
       planning_initiatives: {
         Row: {
           created_at: string
