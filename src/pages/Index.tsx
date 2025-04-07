@@ -31,18 +31,15 @@ const Index = () => {
       try {
         setLoading(true);
         
-        // Fetch data in parallel
         const [goals, metrics, reviews] = await Promise.all([
           fetchStrategicGoals(),
           fetchIndustryMetrics(),
           fetchUpcomingStrategyReviews(1),
         ]);
         
-        // Process goals data
         const completedGoals = goals.filter(g => g.status === 'completed').length;
         const goalsCount = goals.length;
         
-        // Find industry position data
         const marketShareMetric = metrics.find(m => 
           m.name.toLowerCase().includes('market share') || 
           m.name.toLowerCase().includes('position')
@@ -58,7 +55,6 @@ const Index = () => {
           industryValue = `${marketShareMetric.change_percentage || 0}% YoY`;
         }
         
-        // Process next review
         let nextReviewDate = 'Not Scheduled';
         let nextReviewTitle = 'No upcoming reviews';
         
@@ -74,7 +70,7 @@ const Index = () => {
           industryPosition,
           industryTrend,
           industryValue,
-          teamAlignment: 87, // This would normally come from a team alignment API
+          teamAlignment: 87,
           teamAlignmentTrend: 'neutral',
           nextReviewDate,
           nextReviewTitle,

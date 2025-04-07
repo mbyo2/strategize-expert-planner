@@ -1,4 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { 
+  fetchPlanningInitiatives, 
+  createPlanningInitiative, 
+  updatePlanningInitiative, 
+  deletePlanningInitiative 
+} from '@/services/planningInitiativesService';
+import { PlanningInitiative } from '@/types/database';
 import PageLayout from '@/components/PageLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -13,7 +20,6 @@ import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { PlanningInitiative, fetchPlanningInitiatives, createPlanningInitiative, updatePlanningInitiative, deletePlanningInitiative } from '@/services/planningInitiativesService';
 import { format } from 'date-fns';
 import { Progress } from '@/components/ui/progress';
 import StrategySection from '@/components/StrategySection';
