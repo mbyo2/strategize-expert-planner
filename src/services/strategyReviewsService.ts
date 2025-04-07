@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { customSupabase } from "@/integrations/supabase/customClient";
 import { StrategyReview } from "@/types/database";
 
-export { StrategyReview };
+export type { StrategyReview };
 
 export const fetchStrategyReviews = async (): Promise<StrategyReview[]> => {
   try {

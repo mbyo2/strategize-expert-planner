@@ -6,8 +6,8 @@ import {
   createStrategicGoal,
   updateStrategicGoal,
   deleteStrategicGoal,
+  StrategicGoal
 } from '@/services/strategicGoalsService';
-import { StrategicGoal } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,7 +35,7 @@ const Goals = () => {
   const [goals, setGoals] = useState<StrategicGoal[]>([]);
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -71,7 +71,7 @@ const Goals = () => {
       description: formData.get('description') as string,
       status: (formData.get('status') as StrategicGoal['status']) || 'planned',
       progress: parseInt(formData.get('progress') as string) || 0,
-      user_id: currentUser?.id || '',
+      user_id: user?.id || '',
       start_date: formData.get('start_date') as string,
       due_date: formData.get('due_date') as string,
       target_value: parseFloat(formData.get('target_value') as string) || 0,
