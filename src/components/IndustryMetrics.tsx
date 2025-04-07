@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   ChartContainer, 
   ChartTooltip, 
@@ -31,23 +31,8 @@ import {
   ResizablePanel,
   ResizableHandle
 } from '@/components/ui/resizable';
-
-const marketShareData = [
-  { month: 'Jan', yourCompany: 18, competitor1: 22, competitor2: 15, competitor3: 12 },
-  { month: 'Feb', yourCompany: 19, competitor1: 21, competitor2: 15, competitor3: 13 },
-  { month: 'Mar', yourCompany: 20, competitor1: 20, competitor2: 16, competitor3: 13 },
-  { month: 'Apr', yourCompany: 21, competitor1: 19, competitor2: 16, competitor3: 14 },
-  { month: 'May', yourCompany: 22, competitor1: 19, competitor2: 15, competitor3: 14 },
-  { month: 'Jun', yourCompany: 23, competitor1: 18, competitor2: 14, competitor3: 15 },
-];
-
-const industryGrowthData = [
-  { category: 'Product A', growth: 12 },
-  { category: 'Product B', growth: 18 },
-  { category: 'Product C', growth: -4 },
-  { category: 'Product D', growth: 8 },
-  { category: 'Product E', growth: 5 },
-];
+import { Skeleton } from '@/components/ui/skeleton';
+import { useRealTimeIndustryMetrics } from '@/hooks/useRealTimeIndustryMetrics';
 
 const chartConfig = {
   yourCompany: { label: 'Your Company', color: '#3b82f6' },
@@ -57,8 +42,43 @@ const chartConfig = {
 };
 
 const IndustryMetrics: React.FC = () => {
-  const [timeframe, setTimeframe] = React.useState('6months');
+  const [timeframe, setTimeframe] = useState('6months');
+  const { metrics, loading, error } = useRealTimeIndustryMetrics();
   
+  // Process data for charts
+  const marketShareData = metrics
+    .filter(metric => metric.category === 'Competition')
+    .map(metric => ({
+      month: new Date(metric.updated_at).toLocaleString('default', { month: 'short' }),
+      yourCompany: metric.name === 'Your Market Share' ? metric.value : null,
+      competitor1: metric.name === 'Competitor Market Share' ? metric.value : null,
+      competitor2: metric.name === 'Secondary Competitor Share' ? metric.value : null,
+      competitor3: metric.name === 'Tertiary Competitor Share' ? metric.value : null,
+    }));
+
+  const industryGrowthData = metrics
+    .filter(metric => metric.category === 'Market' || metric.category === 'Financial')
+    .map(metric => ({
+      category: metric.name,
+      growth: metric.change_percentage || 0,
+    }));
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-8 w-[150px]" />
+        </div>
+        <Skeleton className="h-[350px] w-full" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-center text-red-500">Failed to load industry metrics</div>;
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -83,22 +103,28 @@ const IndustryMetrics: React.FC = () => {
           <div className="p-4 h-full">
             <h4 className="text-sm font-medium mb-2">Market Share Trends</h4>
             <div className="h-[300px]">
-              <ChartContainer
-                config={chartConfig}
-                className="w-full h-full"
-              >
-                <RechartsLineChart data={marketShareData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <ChartLegend content={<ChartLegendContent />} />
-                  <Line type="monotone" dataKey="yourCompany" stroke={chartConfig.yourCompany.color} strokeWidth={2} activeDot={{ r: 6 }} />
-                  <Line type="monotone" dataKey="competitor1" stroke={chartConfig.competitor1.color} />
-                  <Line type="monotone" dataKey="competitor2" stroke={chartConfig.competitor2.color} />
-                  <Line type="monotone" dataKey="competitor3" stroke={chartConfig.competitor3.color} />
-                </RechartsLineChart>
-              </ChartContainer>
+              {marketShareData.length > 0 ? (
+                <ChartContainer
+                  config={chartConfig}
+                  className="w-full h-full"
+                >
+                  <RechartsLineChart data={marketShareData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartLegend content={<ChartLegendContent />} />
+                    <Line type="monotone" dataKey="yourCompany" stroke={chartConfig.yourCompany.color} strokeWidth={2} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="competitor1" stroke={chartConfig.competitor1.color} />
+                    <Line type="monotone" dataKey="competitor2" stroke={chartConfig.competitor2.color} />
+                    <Line type="monotone" dataKey="competitor3" stroke={chartConfig.competitor3.color} />
+                  </RechartsLineChart>
+                </ChartContainer>
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
+                  No market share data available
+                </div>
+              )}
             </div>
           </div>
         </ResizablePanel>
@@ -109,28 +135,34 @@ const IndustryMetrics: React.FC = () => {
           <div className="p-4 h-full">
             <h4 className="text-sm font-medium mb-2">Category Growth Rates</h4>
             <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartsBarChart
-                  data={industryGrowthData}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="category" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar 
-                    dataKey="growth" 
-                    fill="#3b82f6"
-                    radius={[4, 4, 0, 0]}
-                    label={{
-                      position: 'top',
-                      formatter: (value: number) => `${value}%`,
-                      fontSize: 12
-                    }}
-                  />
-                </RechartsBarChart>
-              </ResponsiveContainer>
+              {industryGrowthData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsBarChart
+                    data={industryGrowthData}
+                    margin={{ top: 10, right: 10, left: 0, bottom: 20 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="category" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar 
+                      dataKey="growth" 
+                      fill="#3b82f6"
+                      radius={[4, 4, 0, 0]}
+                      label={{
+                        position: 'top',
+                        formatter: (value: number) => `${value}%`,
+                        fontSize: 12
+                      }}
+                    />
+                  </RechartsBarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
+                  No growth rate data available
+                </div>
+              )}
             </div>
           </div>
         </ResizablePanel>

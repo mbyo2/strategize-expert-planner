@@ -9,6 +9,135 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      company_strategy: {
+        Row: {
+          id: string
+          mission: string | null
+          updated_at: string
+          updated_by: string | null
+          vision: string | null
+        }
+        Insert: {
+          id?: string
+          mission?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          vision?: string | null
+        }
+        Update: {
+          id?: string
+          mission?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          vision?: string | null
+        }
+        Relationships: []
+      }
+      industry_metrics: {
+        Row: {
+          category: string
+          change_percentage: number | null
+          id: string
+          name: string
+          previous_value: number | null
+          source: string | null
+          trend: string | null
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          category: string
+          change_percentage?: number | null
+          id?: string
+          name: string
+          previous_value?: number | null
+          source?: string | null
+          trend?: string | null
+          updated_at?: string
+          value: number
+        }
+        Update: {
+          category?: string
+          change_percentage?: number | null
+          id?: string
+          name?: string
+          previous_value?: number | null
+          source?: string | null
+          trend?: string | null
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      market_changes: {
+        Row: {
+          category: string | null
+          date_identified: string
+          description: string
+          id: string
+          impact_level: string
+          source: string | null
+          title: string
+        }
+        Insert: {
+          category?: string | null
+          date_identified?: string
+          description: string
+          id?: string
+          impact_level: string
+          source?: string | null
+          title: string
+        }
+        Update: {
+          category?: string | null
+          date_identified?: string
+          description?: string
+          id?: string
+          impact_level?: string
+          source?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      planning_initiatives: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          name: string
+          owner_id: string | null
+          progress: number
+          start_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name: string
+          owner_id?: string | null
+          progress?: number
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name?: string
+          owner_id?: string | null
+          progress?: number
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar: string | null
@@ -45,6 +174,135 @@ export type Database = {
           job_title?: string | null
           name?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      recommendations: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string
+          id: string
+          priority: number
+          status: string
+          title: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          priority?: number
+          status?: string
+          title: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          priority?: number
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      strategic_goals: {
+        Row: {
+          created_at: string
+          current_value: number | null
+          description: string | null
+          due_date: string | null
+          id: string
+          name: string
+          progress: number
+          start_date: string | null
+          status: string
+          target_value: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_value?: number | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          name: string
+          progress?: number
+          start_date?: string | null
+          status?: string
+          target_value?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_value?: number | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          name?: string
+          progress?: number
+          start_date?: string | null
+          status?: string
+          target_value?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      strategic_pillars: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      strategy_reviews: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          scheduled_date: string
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          scheduled_date: string
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          scheduled_date?: string
+          status?: string
+          title?: string
         }
         Relationships: []
       }
