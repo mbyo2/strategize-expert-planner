@@ -1,17 +1,18 @@
+
 import React, { useEffect, useState } from 'react';
 import PageLayout from '../components/PageLayout';
 import CustomizableDashboard from '../components/CustomizableDashboard';
 import InfoCard from '../components/InfoCard';
 import ReportGenerator from '../components/ReportGenerator';
-import { Target, Building, Users, Calendar } from 'lucide-react';
+import { Target, Building, Users, Calendar, BarChart } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { fetchStrategicGoals } from '@/services/strategicGoalsService';
 import { fetchIndustryMetrics } from '@/services/industryMetricsService';
 import { fetchUpcomingStrategyReviews } from '@/services/strategyReviewsService';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
-import { Button, Link } from '@chakra-ui/react';
-import { BarChart } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
   const isMobile = useIsMobile();
