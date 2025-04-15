@@ -10,6 +10,8 @@ import { fetchIndustryMetrics } from '@/services/industryMetricsService';
 import { fetchUpcomingStrategyReviews } from '@/services/strategyReviewsService';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
+import { Button, Link } from '@chakra-ui/react';
+import { BarChart } from 'lucide-react';
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -91,7 +93,14 @@ const Index = () => {
       subtitle="Monitor your organization's strategic initiatives and industry performance"
     >
       <div className="flex justify-between items-center mb-4">
-        <div />
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/analytics">
+              <BarChart className="mr-2 h-4 w-4" />
+              View Analytics
+            </Link>
+          </Button>
+        </div>
         <ReportGenerator triggerClassName="ml-auto" />
       </div>
       
