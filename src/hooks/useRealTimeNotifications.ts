@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { customSupabase } from "@/integrations/supabase/customClient";
 import { toast } from "sonner";
@@ -56,27 +55,23 @@ export const useRealTimeNotifications = (userId?: string) => {
       .on(
         'postgres_changes',
         { 
-          event: '*',  // Listen for inserts, updates, and deletes
+          event: '*',
           schema: 'public', 
           table: 'notifications' 
         },
         async (payload) => {
           console.log('Notifications change detected:', payload);
           
-          // Handle different event types
           if (payload.eventType === 'INSERT') {
             const newNotification = payload.new as Notification;
             
-            // Only add if it's for this user or if no userId filter is applied
             if (!userId || newNotification.userId === userId) {
               setNotifications(prev => [newNotification, ...prev]);
               setUnreadCount(prev => prev + 1);
               
-              // Show toast for new notifications
-              // Fix: Using the sonner toast API correctly
+              // Use correct sonner toast API
               toast(newNotification.message, {
                 description: `${newNotification.type} notification`,
-                // Use the correct variant based on notification type
                 ...(newNotification.type === 'error' && { style: { backgroundColor: 'red' } })
               });
             }

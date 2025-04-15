@@ -103,35 +103,35 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          isread: boolean
+          isRead: boolean
           message: string
-          relatedentityid: string | null
-          relatedentitytype: string | null
+          relatedEntityId: string | null
+          relatedEntityType: string | null
           timestamp: string
           type: string
-          userid: string | null
+          userId: string | null
         }
         Insert: {
           created_at?: string
           id?: string
-          isread?: boolean
+          isRead?: boolean
           message: string
-          relatedentityid?: string | null
-          relatedentitytype?: string | null
+          relatedEntityId?: string | null
+          relatedEntityType?: string | null
           timestamp?: string
           type: string
-          userid?: string | null
+          userId?: string | null
         }
         Update: {
           created_at?: string
           id?: string
-          isread?: boolean
+          isRead?: boolean
           message?: string
-          relatedentityid?: string | null
-          relatedentitytype?: string | null
+          relatedEntityId?: string | null
+          relatedEntityType?: string | null
           timestamp?: string
           type?: string
-          userid?: string | null
+          userId?: string | null
         }
         Relationships: []
       }
