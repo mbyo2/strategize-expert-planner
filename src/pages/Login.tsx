@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Shield, LogIn } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -42,6 +43,18 @@ const Login = () => {
   const onSubmit = async (data: LoginFormValues) => {
     try {
       await login(data.email, data.password);
+      
+      // Check if email is verified
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && !user.email_verified) {
+        toast({
+          title: "Email not verified",
+          description: "Please check your email to verify your account.",
+          variant: "warning"
+        });
+        return;
+      }
+
       const from = location.state?.from?.pathname || '/';
       
       toast("Login successful", {

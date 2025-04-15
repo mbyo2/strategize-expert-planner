@@ -176,40 +176,61 @@ export type Database = {
       }
       profiles: {
         Row: {
+          app_notifications: boolean | null
           avatar: string | null
           bio: string | null
           company: string | null
           created_at: string
+          date_format: string | null
           department: string | null
           email: string | null
+          email_notifications: boolean | null
           id: string
           job_title: string | null
+          language: string | null
           name: string | null
+          theme: string | null
+          timezone: string | null
           updated_at: string
+          weekly_digest: boolean | null
         }
         Insert: {
+          app_notifications?: boolean | null
           avatar?: string | null
           bio?: string | null
           company?: string | null
           created_at?: string
+          date_format?: string | null
           department?: string | null
           email?: string | null
+          email_notifications?: boolean | null
           id: string
           job_title?: string | null
+          language?: string | null
           name?: string | null
+          theme?: string | null
+          timezone?: string | null
           updated_at?: string
+          weekly_digest?: boolean | null
         }
         Update: {
+          app_notifications?: boolean | null
           avatar?: string | null
           bio?: string | null
           company?: string | null
           created_at?: string
+          date_format?: string | null
           department?: string | null
           email?: string | null
+          email_notifications?: boolean | null
           id?: string
           job_title?: string | null
+          language?: string | null
           name?: string | null
+          theme?: string | null
+          timezone?: string | null
           updated_at?: string
+          weekly_digest?: boolean | null
         }
         Relationships: []
       }
