@@ -1,9 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useToast } from "@/hooks/use-toast";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -46,11 +46,9 @@ const Login = () => {
       
       // Check if email is verified
       const { data: { user } } = await supabase.auth.getUser();
-      if (user && !user.email_verified) {
-        toast({
-          title: "Email not verified",
+      if (user && user.email_confirmed_at === null) {
+        toast("Email not verified", {
           description: "Please check your email to verify your account.",
-          variant: "warning"
         });
         return;
       }
