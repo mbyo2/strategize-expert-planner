@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { z } from 'zod';
@@ -10,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Shield, LogIn } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from "sonner";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -21,7 +21,6 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
   const { login, isAuthenticated } = useAuth();
   
   // Redirect to home or intended page if already authenticated
@@ -45,18 +44,16 @@ const Login = () => {
       await login(data.email, data.password);
       const from = location.state?.from?.pathname || '/';
       
-      toast({
-        title: "Login successful",
-        description: "Welcome back to Intantiko!",
+      toast("Login successful", {
+        description: "Welcome back!",
       });
       
       navigate(from, { replace: true });
     } catch (error: any) {
       console.error("Login error:", error);
-      toast({
-        variant: "destructive",
-        title: "Login failed",
+      toast("Login failed", {
         description: error.message || "Invalid email or password. Please try again.",
+        style: { backgroundColor: 'red', color: 'white' }
       });
     }
   };

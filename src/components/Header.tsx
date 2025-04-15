@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Shield, Sun, Moon, HomeIcon, LineChart, Target, LayoutDashboard, Briefcase, Settings } from 'lucide-react';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import UserMenu from './UserMenu';
 import { useAuth, UserRole } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
+import NotificationBell from './Notifications/NotificationBell';
 
 const Header: React.FC = () => {
   const { isAuthenticated, hasPermission } = useAuth();
@@ -61,6 +62,7 @@ const Header: React.FC = () => {
         )}
         
         <div className="flex items-center gap-2">
+          {isAuthenticated && <NotificationBell />}
           <Button variant="ghost" size="icon" className="text-foreground">
             <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:rotate-90 dark:scale-0" />
             <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
