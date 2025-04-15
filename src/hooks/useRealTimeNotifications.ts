@@ -73,10 +73,11 @@ export const useRealTimeNotifications = (userId?: string) => {
               setUnreadCount(prev => prev + 1);
               
               // Show toast for new notifications
-              toast({
-                title: "New Notification",
-                description: newNotification.message,
-                variant: newNotification.type === 'error' ? 'destructive' : 'default',
+              // Fix: Using the sonner toast API correctly
+              toast(newNotification.message, {
+                description: `${newNotification.type} notification`,
+                // Use the correct variant based on notification type
+                ...(newNotification.type === 'error' && { style: { backgroundColor: 'red' } })
               });
             }
           } else if (payload.eventType === 'UPDATE') {
