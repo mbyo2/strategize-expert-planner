@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,8 +33,6 @@ const queryClient = new QueryClient({
       staleTime: 1000 * 60 * 5, // 5 minutes
       gcTime: 1000 * 60 * 30, // 30 minutes (formerly cacheTime)
       retry: 1,
-      // Improve suspense mode behavior
-      suspense: false,
       // Add error handling
       onError: (error) => {
         console.error("Query error:", error);
