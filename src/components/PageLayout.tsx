@@ -5,11 +5,15 @@ import Footer from './Footer';
 import Navigation from './Navigation';
 import MobileNavigation from './MobileNavigation';
 import FadeIn from './FadeIn';
+import CalendarIntegration from './CalendarIntegration';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { isOnline } from '@/services/offlineService';
 import { useIsMountedRef } from '@/hooks/use-mounted-ref';
+import { Button } from '@/components/ui/button';
+import { Calendar, Download } from 'lucide-react';
+import ReportGenerator from './ReportGenerator';
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -18,6 +22,7 @@ interface PageLayoutProps {
   className?: string;
   icon?: React.ReactNode;
   loading?: boolean;
+  showExportOptions?: boolean;
 }
 
 const PageLayout: React.FC<PageLayoutProps> = ({ 
@@ -26,7 +31,8 @@ const PageLayout: React.FC<PageLayoutProps> = ({
   subtitle, 
   className, 
   icon,
-  loading = false
+  loading = false,
+  showExportOptions = false
 }) => {
   const isMobile = useIsMobile();
   const isMounted = useIsMountedRef();
@@ -60,25 +66,38 @@ const PageLayout: React.FC<PageLayoutProps> = ({
       )}>
         {(title || subtitle) && (
           <header className="mb-4 sm:mb-6 md:mb-8 pb-4 border-b">
-            <FadeIn delay={100}>
-              {title && (
-                <h1 className={cn(
-                  "font-semibold tracking-tight flex items-center",
-                  isMobile ? "text-2xl" : "text-3xl"
-                )}>
-                  {icon && <span className="mr-2">{icon}</span>}
-                  {title}
-                </h1>
-              )}
-              {subtitle && <p className="text-muted-foreground mt-1 text-sm sm:text-base">{subtitle}</p>}
-              
-              {!isConnected && (
-                <div className="mt-2 text-sm text-amber-600 dark:text-amber-400 flex items-center">
-                  <span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
-                  Offline mode - Some features may be limited
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <FadeIn delay={100}>
+                <div>
+                  {title && (
+                    <h1 className={cn(
+                      "font-semibold tracking-tight flex items-center",
+                      isMobile ? "text-2xl" : "text-3xl"
+                    )}>
+                      {icon && <span className="mr-2">{icon}</span>}
+                      {title}
+                    </h1>
+                  )}
+                  {subtitle && <p className="text-muted-foreground mt-1 text-sm sm:text-base">{subtitle}</p>}
+                  
+                  {!isConnected && (
+                    <div className="mt-2 text-sm text-amber-600 dark:text-amber-400 flex items-center">
+                      <span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
+                      Offline mode - Some features may be limited
+                    </div>
+                  )}
                 </div>
+              </FadeIn>
+              
+              {showExportOptions && (
+                <FadeIn delay={200}>
+                  <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
+                    <CalendarIntegration />
+                    <ReportGenerator triggerClassName="" />
+                  </div>
+                </FadeIn>
               )}
-            </FadeIn>
+            </div>
           </header>
         )}
         
