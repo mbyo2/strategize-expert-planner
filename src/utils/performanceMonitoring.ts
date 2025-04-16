@@ -9,6 +9,12 @@ type PerformanceMeasure = {
   duration?: number;
 };
 
+// Custom type for First Input Delay entry that includes processingStart
+interface FirstInputEntry extends PerformanceEntry {
+  processingStart?: number;
+  startTime: number;
+}
+
 // Store active measurements
 const activeMeasurements = new Map<string, number>();
 
@@ -124,11 +130,15 @@ export const registerPerformanceObservers = (): (() => void) => {
     if (PerformanceObserver.supportedEntryTypes.includes('first-input')) {
       const fidObserver = new PerformanceObserver((entryList) => {
         for (const entry of entryList.getEntries()) {
-          const fid = entry.processingStart! - entry.startTime;
-          console.info('🖱️ First Input Delay:', {
-            delay: fid.toFixed(2) + 'ms',
-            type: (entry as any).name // Type casting since name might not be in the type definition
-          });
+          // Cast to our custom type that includes processingStart
+          const fidEntry = entry as FirstInputEntry;
+          if (fidEntry.processingStart) {
+            const fid = fidEntry.processingStart - fidEntry.startTime;
+            console.info('🖱️ First Input Delay:', {
+              delay: fid.toFixed(2) + 'ms',
+              type: (fidEntry as any).name // Type casting since name might not be in the type definition
+            });
+          }
         }
       });
       fidObserver.observe({ type: 'first-input', buffered: true });

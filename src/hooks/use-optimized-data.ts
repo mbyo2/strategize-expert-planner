@@ -40,23 +40,28 @@ export function useOptimizedQuery<TData, TError = Error>(
     };
   }, []);
 
+  // Create proper meta object with errorHandler
+  const metaWithErrorHandler = {
+    ...(options?.meta || {}),
+    errorHandler: (error: TError) => {
+      console.error(`Query error for ${queryKey.join('.')}:`, error);
+      toast.error('Data loading error', {
+        description: (error as Error).message || 'Failed to load data',
+      });
+      if (options?.meta?.errorHandler) {
+        options.meta.errorHandler(error);
+      }
+    }
+  };
+
   return useQuery({
     queryKey,
     queryFn: enhancedQueryFn,
     // Only refetch on window focus if the document is visible
     refetchOnWindowFocus: isVisible,
-    // Default meta error handler
-    meta: {
-      ...options?.meta,
-      errorHandler: (error: TError) => {
-        console.error(`Query error for ${queryKey.join('.')}:`, error);
-        toast.error('Data loading error', {
-          description: (error as Error).message || 'Failed to load data',
-        });
-        options?.meta?.errorHandler?.(error);
-      }
-    },
-    ...options
+    // Merge in custom options and meta
+    ...(options || {}),
+    meta: metaWithErrorHandler
   });
 }
 
@@ -83,20 +88,25 @@ export function useOptimizedMutation<TData, TVariables, TError = Error, TContext
     }
   };
 
+  // Create proper meta object with errorHandler
+  const metaWithErrorHandler = {
+    ...(options?.meta || {}),
+    errorHandler: (error: TError) => {
+      console.error('Mutation error:', error);
+      toast.error('Operation failed', {
+        description: (error as Error).message || 'Failed to complete operation',
+      });
+      if (options?.meta?.errorHandler) {
+        options.meta.errorHandler(error);
+      }
+    }
+  };
+
   return useMutation({
     mutationFn: enhancedMutationFn,
-    // Default meta error handler
-    meta: {
-      ...options?.meta,
-      errorHandler: (error: TError) => {
-        console.error('Mutation error:', error);
-        toast.error('Operation failed', {
-          description: (error as Error).message || 'Failed to complete operation',
-        });
-        options?.meta?.errorHandler?.(error);
-      }
-    },
     // Combine with user options
-    ...options
+    ...(options || {}),
+    // Use our enhanced meta
+    meta: metaWithErrorHandler
   });
 }

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -86,11 +85,14 @@ const App: React.FC = () => {
     
     // Performance monitoring
     if ('performance' in window && 'PerformanceObserver' in window) {
-      // Create performance observer for large layout shifts
+      // Create performance observer for layout shifts
       const layoutShiftObserver = new PerformanceObserver((entryList) => {
         for (const entry of entryList.getEntries()) {
-          if (entry.hadRecentInput) continue;
-          console.warn('Layout shift detected:', entry);
+          // Using type assertion to access layout shift properties
+          const layoutShiftEntry = entry as unknown as { hadRecentInput?: boolean };
+          if (!layoutShiftEntry.hadRecentInput) {
+            console.warn('Layout shift detected:', entry);
+          }
         }
       });
       

@@ -28,13 +28,26 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
-// Mock IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
+// Properly mock IntersectionObserver with required properties
+class MockIntersectionObserver implements IntersectionObserver {
+  readonly root: Element | Document | null = null;
+  readonly rootMargin: string = '';
+  readonly thresholds: ReadonlyArray<number> = [];
+  
   constructor(private callback: IntersectionObserverCallback) {}
+  
   observe() { return null; }
   unobserve() { return null; }
   disconnect() { return null; }
-};
+  takeRecords(): IntersectionObserverEntry[] { return []; }
+}
+
+// Set the global IntersectionObserver
+Object.defineProperty(window, 'IntersectionObserver', {
+  writable: true,
+  configurable: true,
+  value: MockIntersectionObserver
+});
 
 // Suppress React error logging during tests
 const originalConsoleError = console.error;
