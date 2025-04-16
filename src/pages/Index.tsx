@@ -13,6 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useOptimizedQuery } from '@/hooks/use-optimized-query';
+import { cacheDashboardData, getCachedDashboardData } from '@/services/offlineService';
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -29,16 +31,41 @@ const Index = () => {
     nextReviewTitle: '',
   });
   
+  // Use optimized query with offline support
+  const { data: goals = [], isLoading: isGoalsLoading, isOfflineData: isGoalsOffline } = useOptimizedQuery(
+    ['strategic-goals'],
+    fetchStrategicGoals,
+    {
+      cacheKey: 'dashboard-goals',
+      mobilePriority: 'high',
+      offlineCapable: true,
+    }
+  );
+  
+  const { data: metrics = [], isLoading: isMetricsLoading, isOfflineData: isMetricsOffline } = useOptimizedQuery(
+    ['industry-metrics'],
+    fetchIndustryMetrics,
+    {
+      cacheKey: 'dashboard-metrics',
+      mobilePriority: 'medium',
+      offlineCapable: true,
+    }
+  );
+  
+  const { data: reviews = [], isLoading: isReviewsLoading, isOfflineData: isReviewsOffline } = useOptimizedQuery(
+    ['strategy-reviews'],
+    () => fetchUpcomingStrategyReviews(1),
+    {
+      cacheKey: 'dashboard-reviews',
+      mobilePriority: 'low',
+      offlineCapable: true,
+    }
+  );
+  
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const processDashboardData = () => {
       try {
         setLoading(true);
-        
-        const [goals, metrics, reviews] = await Promise.all([
-          fetchStrategicGoals(),
-          fetchIndustryMetrics(),
-          fetchUpcomingStrategyReviews(1),
-        ]);
         
         const completedGoals = goals.filter(g => g.status === 'completed').length;
         const goalsCount = goals.length;
@@ -49,7 +76,7 @@ const Index = () => {
         );
         
         let industryPosition = 'Top 15%';
-        let industryTrend: 'up' | 'down' | 'neutral' = 'neutral';
+        let industryTrend = 'neutral';
         let industryValue = '';
         
         if (marketShareMetric) {
@@ -67,7 +94,7 @@ const Index = () => {
           nextReviewTitle = nextReview.title;
         }
         
-        setDashboardData({
+        const newDashboardData = {
           goalsCount,
           completedGoals,
           industryPosition,
@@ -77,28 +104,46 @@ const Index = () => {
           teamAlignmentTrend: 'neutral',
           nextReviewDate,
           nextReviewTitle,
-        });
+        };
+        
+        setDashboardData(newDashboardData);
+        
+        // Cache the processed dashboard data for offline use
+        cacheDashboardData(newDashboardData);
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        console.error('Error processing dashboard data:', error);
+        
+        // Try to get cached dashboard data as fallback
+        const cachedData = getCachedDashboardData();
+        if (cachedData) {
+          setDashboardData(cachedData);
+        }
       } finally {
         setLoading(false);
       }
     };
     
-    fetchDashboardData();
-  }, []);
+    // Only process data when all queries are completed (or offline data is loaded)
+    if (!isGoalsLoading && !isMetricsLoading && !isReviewsLoading) {
+      processDashboardData();
+    }
+  }, [goals, metrics, reviews, isGoalsLoading, isMetricsLoading, isReviewsLoading]);
+  
+  // Show offline indicator if any data is from cache
+  const isAnyOfflineData = isGoalsOffline || isMetricsOffline || isReviewsOffline;
   
   return (
     <PageLayout 
       title="Intantiko Strategic Dashboard" 
       subtitle="Monitor your organization's strategic initiatives and industry performance"
+      loading={isGoalsLoading && isMetricsLoading && isReviewsLoading}
     >
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
         <div className="flex gap-2">
           <Button variant="outline" asChild>
             <Link to="/analytics">
               <BarChart className="mr-2 h-4 w-4" />
-              View Analytics
+              <span className={isMobile ? "sr-only" : ""}>View Analytics</span>
             </Link>
           </Button>
         </div>

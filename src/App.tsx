@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,12 +21,11 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import AccessDenied from "./pages/AccessDenied";
 import NotFound from "./pages/NotFound";
+import Analytics from "./pages/Analytics";
 import React from 'react';
 
-// Create a QueryClient instance outside component
 const queryClient = new QueryClient();
 
-// Make App a proper function component with React.FC type
 const App: React.FC = () => {
   return (
     <React.StrictMode>
@@ -39,15 +37,14 @@ const App: React.FC = () => {
               <Sonner />
               <BrowserRouter>
                 <Routes>
-                  {/* Public routes */}
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/access-denied" element={<AccessDenied />} />
                   
-                  {/* Protected routes */}
                   <Route path="/" element={<AuthGuard><Index /></AuthGuard>} />
+                  <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />
                   <Route path="/industry" element={<AuthGuard requiredRoles={['analyst', 'manager', 'admin']}><Industry /></AuthGuard>} />
                   <Route path="/planning" element={<AuthGuard requiredRoles={['manager', 'admin']}><Planning /></AuthGuard>} />
                   <Route path="/goals" element={<AuthGuard><Goals /></AuthGuard>} />
@@ -57,7 +54,6 @@ const App: React.FC = () => {
                   <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
                   <Route path="/admin" element={<AuthGuard requiredRoles={['admin']}><Admin /></AuthGuard>} />
                   
-                  {/* Catch-all route */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>

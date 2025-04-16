@@ -1,11 +1,15 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Header from './Header';
 import Footer from './Footer';
 import Navigation from './Navigation';
+import MobileNavigation from './MobileNavigation';
 import FadeIn from './FadeIn';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Skeleton } from '@/components/ui/skeleton';
+import { isOnline } from '@/services/offlineService';
+import { useIsMountedRef } from '@/hooks/use-mounted-ref';
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -13,17 +17,47 @@ interface PageLayoutProps {
   subtitle?: string;
   className?: string;
   icon?: React.ReactNode;
+  loading?: boolean;
 }
 
-const PageLayout: React.FC<PageLayoutProps> = ({ children, title, subtitle, className, icon }) => {
+const PageLayout: React.FC<PageLayoutProps> = ({ 
+  children, 
+  title, 
+  subtitle, 
+  className, 
+  icon,
+  loading = false
+}) => {
   const isMobile = useIsMobile();
+  const isMounted = useIsMountedRef();
+  const [isPageLoading, setIsPageLoading] = React.useState(loading);
+  const isConnected = isOnline();
+  
+  // Simulate data loading optimization for mobile
+  useEffect(() => {
+    if (loading) {
+      // Add slight delay for mobile to improve perceived performance
+      const timer = setTimeout(() => {
+        if (isMounted.current) {
+          setIsPageLoading(false);
+        }
+      }, isMobile ? 300 : 0);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [loading, isMobile, isMounted]);
   
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
       <Navigation />
       
-      <main className={cn("flex-1 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8", className)}>
+      <main className={cn(
+        "flex-1 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8",
+        // Add extra padding at the bottom on mobile for the navigation
+        isMobile && "pb-20",
+        className
+      )}>
         {(title || subtitle) && (
           <header className="mb-4 sm:mb-6 md:mb-8 pb-4 border-b">
             <FadeIn delay={100}>
@@ -37,15 +71,35 @@ const PageLayout: React.FC<PageLayoutProps> = ({ children, title, subtitle, clas
                 </h1>
               )}
               {subtitle && <p className="text-muted-foreground mt-1 text-sm sm:text-base">{subtitle}</p>}
+              
+              {!isConnected && (
+                <div className="mt-2 text-sm text-amber-600 dark:text-amber-400 flex items-center">
+                  <span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
+                  Offline mode - Some features may be limited
+                </div>
+              )}
             </FadeIn>
           </header>
         )}
         
         <FadeIn delay={200} className="h-full">
-          {children}
+          {isPageLoading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-[180px] w-full rounded-lg" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Skeleton className="h-[100px] rounded-lg" />
+                <Skeleton className="h-[100px] rounded-lg" />
+                <Skeleton className="h-[100px] rounded-lg" />
+                <Skeleton className="h-[100px] rounded-lg" />
+              </div>
+            </div>
+          ) : (
+            children
+          )}
         </FadeIn>
       </main>
       
+      <MobileNavigation />
       <Footer />
     </div>
   );
