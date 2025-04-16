@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/hooks/useAuth';
 
@@ -23,7 +22,8 @@ export type AuditResource =
   | 'analysis'
   | 'setting'
   | 'document'
-  | 'access_control';
+  | 'access_control'
+  | 'event';  // Added 'event' as a valid resource type
 
 export interface AuditLogEntry {
   action: AuditAction;
