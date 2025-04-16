@@ -23,7 +23,7 @@ export const endMeasure = (measureName: string) => {
   performance.clearMeasures(measureName);
 };
 
-// Fix type issue with layout shift entries
+// Define types for layout shift entries
 interface LayoutShiftAttribution {
   node: Node;
   previousRect: DOMRectReadOnly;
@@ -48,37 +48,41 @@ interface LongTaskEntry extends PerformanceEntry {
 
 export const observeLongTasks = () => {
   if ('PerformanceObserver' in window) {
-    const observer = new PerformanceObserver((list) => {
-      list.getEntries().forEach((entry) => {
-        // Properly type-cast the entry
-        const longTaskEntry = entry as LongTaskEntry;
-        if (longTaskEntry.processingStart) {
-          console.log('Long Task Detected', entry.name, entry.duration, longTaskEntry.processingStart);
-        } else {
+    try {
+      const observer = new PerformanceObserver((list) => {
+        list.getEntries().forEach((entry) => {
+          // Properly type-cast the entry
+          const longTaskEntry = entry as LongTaskEntry;
           console.log('Long Task Detected', entry.name, entry.duration);
-        }
+        });
       });
-    });
 
-    observer.observe({ type: 'longtask', buffered: true });
+      observer.observe({ type: 'longtask', buffered: true });
+    } catch (error) {
+      console.warn('Long task observation not supported:', error);
+    }
   }
 };
 
 // Create a function to observe layout shifts
 export const observeLayoutShifts = () => {
   if ('PerformanceObserver' in window) {
-    const observer = new PerformanceObserver((list) => {
-      list.getEntries().forEach((entry) => {
-        // Properly type-cast the entry
-        const layoutShiftEntry = entry as LayoutShiftEntry;
-        
-        // Only log unexpected layout shifts
-        if (!layoutShiftEntry.hadRecentInput) {
-          console.warn('Layout shift detected:', layoutShiftEntry.value.toFixed(4), entry);
-        }
+    try {
+      const observer = new PerformanceObserver((list) => {
+        list.getEntries().forEach((entry) => {
+          // Properly type-cast the entry
+          const layoutShiftEntry = entry as LayoutShiftEntry;
+          
+          // Only log unexpected layout shifts
+          if (!layoutShiftEntry.hadRecentInput) {
+            console.warn('Layout shift detected:', layoutShiftEntry.value.toFixed(4));
+          }
+        });
       });
-    });
 
-    observer.observe({ type: 'layout-shift', buffered: true });
+      observer.observe({ type: 'layout-shift', buffered: true });
+    } catch (error) {
+      console.warn('Layout shift observation not supported:', error);
+    }
   }
 };

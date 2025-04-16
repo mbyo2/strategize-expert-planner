@@ -1,125 +1,84 @@
 
-import { useQuery, useMutation, useQueryClient, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
-import { useState, useCallback, useEffect } from 'react';
+import { UseQueryOptions, useQuery } from '@tanstack/react-query';
+import { DefinedUseQueryResult, UseQueryResult } from '@tanstack/react-query';
+import { useCallback } from 'react';
 import { startMeasure, endMeasure } from '@/utils/performanceMonitoring';
-import { toast } from 'sonner';
 
-/**
- * Custom hook for optimized data fetching that includes:
- * - Performance monitoring
- * - Smart refetching based on visibility
- * - Automatic error handling
- */
-export function useOptimizedQuery<TData, TError = Error>(
-  queryKey: string[],
-  queryFn: () => Promise<TData>,
-  options?: Omit<UseQueryOptions<TData, TError, TData>, 'queryKey' | 'queryFn'>
-) {
-  const measureKey = `query:${queryKey.join('.')}`;
-  const enhancedQueryFn = async () => {
-    startMeasure(measureKey);
+const useOptimizedData = <TData, TError = Error>({
+  queryKey,
+  queryFn,
+  options = {},
+  timeoutMs = 5000,
+  initialData,
+  measurementName,
+}: {
+  queryKey: string[];
+  queryFn: () => Promise<TData>;
+  options?: Omit<UseQueryOptions<TData, TError, TData>, 'queryKey' | 'queryFn'>;
+  timeoutMs?: number;
+  initialData?: TData;
+  measurementName?: string;
+}): UseQueryResult<TData, TError> => {
+  // Add performance measurement to query function
+  const wrappedQueryFn = useCallback(async () => {
+    if (measurementName) {
+      startMeasure(measurementName);
+    }
+    
     try {
-      const result = await queryFn();
+      const result = await Promise.race([
+        queryFn(),
+        new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Query timeout')), timeoutMs);
+        }),
+      ]);
+      
       return result;
     } finally {
-      endMeasure(measureKey);
+      if (measurementName) {
+        endMeasure(measurementName);
+      }
     }
-  };
-
-  // Track document visibility for smart refetching
-  const [isVisible, setIsVisible] = useState(!document.hidden);
+  }, [queryFn, timeoutMs, measurementName]);
   
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      setIsVisible(!document.hidden);
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
-
-  // Handle errors through meta or directly
-  const handleError = (error: TError) => {
-    console.error(`Query error for ${queryKey.join('.')}:`, error);
-    toast.error('Data loading error', {
-      description: (error as Error).message || 'Failed to load data',
-    });
-    
-    // Call custom error handler if provided
-    if (options?.meta?.errorHandler && typeof options.meta.errorHandler === 'function') {
-      options.meta.errorHandler(error);
+  // Create error handler method instead of using meta.onError
+  const handleError = (error: Error) => {
+    console.error(`Query error for ${queryKey.join('/')}:`, error);
+    // Additional error handling as needed
+  };
+  
+  // Define query options with proper error handling approach
+  const queryOptions: UseQueryOptions<TData, TError, TData> = {
+    ...options,
+    enabled: options.enabled !== undefined ? options.enabled : true,
+    staleTime: options.staleTime || 1000 * 60, // 1 minute by default
+    retry: options.retry !== undefined ? options.retry : 1,
+    meta: {
+      ...(options.meta || {}),
+      errorHandler: (error: Error) => {
+        handleError(error);
+        // Call the original error handler if provided
+        if (options.meta?.errorHandler) {
+          options.meta.errorHandler(error);
+        }
+      }
     }
   };
-
+  
+  if (initialData !== undefined) {
+    return useQuery({
+      queryKey,
+      queryFn: wrappedQueryFn,
+      initialData,
+      ...queryOptions,
+    }) as DefinedUseQueryResult<TData, TError>;
+  }
+  
   return useQuery({
     queryKey,
-    queryFn: enhancedQueryFn,
-    // Only refetch on window focus if the document is visible
-    refetchOnWindowFocus: isVisible,
-    // Spread the user-provided options
-    ...(options || {}),
-    // Fix: Use onError in meta instead of directly
-    onSettled: (data, error) => {
-      if (error) {
-        handleError(error as TError);
-      }
-      // Call the original onSettled if provided
-      if (options?.onSettled) {
-        options.onSettled(data, error as TError);
-      }
-    }
+    queryFn: wrappedQueryFn,
+    ...queryOptions,
   });
-}
+};
 
-/**
- * Custom hook for optimized data mutations that includes:
- * - Performance monitoring
- * - Automatic error handling
- * - Success messages
- */
-export function useOptimizedMutation<TData, TVariables, TError = Error, TContext = unknown>(
-  mutationFn: (variables: TVariables) => Promise<TData>,
-  options?: Omit<UseMutationOptions<TData, TError, TVariables, TContext>, 'mutationFn'>
-) {
-  const queryClient = useQueryClient();
-  const [operationId] = useState(() => Math.random().toString(36).substring(2, 9));
-  const measureKey = `mutation:${operationId}`;
-
-  const enhancedMutationFn = async (variables: TVariables) => {
-    startMeasure(measureKey);
-    try {
-      return await mutationFn(variables);
-    } finally {
-      endMeasure(measureKey);
-    }
-  };
-
-  // Handle errors directly
-  const handleError = (error: TError) => {
-    console.error('Mutation error:', error);
-    toast.error('Operation failed', {
-      description: (error as Error).message || 'Failed to complete operation',
-    });
-    
-    // Call custom error handler if provided
-    if (options?.meta?.errorHandler && typeof options.meta.errorHandler === 'function') {
-      options.meta.errorHandler(error);
-    }
-  };
-
-  return useMutation({
-    mutationFn: enhancedMutationFn,
-    // Spread the user-provided options
-    ...(options || {}),
-    // Fix: Use onError in the proper location
-    onError: (error) => {
-      handleError(error);
-      // Call original onError if provided
-      if (options?.onError) {
-        options.onError(error, {} as TVariables, {} as TContext);
-      }
-    }
-  });
-}
+export default useOptimizedData;

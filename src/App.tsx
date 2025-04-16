@@ -6,10 +6,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
+import { LanguageProvider } from "@/i18n";
 import AuthGuard from "@/components/AuthGuard";
 import React, { useEffect, lazy, Suspense } from 'react';
 import { logAuditEvent } from "./services/auditService";
 import { observeLongTasks, observeLayoutShifts } from "./utils/performanceMonitoring";
+import IntegratedAppExperience from "./components/IntegratedAppExperience";
 
 // Dynamic imports for code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -101,37 +103,40 @@ const App: React.FC = () => {
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <AuthProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/mfa-verify" element={<MfaVerify />} />
-                    <Route path="/access-denied" element={<AccessDenied />} />
-                    
-                    <Route path="/" element={<AuthGuard><Index /></AuthGuard>} />
-                    <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />
-                    <Route path="/industry" element={<AuthGuard requiredRoles={['analyst', 'manager', 'admin']} resourceType="industry"><Industry /></AuthGuard>} />
-                    <Route path="/planning" element={<AuthGuard requiredRoles={['manager', 'admin']} resourceType="planning"><Planning /></AuthGuard>} />
-                    <Route path="/goals" element={<AuthGuard resourceType="goal"><Goals /></AuthGuard>} />
-                    <Route path="/resources" element={<AuthGuard requiredRoles={['analyst', 'manager', 'admin']} resourceType="resource"><Resources /></AuthGuard>} />
-                    <Route path="/teams" element={<AuthGuard requiredRoles={['manager', 'admin']} resourceType="team"><Teams /></AuthGuard>} />
-                    <Route path="/settings" element={<AuthGuard resourceType="setting"><Settings /></AuthGuard>} />
-                    <Route path="/profile" element={<AuthGuard resourceType="user"><Profile /></AuthGuard>} />
-                    <Route path="/admin" element={<AuthGuard requiredRoles={['admin']} resourceType="admin" actionType="admin" requireMfa={true}><Admin /></AuthGuard>} />
-                    
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-              </BrowserRouter>
-            </TooltipProvider>
-          </AuthProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <Suspense fallback={<PageLoader />}>
+                    <IntegratedAppExperience />
+                    <Routes>
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/signup" element={<Signup />} />
+                      <Route path="/forgot-password" element={<ForgotPassword />} />
+                      <Route path="/reset-password" element={<ResetPassword />} />
+                      <Route path="/mfa-verify" element={<MfaVerify />} />
+                      <Route path="/access-denied" element={<AccessDenied />} />
+                      
+                      <Route path="/" element={<AuthGuard><Index /></AuthGuard>} />
+                      <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />
+                      <Route path="/industry" element={<AuthGuard requiredRoles={['analyst', 'manager', 'admin']} resourceType="industry"><Industry /></AuthGuard>} />
+                      <Route path="/planning" element={<AuthGuard requiredRoles={['manager', 'admin']} resourceType="planning"><Planning /></AuthGuard>} />
+                      <Route path="/goals" element={<AuthGuard resourceType="goal"><Goals /></AuthGuard>} />
+                      <Route path="/resources" element={<AuthGuard requiredRoles={['analyst', 'manager', 'admin']} resourceType="resource"><Resources /></AuthGuard>} />
+                      <Route path="/teams" element={<AuthGuard requiredRoles={['manager', 'admin']} resourceType="team"><Teams /></AuthGuard>} />
+                      <Route path="/settings" element={<AuthGuard resourceType="setting"><Settings /></AuthGuard>} />
+                      <Route path="/profile" element={<AuthGuard resourceType="user"><Profile /></AuthGuard>} />
+                      <Route path="/admin" element={<AuthGuard requiredRoles={['admin']} resourceType="admin" actionType="admin" requireMfa={true}><Admin /></AuthGuard>} />
+                      
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Suspense>
+                </BrowserRouter>
+              </TooltipProvider>
+            </AuthProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </React.StrictMode>

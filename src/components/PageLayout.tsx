@@ -14,6 +14,8 @@ import { useIsMountedRef } from '@/hooks/use-mounted-ref';
 import { Button } from '@/components/ui/button';
 import { Calendar, Download } from 'lucide-react';
 import ReportGenerator from './ReportGenerator';
+import ContextualHelp from './help/ContextualHelp';
+import { useLanguage } from '@/i18n';
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -23,6 +25,7 @@ interface PageLayoutProps {
   icon?: React.ReactNode;
   loading?: boolean;
   showExportOptions?: boolean;
+  helpText?: string;
 }
 
 const PageLayout: React.FC<PageLayoutProps> = ({ 
@@ -32,12 +35,14 @@ const PageLayout: React.FC<PageLayoutProps> = ({
   className, 
   icon,
   loading = false,
-  showExportOptions = false
+  showExportOptions = false,
+  helpText
 }) => {
   const isMobile = useIsMobile();
   const isMounted = useIsMountedRef();
   const [isPageLoading, setIsPageLoading] = React.useState(loading);
   const isConnected = isOnline();
+  const { t } = useLanguage();
   
   // Simulate data loading optimization for mobile
   useEffect(() => {
@@ -58,7 +63,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
       <Header />
       <Navigation />
       
-      <main className={cn(
+      <main id="main-content" className={cn(
         "flex-1 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8",
         // Add extra padding at the bottom on mobile for the navigation
         isMobile && "pb-20",
@@ -75,10 +80,15 @@ const PageLayout: React.FC<PageLayoutProps> = ({
                       isMobile ? "text-2xl" : "text-3xl"
                     )}>
                       {icon && <span className="mr-2">{icon}</span>}
-                      {title}
+                      {t(title) || title}
+                      {helpText && (
+                        <span className="ml-2">
+                          <ContextualHelp content={helpText} />
+                        </span>
+                      )}
                     </h1>
                   )}
-                  {subtitle && <p className="text-muted-foreground mt-1 text-sm sm:text-base">{subtitle}</p>}
+                  {subtitle && <p className="text-muted-foreground mt-1 text-sm sm:text-base">{t(subtitle) || subtitle}</p>}
                   
                   {!isConnected && (
                     <div className="mt-2 text-sm text-amber-600 dark:text-amber-400 flex items-center">
