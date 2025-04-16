@@ -60,8 +60,16 @@ export function useOptimizedQuery<TData, TError = Error>(
     refetchOnWindowFocus: isVisible,
     // Spread the user-provided options
     ...(options || {}),
-    // Set up the error handler
-    onError: handleError
+    // Fix: Use onError in meta instead of directly
+    onSettled: (data, error) => {
+      if (error) {
+        handleError(error as TError);
+      }
+      // Call the original onSettled if provided
+      if (options?.onSettled) {
+        options.onSettled(data, error as TError);
+      }
+    }
   });
 }
 
@@ -105,7 +113,13 @@ export function useOptimizedMutation<TData, TVariables, TError = Error, TContext
     mutationFn: enhancedMutationFn,
     // Spread the user-provided options
     ...(options || {}),
-    // Set up the error handler
-    onError: handleError
+    // Fix: Use onError in the proper location
+    onError: (error) => {
+      handleError(error);
+      // Call original onError if provided
+      if (options?.onError) {
+        options.onError(error, {} as TVariables, {} as TContext);
+      }
+    }
   });
 }

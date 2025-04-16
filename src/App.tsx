@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import AuthGuard from "@/components/AuthGuard";
 import React, { useEffect, lazy, Suspense } from 'react';
 import { logAuditEvent } from "./services/auditService";
+import { observeLongTasks, observeLayoutShifts } from "./utils/performanceMonitoring";
 
 // Dynamic imports for code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -87,31 +88,9 @@ const App: React.FC = () => {
     
     // Performance monitoring
     if ('performance' in window && 'PerformanceObserver' in window) {
-      // Create performance observer for layout shifts
-      const layoutShiftObserver = new PerformanceObserver((entryList) => {
-        for (const entry of entryList.getEntries()) {
-          // Using type assertion to access layout shift properties
-          const layoutShiftEntry = entry as any;
-          if (!layoutShiftEntry.hadRecentInput) {
-            console.warn('Layout shift detected:', entry);
-          }
-        }
-      });
-      
-      // Create performance observer for long tasks
-      const longTaskObserver = new PerformanceObserver((entryList) => {
-        for (const entry of entryList.getEntries()) {
-          console.warn('Long task detected:', entry.duration, 'ms', entry);
-        }
-      });
-      
-      // Register observers
-      try {
-        layoutShiftObserver.observe({ type: 'layout-shift', buffered: true });
-        longTaskObserver.observe({ type: 'longtask', buffered: true });
-      } catch (e) {
-        console.error('Performance observer error:', e);
-      }
+      // Set up observers for performance monitoring
+      observeLongTasks();
+      observeLayoutShifts();
     }
     
     window.addEventListener('beforeunload', handleUnload);

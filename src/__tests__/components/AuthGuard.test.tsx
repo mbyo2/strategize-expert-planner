@@ -18,7 +18,7 @@ vi.mock('@/services/auditService', () => ({
 
 describe('AuthGuard', () => {
   it('redirects to login when user is not authenticated', () => {
-    // Setup mock
+    // Setup mock with the required missing properties
     vi.spyOn(authHook, 'useAuth').mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
@@ -28,6 +28,16 @@ describe('AuthGuard', () => {
       logout: vi.fn(),
       signup: vi.fn(),
       updateProfile: vi.fn(),
+      // Add missing properties
+      getSecuritySettings: vi.fn().mockReturnValue({
+        mfaEnabled: false,
+        ipRestrictions: [],
+        sessionTimeoutMinutes: 30,
+        requireMfaForAdmin: true
+      }),
+      updateSecuritySettings: vi.fn(),
+      verifyMfa: vi.fn(),
+      setupMfa: vi.fn()
     });
     
     // Render component
@@ -52,7 +62,7 @@ describe('AuthGuard', () => {
   });
   
   it('renders children when user is authenticated', () => {
-    // Setup mock
+    // Setup mock with the required missing properties
     vi.spyOn(authHook, 'useAuth').mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
@@ -67,6 +77,16 @@ describe('AuthGuard', () => {
       logout: vi.fn(),
       signup: vi.fn(),
       updateProfile: vi.fn(),
+      // Add missing properties
+      getSecuritySettings: vi.fn().mockReturnValue({
+        mfaEnabled: false,
+        ipRestrictions: [],
+        sessionTimeoutMinutes: 30,
+        requireMfaForAdmin: true
+      }),
+      updateSecuritySettings: vi.fn(),
+      verifyMfa: vi.fn(),
+      setupMfa: vi.fn()
     });
     
     // Render component
@@ -83,7 +103,7 @@ describe('AuthGuard', () => {
   });
   
   it('renders access denied when user lacks required roles', () => {
-    // Setup mock with permission check that fails
+    // Setup mock with permission check that fails and required missing properties
     vi.spyOn(authHook, 'useAuth').mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
@@ -98,6 +118,16 @@ describe('AuthGuard', () => {
       logout: vi.fn(),
       signup: vi.fn(),
       updateProfile: vi.fn(),
+      // Add missing properties
+      getSecuritySettings: vi.fn().mockReturnValue({
+        mfaEnabled: false,
+        ipRestrictions: [],
+        sessionTimeoutMinutes: 30,
+        requireMfaForAdmin: true
+      }),
+      updateSecuritySettings: vi.fn(),
+      verifyMfa: vi.fn(),
+      setupMfa: vi.fn()
     });
     
     // Render with required roles

@@ -28,7 +28,7 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
-// Create proper IntersectionObserver mock
+// Create proper IntersectionObserver mock that meets the interface requirements
 class MockIntersectionObserver implements IntersectionObserver {
   readonly root: Element | Document | null = null;
   readonly rootMargin: string = '';
@@ -36,14 +36,14 @@ class MockIntersectionObserver implements IntersectionObserver {
   
   constructor(private callback: IntersectionObserverCallback) {}
   
-  observe() { return null; }
-  unobserve() { return null; }
-  disconnect() { return null; }
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
   takeRecords(): IntersectionObserverEntry[] { return []; }
 }
 
 // Set the global IntersectionObserver
-window.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
+window.IntersectionObserver = MockIntersectionObserver;
 
 // Suppress React error logging during tests
 const originalConsoleError = console.error;

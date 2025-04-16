@@ -1,3 +1,4 @@
+
 import { http, HttpResponse } from 'msw';
 
 export const handlers = [
@@ -37,6 +38,33 @@ export const handlers = [
         { status: 400 }
       );
     }
+  }),
+
+  // Mock endpoint for profiles
+  http.get('*/rest/v1/profiles', () => {
+    return HttpResponse.json([
+      {
+        id: '123',
+        name: 'Test User',
+        email: 'test@example.com',
+        role: 'admin',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    ]);
+  }),
+
+  // Mock endpoint for user_roles
+  http.get('*/rest/v1/user_roles', () => {
+    return HttpResponse.json([
+      {
+        id: '456',
+        user_id: '123',
+        role: 'admin',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    ]);
   }),
 
   // Other handlers can be added here
