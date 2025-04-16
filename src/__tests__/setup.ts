@@ -28,7 +28,7 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
-// Properly mock IntersectionObserver with required properties
+// Create proper IntersectionObserver mock
 class MockIntersectionObserver implements IntersectionObserver {
   readonly root: Element | Document | null = null;
   readonly rootMargin: string = '';
@@ -43,11 +43,7 @@ class MockIntersectionObserver implements IntersectionObserver {
 }
 
 // Set the global IntersectionObserver
-Object.defineProperty(window, 'IntersectionObserver', {
-  writable: true,
-  configurable: true,
-  value: MockIntersectionObserver
-});
+window.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
 
 // Suppress React error logging during tests
 const originalConsoleError = console.error;

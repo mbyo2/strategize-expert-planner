@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 import { logAuditEvent } from '@/services/auditService';
+import { sanitizeData } from '@/services/auditService';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -23,19 +24,40 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const [isMfaRequired, setIsMfaRequired] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
   const [isProcessingMfa, setIsProcessingMfa] = useState(false);
   const [loginData, setLoginData] = useState<LoginFormValues | null>(null);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [lockedUntil, setLockedUntil] = useState<Date | null>(null);
+  
+  // Check if there's a session expiry message in the location state
+  useEffect(() => {
+    if (location.state?.sessionExpired) {
+      toast.warning("Session Expired", {
+        description: "Your session has expired. Please log in again.",
+      });
+      
+      // Clean up the location state
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
   
   // Redirect to home or intended page if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       const from = location.state?.from?.pathname || '/';
+      
+      // If the user needs MFA, redirect to MFA verification
+      if (user?.mfaEnabled && !user?.mfaVerified) {
+        navigate('/mfa-verify', { state: { from } });
+        return;
+      }
+      
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate, location]);
+  }, [isAuthenticated, navigate, location, user]);
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -46,26 +68,63 @@ const Login = () => {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
+    // Check if account is locked
+    if (lockedUntil && new Date() < lockedUntil) {
+      const remainingMinutes = Math.ceil(
+        (lockedUntil.getTime() - new Date().getTime()) / (1000 * 60)
+      );
+      
+      toast.error("Account Locked", {
+        description: `Too many failed attempts. Try again in ${remainingMinutes} minutes.`,
+      });
+      
+      // Log locked account attempt
+      logAuditEvent({
+        action: 'login',
+        resource: 'user',
+        description: 'Login attempt on locked account',
+        metadata: { email: sanitizeData(data.email) },
+        severity: 'high'
+      });
+      
+      return;
+    }
+    
     try {
       // Store login data for MFA verification
       setLoginData(data);
       
-      // Normally we would check if MFA is required for this user
-      // For this example, we'll simulate MFA being required 50% of the time
-      const requireMfa = Math.random() > 0.5;
+      // Check if user has MFA enabled
+      const { data: mfaData } = await supabase.auth.getUser();
+      const mfaEnabled = mfaData?.user?.user_metadata?.mfa_enabled;
       
-      if (requireMfa) {
+      if (mfaEnabled) {
         setIsMfaRequired(true);
-        // In a real app, we would send a verification code to the user's email/phone
+        
+        // Send OTP code to the user's email
+        // In a real app, we would do this on the backend
         toast("Verification code sent", {
           description: "Please check your email for the verification code.",
           icon: <MailCheck className="h-4 w-4" />
         });
+        
+        // Log MFA request
+        logAuditEvent({
+          action: 'mfa_verify',
+          resource: 'user',
+          description: 'MFA verification requested during login',
+          metadata: { email: sanitizeData(data.email) },
+          severity: 'medium'
+        });
+        
         return;
       }
       
       // Regular login flow without MFA
       await login(data.email, data.password);
+      
+      // Reset login attempts on success
+      setLoginAttempts(0);
       
       // Check if email is verified
       const { data: { user } } = await supabase.auth.getUser();
@@ -95,17 +154,48 @@ const Login = () => {
       navigate(from, { replace: true });
     } catch (error: any) {
       console.error("Login error:", error);
-      toast("Login failed", {
-        description: error.message || "Invalid email or password. Please try again.",
-        style: { backgroundColor: 'red', color: 'white' }
-      });
+      
+      // Increment login attempts
+      const newAttempts = loginAttempts + 1;
+      setLoginAttempts(newAttempts);
+      
+      // Lock account after 5 failed attempts
+      if (newAttempts >= 5) {
+        const lockTime = new Date();
+        lockTime.setMinutes(lockTime.getMinutes() + 15); // Lock for 15 minutes
+        setLockedUntil(lockTime);
+        
+        toast.error("Account Locked", {
+          description: "Too many failed attempts. Try again in 15 minutes.",
+        });
+        
+        // Log account lock
+        logAuditEvent({
+          action: 'login',
+          resource: 'user',
+          description: 'Account locked due to too many failed login attempts',
+          metadata: { 
+            email: sanitizeData(data.email),
+            attemptsCount: newAttempts,
+            lockedUntil: lockTime.toISOString()
+          },
+          severity: 'high'
+        });
+      } else {
+        toast.error("Login failed", {
+          description: error.message || "Invalid email or password. Please try again.",
+        });
+      }
       
       // Log the failed login
       logAuditEvent({
         action: 'login',
         resource: 'user',
         description: 'Failed login attempt',
-        metadata: { error: error.message },
+        metadata: { 
+          error: error.message,
+          attemptsCount: newAttempts
+        },
         severity: 'medium'
       });
     }
@@ -148,9 +238,8 @@ const Login = () => {
       navigate(from, { replace: true });
     } catch (error: any) {
       console.error("MFA verification error:", error);
-      toast("Verification failed", {
+      toast.error("Verification failed", {
         description: error.message || "Invalid verification code. Please try again.",
-        style: { backgroundColor: 'red', color: 'white' }
       });
       
       // Log the failed MFA attempt
@@ -214,7 +303,7 @@ const Login = () => {
                 </Link>
               </div>
 
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting || (lockedUntil && new Date() < lockedUntil)}>
                 {form.formState.isSubmitting ? (
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -227,6 +316,12 @@ const Login = () => {
                   </span>
                 )}
               </Button>
+              
+              {lockedUntil && new Date() < lockedUntil && (
+                <p className="text-sm text-destructive text-center">
+                  Account locked until {lockedUntil.toLocaleTimeString()} due to too many failed attempts.
+                </p>
+              )}
             </form>
           </Form>
         ) : (

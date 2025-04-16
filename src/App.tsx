@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,6 +24,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const MfaVerify = lazy(() => import("./pages/MfaVerify"));
 const AccessDenied = lazy(() => import("./pages/AccessDenied"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Analytics = lazy(() => import("./pages/Analytics"));
@@ -89,7 +91,7 @@ const App: React.FC = () => {
       const layoutShiftObserver = new PerformanceObserver((entryList) => {
         for (const entry of entryList.getEntries()) {
           // Using type assertion to access layout shift properties
-          const layoutShiftEntry = entry as unknown as { hadRecentInput?: boolean };
+          const layoutShiftEntry = entry as any;
           if (!layoutShiftEntry.hadRecentInput) {
             console.warn('Layout shift detected:', entry);
           }
@@ -131,6 +133,7 @@ const App: React.FC = () => {
                     <Route path="/signup" element={<Signup />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/mfa-verify" element={<MfaVerify />} />
                     <Route path="/access-denied" element={<AccessDenied />} />
                     
                     <Route path="/" element={<AuthGuard><Index /></AuthGuard>} />
@@ -142,7 +145,7 @@ const App: React.FC = () => {
                     <Route path="/teams" element={<AuthGuard requiredRoles={['manager', 'admin']} resourceType="team"><Teams /></AuthGuard>} />
                     <Route path="/settings" element={<AuthGuard resourceType="setting"><Settings /></AuthGuard>} />
                     <Route path="/profile" element={<AuthGuard resourceType="user"><Profile /></AuthGuard>} />
-                    <Route path="/admin" element={<AuthGuard requiredRoles={['admin']} resourceType="admin" actionType="admin"><Admin /></AuthGuard>} />
+                    <Route path="/admin" element={<AuthGuard requiredRoles={['admin']} resourceType="admin" actionType="admin" requireMfa={true}><Admin /></AuthGuard>} />
                     
                     <Route path="*" element={<NotFound />} />
                   </Routes>

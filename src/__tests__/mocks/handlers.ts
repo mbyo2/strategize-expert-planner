@@ -1,38 +1,43 @@
-
 import { http, HttpResponse } from 'msw';
 
-// Define handlers for mock API responses
 export const handlers = [
-  // Mock API response for fetching strategic goals
-  http.get('/api/goals', () => {
-    return HttpResponse.json([
-      { id: '1', title: 'Increase market share', progress: 75, status: 'in_progress' },
-      { id: '2', title: 'Reduce operational costs', progress: 40, status: 'in_progress' },
-      { id: '3', title: 'Launch new product line', progress: 10, status: 'planning' }
-    ]);
-  }),
-  
-  // Mock API response for authentication
-  http.post('/api/auth/login', async ({ request }) => {
-    const { email, password } = await request.json();
-    
-    if (email === 'test@example.com' && password === 'password') {
-      return HttpResponse.json({
-        user: {
-          id: '123',
-          email: 'test@example.com',
-          name: 'Test User',
-          role: 'manager'
-        },
-        token: 'fake-jwt-token'
-      });
+  // Mock authentication endpoints
+  http.post('*/auth/v1/token', async ({ request }) => {
+    try {
+      // Parse the request body
+      const requestBody = await request.json();
+      
+      // Type assertion for the request body
+      const { email, password } = requestBody as { 
+        email: string; 
+        password: string; 
+        grant_type?: string; 
+      };
+
+      // Simple validation
+      if (email === 'test@example.com' && password === 'password123') {
+        return HttpResponse.json({
+          access_token: 'mocked-access-token',
+          refresh_token: 'mocked-refresh-token',
+          user: {
+            id: '123',
+            email: 'test@example.com',
+            user_metadata: { name: 'Test User' }
+          }
+        });
+      }
+      
+      return new HttpResponse(
+        JSON.stringify({ error: 'Invalid credentials' }),
+        { status: 401 }
+      );
+    } catch (e) {
+      return new HttpResponse(
+        JSON.stringify({ error: 'Bad request' }),
+        { status: 400 }
+      );
     }
-    
-    return new HttpResponse(
-      JSON.stringify({ error: 'Invalid credentials' }),
-      { status: 401 }
-    );
   }),
-  
-  // Add more mock API handlers as needed
+
+  // Other handlers can be added here
 ];

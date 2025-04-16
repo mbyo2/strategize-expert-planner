@@ -3,6 +3,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
+import { logAuditEvent } from '@/services/auditService';
 
 // Define user roles
 export type UserRole = 'admin' | 'manager' | 'analyst' | 'viewer';
@@ -18,6 +19,10 @@ export interface User {
   department?: string;
   company?: string;
   bio?: string;
+  mfaEnabled?: boolean;
+  mfaVerified?: boolean; // Track if MFA was verified for this session
+  lastActive?: string;
+  ipRestrictions?: string[];
 }
 
 // Profile update interface
@@ -29,6 +34,15 @@ export interface ProfileUpdate {
   department?: string;
   company?: string;
   bio?: string;
+  mfaEnabled?: boolean;
+}
+
+// Security settings interface
+export interface SecuritySettings {
+  mfaEnabled: boolean;
+  ipRestrictions: string[];
+  sessionTimeoutMinutes: number;
+  requireMfaForAdmin: boolean;
 }
 
 // Auth context interface
@@ -41,10 +55,22 @@ interface AuthContextType {
   logout: () => void;
   hasPermission: (requiredRoles: UserRole[]) => boolean;
   updateProfile: (profileData: ProfileUpdate) => void;
+  getSecuritySettings: () => SecuritySettings;
+  updateSecuritySettings: (settings: Partial<SecuritySettings>) => Promise<void>;
+  verifyMfa: (code: string) => Promise<boolean>;
+  setupMfa: () => Promise<string>; // Returns MFA setup code or URL
 }
 
 // Role hierarchy (higher index = more permissions)
 const roleHierarchy: UserRole[] = ['viewer', 'analyst', 'manager', 'admin'];
+
+// Default security settings
+const defaultSecuritySettings: SecuritySettings = {
+  mfaEnabled: false,
+  ipRestrictions: [],
+  sessionTimeoutMinutes: 30,
+  requireMfaForAdmin: true
+};
 
 // Create the auth context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,9 +78,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Auth provider component
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [authUser, setAuthUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [securitySettings, setSecuritySettings] = useState<SecuritySettings>(defaultSecuritySettings);
   const { toast } = useToast();
 
   // Check if user is logged in on initial load
@@ -115,6 +141,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       const role = roleData?.role as UserRole || 'viewer';
       
+      // Get security settings
+      const { data: securityData, error: securityError } = await supabase
+        .from('user_security')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      // Update user's last active timestamp
+      const now = new Date().toISOString();
+      await supabase
+        .from('profiles')
+        .update({ last_active: now })
+        .eq('id', userId);
+        
+      // Update user activity for audit
+      logAuditEvent({
+        action: 'login',
+        resource: 'user',
+        resourceId: userId,
+        description: 'User session refreshed',
+        userId: userId,
+        severity: 'low',
+      });
+      
+      // Parse security settings or use defaults
+      let userSecuritySettings = defaultSecuritySettings;
+      if (securityData) {
+        userSecuritySettings = {
+          mfaEnabled: securityData.mfa_enabled || false,
+          ipRestrictions: securityData.ip_restrictions || [],
+          sessionTimeoutMinutes: securityData.session_timeout_minutes || 30,
+          requireMfaForAdmin: securityData.require_mfa_for_admin || true
+        };
+      }
+      
+      setSecuritySettings(userSecuritySettings);
+      
       // Combine profile and role data
       const userData: User = {
         id: userId,
@@ -125,7 +188,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         jobTitle: profile?.job_title,
         department: profile?.department,
         company: profile?.company,
-        bio: profile?.bio
+        bio: profile?.bio,
+        mfaEnabled: userSecuritySettings.mfaEnabled,
+        mfaVerified: false, // Always false on initial load, requires verification
+        lastActive: now,
+        ipRestrictions: userSecuritySettings.ipRestrictions
       };
       
       setUser(userData);
@@ -139,7 +206,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           name: session.user.user_metadata.name || session.user.email?.split('@')[0] || 'New User',
           email: session.user.email || '',
           role: 'viewer',
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.email}`
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.email}`,
+          mfaEnabled: false,
+          mfaVerified: false
         };
         setUser(defaultUser);
       }
@@ -158,11 +227,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       if (error) throw error;
       
+      // Log successful login
+      logAuditEvent({
+        action: 'login',
+        resource: 'user',
+        description: `User logged in: ${email}`,
+        severity: 'medium',
+      });
+      
       toast({
         title: "Login successful",
         description: "Welcome back!",
       });
     } catch (error: any) {
+      // Log failed login
+      logAuditEvent({
+        action: 'login',
+        resource: 'user',
+        description: `Failed login attempt: ${email}`,
+        severity: 'high',
+        metadata: { error: error.message }
+      });
+      
       toast({
         variant: "destructive",
         title: "Login failed",
@@ -189,11 +275,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       if (error) throw error;
       
+      // Log successful signup
+      logAuditEvent({
+        action: 'create',
+        resource: 'user',
+        description: `New user signed up: ${email}`,
+        severity: 'medium',
+      });
+      
       toast({
         title: "Account created",
         description: "Your account has been created successfully.",
       });
     } catch (error: any) {
+      // Log failed signup
+      logAuditEvent({
+        action: 'create',
+        resource: 'user',
+        description: `Failed signup attempt: ${email}`,
+        severity: 'medium',
+        metadata: { error: error.message }
+      });
+      
       toast({
         variant: "destructive",
         title: "Signup failed",
@@ -207,9 +310,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     try {
+      const userId = user?.id;
+      
       await supabase.auth.signOut();
       setUser(null);
       setSession(null);
+      
+      // Log logout for audit
+      if (userId) {
+        logAuditEvent({
+          action: 'logout',
+          resource: 'user',
+          resourceId: userId,
+          description: 'User logged out',
+          userId: userId,
+          severity: 'low',
+        });
+      }
+      
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
@@ -251,8 +369,44 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       if (error) throw error;
       
+      // If MFA setting is being changed
+      if (profileData.mfaEnabled !== undefined && profileData.mfaEnabled !== user.mfaEnabled) {
+        // In a real app, we would update the user_security table
+        // For this example, we'll just update the local state
+        
+        // Log MFA setting change
+        logAuditEvent({
+          action: 'settings_change',
+          resource: 'security_setting',
+          resourceId: user.id,
+          description: `User ${profileData.mfaEnabled ? 'enabled' : 'disabled'} MFA`,
+          userId: user.id,
+          severity: 'high',
+          metadata: { setting: 'mfa_enabled', value: profileData.mfaEnabled }
+        });
+        
+        setSecuritySettings({
+          ...securitySettings,
+          mfaEnabled: profileData.mfaEnabled
+        });
+      }
+      
       // Update local state
-      setUser({ ...user, ...profileData });
+      setUser({ 
+        ...user, 
+        ...profileData,
+        mfaEnabled: profileData.mfaEnabled !== undefined ? profileData.mfaEnabled : user.mfaEnabled 
+      });
+      
+      // Log profile update
+      logAuditEvent({
+        action: 'update',
+        resource: 'user',
+        resourceId: user.id,
+        description: 'User profile updated',
+        userId: user.id,
+        severity: 'medium',
+      });
       
       toast({
         title: "Profile updated",
@@ -265,6 +419,143 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         title: "Update failed",
         description: "Failed to update profile. Please try again.",
       });
+    }
+  };
+
+  // Get user security settings
+  const getSecuritySettings = () => {
+    return securitySettings;
+  };
+
+  // Update security settings
+  const updateSecuritySettings = async (settings: Partial<SecuritySettings>) => {
+    if (!user) return;
+    
+    try {
+      const updatedSettings = {
+        ...securitySettings,
+        ...settings
+      };
+      
+      // In a real app, we would update the user_security table
+      // For this example, we'll just update the local state
+      setSecuritySettings(updatedSettings);
+      
+      // If MFA setting is being changed
+      if (settings.mfaEnabled !== undefined && settings.mfaEnabled !== user.mfaEnabled) {
+        setUser({
+          ...user,
+          mfaEnabled: settings.mfaEnabled
+        });
+      }
+      
+      // Log security settings update
+      logAuditEvent({
+        action: 'settings_change',
+        resource: 'security_setting',
+        resourceId: user.id,
+        description: 'Security settings updated',
+        userId: user.id,
+        severity: 'high',
+        metadata: { settings }
+      });
+      
+      toast({
+        title: "Security settings updated",
+        description: "Your security settings have been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Error updating security settings:', error);
+      toast({
+        variant: "destructive",
+        title: "Update failed",
+        description: "Failed to update security settings. Please try again.",
+      });
+      throw error;
+    }
+  };
+
+  // Verify MFA code
+  const verifyMfa = async (code: string): Promise<boolean> => {
+    if (!user) return false;
+    
+    try {
+      // In a real app, we would verify the code with a backend service
+      // For this example, we'll accept "123456" as a valid code
+      const isValid = code === "123456";
+      
+      if (isValid) {
+        // Update user state to mark MFA as verified for this session
+        setUser({
+          ...user,
+          mfaVerified: true
+        });
+        
+        // Log successful MFA verification
+        logAuditEvent({
+          action: 'mfa_verify',
+          resource: 'user',
+          resourceId: user.id,
+          description: 'MFA verification successful',
+          userId: user.id,
+          severity: 'medium',
+        });
+        
+        return true;
+      } else {
+        // Log failed MFA verification
+        logAuditEvent({
+          action: 'mfa_verify',
+          resource: 'user',
+          resourceId: user.id,
+          description: 'MFA verification failed',
+          userId: user.id,
+          severity: 'high',
+        });
+        
+        return false;
+      }
+    } catch (error) {
+      console.error('Error verifying MFA:', error);
+      return false;
+    }
+  };
+
+  // Setup MFA for user
+  const setupMfa = async (): Promise<string> => {
+    if (!user) return '';
+    
+    try {
+      // In a real app, we would generate a TOTP secret and QR code URL
+      // For this example, we'll just return a mock setup code
+      const mockSetupUrl = `otpauth://totp/Intantiko:${user.email}?secret=JBSWY3DPEHPK3PXP&issuer=Intantiko`;
+      
+      // Update user state to enable MFA
+      setUser({
+        ...user,
+        mfaEnabled: true
+      });
+      
+      // Update security settings
+      setSecuritySettings({
+        ...securitySettings,
+        mfaEnabled: true
+      });
+      
+      // Log MFA setup
+      logAuditEvent({
+        action: 'mfa_setup',
+        resource: 'user',
+        resourceId: user.id,
+        description: 'MFA setup initiated',
+        userId: user.id,
+        severity: 'high',
+      });
+      
+      return mockSetupUrl;
+    } catch (error) {
+      console.error('Error setting up MFA:', error);
+      return '';
     }
   };
 
@@ -290,6 +581,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     logout,
     hasPermission,
     updateProfile,
+    getSecuritySettings,
+    updateSecuritySettings,
+    verifyMfa,
+    setupMfa
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -21,10 +21,12 @@ describe('AuthGuard', () => {
     // Setup mock
     vi.spyOn(authHook, 'useAuth').mockReturnValue({
       isAuthenticated: false,
+      isLoading: false,
       user: null,
       hasPermission: () => false,
       login: vi.fn(),
       logout: vi.fn(),
+      signup: vi.fn(),
       updateProfile: vi.fn(),
     });
     
@@ -53,10 +55,17 @@ describe('AuthGuard', () => {
     // Setup mock
     vi.spyOn(authHook, 'useAuth').mockReturnValue({
       isAuthenticated: true,
-      user: { id: '123', email: 'test@example.com', role: 'viewer' },
+      isLoading: false,
+      user: { 
+        id: '123', 
+        name: 'Test User', 
+        email: 'test@example.com', 
+        role: 'viewer' 
+      },
       hasPermission: () => true,
       login: vi.fn(),
       logout: vi.fn(),
+      signup: vi.fn(),
       updateProfile: vi.fn(),
     });
     
@@ -77,10 +86,17 @@ describe('AuthGuard', () => {
     // Setup mock with permission check that fails
     vi.spyOn(authHook, 'useAuth').mockReturnValue({
       isAuthenticated: true,
-      user: { id: '123', email: 'test@example.com', role: 'viewer' },
+      isLoading: false,
+      user: { 
+        id: '123', 
+        name: 'Test User', 
+        email: 'test@example.com', 
+        role: 'viewer' 
+      },
       hasPermission: () => false, // This will make the role check fail
       login: vi.fn(),
       logout: vi.fn(),
+      signup: vi.fn(),
       updateProfile: vi.fn(),
     });
     

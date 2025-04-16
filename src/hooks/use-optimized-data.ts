@@ -40,17 +40,16 @@ export function useOptimizedQuery<TData, TError = Error>(
     };
   }, []);
 
-  // Create proper meta object with errorHandler
-  const metaWithErrorHandler = {
-    ...(options?.meta || {}),
-    errorHandler: (error: TError) => {
-      console.error(`Query error for ${queryKey.join('.')}:`, error);
-      toast.error('Data loading error', {
-        description: (error as Error).message || 'Failed to load data',
-      });
-      if (options?.meta?.errorHandler) {
-        options.meta.errorHandler(error);
-      }
+  // Handle errors through meta or directly
+  const handleError = (error: TError) => {
+    console.error(`Query error for ${queryKey.join('.')}:`, error);
+    toast.error('Data loading error', {
+      description: (error as Error).message || 'Failed to load data',
+    });
+    
+    // Call custom error handler if provided
+    if (options?.meta?.errorHandler && typeof options.meta.errorHandler === 'function') {
+      options.meta.errorHandler(error);
     }
   };
 
@@ -59,9 +58,10 @@ export function useOptimizedQuery<TData, TError = Error>(
     queryFn: enhancedQueryFn,
     // Only refetch on window focus if the document is visible
     refetchOnWindowFocus: isVisible,
-    // Merge in custom options and meta
+    // Spread the user-provided options
     ...(options || {}),
-    meta: metaWithErrorHandler
+    // Set up the error handler
+    onError: handleError
   });
 }
 
@@ -88,25 +88,24 @@ export function useOptimizedMutation<TData, TVariables, TError = Error, TContext
     }
   };
 
-  // Create proper meta object with errorHandler
-  const metaWithErrorHandler = {
-    ...(options?.meta || {}),
-    errorHandler: (error: TError) => {
-      console.error('Mutation error:', error);
-      toast.error('Operation failed', {
-        description: (error as Error).message || 'Failed to complete operation',
-      });
-      if (options?.meta?.errorHandler) {
-        options.meta.errorHandler(error);
-      }
+  // Handle errors directly
+  const handleError = (error: TError) => {
+    console.error('Mutation error:', error);
+    toast.error('Operation failed', {
+      description: (error as Error).message || 'Failed to complete operation',
+    });
+    
+    // Call custom error handler if provided
+    if (options?.meta?.errorHandler && typeof options.meta.errorHandler === 'function') {
+      options.meta.errorHandler(error);
     }
   };
 
   return useMutation({
     mutationFn: enhancedMutationFn,
-    // Combine with user options
+    // Spread the user-provided options
     ...(options || {}),
-    // Use our enhanced meta
-    meta: metaWithErrorHandler
+    // Set up the error handler
+    onError: handleError
   });
 }
