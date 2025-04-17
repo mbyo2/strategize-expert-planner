@@ -2,166 +2,99 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
- 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215 16% 47%;
- 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
- 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
- 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
- 
-    --primary: 214 80% 51%;
-    --primary-foreground: 210 40% 98%;
- 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47% 11%;
- 
-    --accent: 216 79% 67%;
-    --accent-foreground: 210 40% 98%;
- 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
- 
-    --ring: 215 20% 65%;
- 
-    --radius: 0.5rem;
-  }
- 
-  .dark {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
- 
-    --muted: 223 47% 11%;
-    --muted-foreground: 215 16% 57%;
- 
-    --popover: 224 71% 4%;
-    --popover-foreground: 215 20% 65%;
- 
-    --card: 224 71% 4%;
-    --card-foreground: 213 31% 91%;
- 
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
- 
-    --primary: 214 80% 56%;
-    --primary-foreground: 0 0% 100%;
- 
-    --secondary: 222 47% 11%;
-    --secondary-foreground: 210 40% 98%;
- 
-    --accent: 216 70% 60%;
-    --accent-foreground: 210 40% 98%;
- 
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
- 
-    --ring: 216 34% 17%;
- 
-    --radius: 0.5rem;
-  }
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 224 71.4% 4.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 224 71.4% 4.1%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 71.4% 4.1%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 20% 98%;
+  --secondary: 220 14.3% 95.9%;
+  --secondary-foreground: 220.9 39.3% 11%;
+  --muted: 220 14.3% 95.9%;
+  --muted-foreground: 220 8.9% 46.1%;
+  --accent: 220 14.3% 95.9%;
+  --accent-foreground: 220.9 39.3% 11%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 224 71.4% 4.1%;
+  --radius: 0.5rem;
 }
- 
-@layer base {
-  * {
-    @apply border-border;
+
+.dark {
+  --background: 224 71.4% 4.1%;
+  --foreground: 210 20% 98%;
+  --card: 224 71.4% 4.1%;
+  --card-foreground: 210 20% 98%;
+  --popover: 224 71.4% 4.1%;
+  --popover-foreground: 210 20% 98%;
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 210 20% 98%;
+  --secondary: 215 27.9% 16.9%;
+  --secondary-foreground: 210 20% 98%;
+  --muted: 215 27.9% 16.9%;
+  --muted-foreground: 217.9 10.6% 64.9%;
+  --accent: 215 27.9% 16.9%;
+  --accent-foreground: 210 20% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 215 27.9% 16.9%;
+  --input: 215 27.9% 16.9%;
+  --ring: 216 34% 17%;
+}
+
+/* Adding sensible default focus styles for better accessibility */
+*:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Adding smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Improving readability with proper spacing */
+p, h1, h2, h3, h4, h5, h6 {
+  margin-bottom: 0.5rem;
+}
+
+/* Adding a print stylesheet for better printing */
+@media print {
+  .no-print {
+    display: none !important;
   }
+  
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-size: 12pt;
+    color: #000;
+    background-color: #fff;
+  }
+  
+  a::after {
+    content: " (" attr(href) ")";
+    font-size: 90%;
+    color: #333;
   }
 }
 
-@layer components {
-  .hover-lift {
-    @apply transition-all duration-300 hover:shadow-md hover:-translate-y-1;
+/* Adding mobile-friendly improvements */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
   }
   
-  .shadow-subtle {
-    @apply shadow-sm hover:shadow-md transition-shadow duration-300;
-  }
-  
-  .bg-sidebar {
-    @apply bg-background dark:bg-background/95;
-  }
-
-  .banking-gradient {
-    @apply bg-gradient-to-r from-primary/90 to-accent/80;
-  }
-
-  .banking-card {
-    @apply rounded-lg border border-border/40 shadow-lg hover:shadow-xl transition-shadow duration-300;
-  }
-
-  .glass-effect {
-    @apply backdrop-blur-sm bg-white/80 dark:bg-black/30;
-  }
-  
-  /* Responsive utilities */
-  .responsive-container {
-    @apply w-full px-4 sm:px-6 lg:px-8 mx-auto max-w-7xl;
-  }
-  
-  .responsive-grid {
-    @apply grid gap-4 sm:gap-6 md:gap-8;
-  }
-  
-  .responsive-grid-cols-1 {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6;
-  }
-  
-  .responsive-grid-cols-2 {
-    @apply grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6;
-  }
-  
-  .responsive-padding {
-    @apply p-4 sm:p-6 md:p-8;
-  }
-  
-  .responsive-text {
-    @apply text-base sm:text-lg md:text-xl;
-  }
-  
-  .responsive-heading {
-    @apply text-xl sm:text-2xl md:text-3xl font-bold;
+  .hide-on-mobile {
+    display: none !important;
   }
 }
 
-@layer utilities {
-  .animate-fade-in {
-    animation: fade-in 0.5s ease-in-out;
-  }
-
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  /* Responsive padding utilities */
-  .p-responsive {
-    @apply p-4 sm:p-6 lg:p-8;
-  }
-  
-  .px-responsive {
-    @apply px-4 sm:px-6 lg:px-8;
-  }
-  
-  .py-responsive {
-    @apply py-4 sm:py-6 lg:py-8;
-  }
+/* Remove the ugly blue highlight on mobile taps */
+* {
+  -webkit-tap-highlight-color: transparent;
 }

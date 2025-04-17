@@ -10,7 +10,7 @@ interface OrganizationsContextType {
   currentOrganization: Organization | null;
   isLoading: boolean;
   createOrganization: (organization: Omit<Organization, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
-  updateOrganization: (id: string, updates: Partial<Omit<Organization, 'id' | 'created_at' | 'updated_at'>>) => Promise<void>;
+  updateOrganization: (id: string, updates: Partial<Organization>) => Promise<void>;
   deleteOrganization: (id: string) => Promise<void>;
   switchOrganization: (id: string) => Promise<void>;
   updateOrganizationSettings: (id: string, settings: Partial<OrganizationSettings>) => Promise<void>;
@@ -215,17 +215,12 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
     }
   };
 
-  const updateOrganization = async (id: string, updates: Partial<Omit<Organization, 'id' | 'created_at' | 'updated_at'>>) => {
+  const updateOrganization = async (id: string, updates: Partial<Organization>) => {
     try {
       const { error } = await supabase
         .from('organizations')
         .update({
-          name: updates.name,
-          description: updates.description,
-          logo_url: updates.logo_url,
-          website: updates.website,
-          industry: updates.industry,
-          size: updates.size,
+          ...(updates as Record<string, any>),
           updated_at: new Date().toISOString()
         })
         .eq('id', id);

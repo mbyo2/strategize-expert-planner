@@ -1,146 +1,131 @@
-
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/sonner';
+import { AuthProvider } from '@/hooks/useAuth';
 import { ThemeProvider } from "@/hooks/useTheme";
-import { LanguageProvider } from "@/i18n";
-import AuthGuard from "@/components/AuthGuard";
-import React, { useEffect, lazy, Suspense } from 'react';
-import { logAuditEvent } from "./services/auditService";
-import { observeLongTasks, observeLayoutShifts } from "./utils/performanceMonitoring";
-import IntegratedAppExperience from "./components/IntegratedAppExperience";
+import { LanguageProvider } from "@/i18n/LanguageProvider";
+import Index from './pages/Index';
+import Goals from './pages/Goals';
+import Industry from './pages/Industry';
+import Planning from './pages/Planning';
+import Settings from './pages/Settings';
+import Teams from './pages/Teams';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import Profile from './pages/Profile';
+import NotFound from './pages/NotFound';
+import AccessDenied from './pages/AccessDenied';
+import OrganizationManagement from './pages/OrganizationManagement';
+import Analytics from './pages/Analytics';
+import MfaVerify from './pages/MfaVerify';
+import Admin from './pages/Admin';
+import { useRealTimeUpdates } from '@/hooks/useRealTimeUpdates';
+import { logAuditEvent } from '@/services/auditService';
+import SEO from '@/components/SEO';
 
-// Dynamic imports for code splitting
-const Index = lazy(() => import("./pages/Index"));
-const Industry = lazy(() => import("./pages/Industry"));
-const Planning = lazy(() => import("./pages/Planning"));
-const Goals = lazy(() => import("./pages/Goals"));
-const Resources = lazy(() => import("./pages/Resources"));
-const Settings = lazy(() => import("./pages/Settings"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Teams = lazy(() => import("./pages/Teams"));
-const Admin = lazy(() => import("./pages/Admin"));
-const Login = lazy(() => import("./pages/Login"));
-const Signup = lazy(() => import("./pages/Signup"));
-const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const MfaVerify = lazy(() => import("./pages/MfaVerify"));
-const AccessDenied = lazy(() => import("./pages/AccessDenied"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const Analytics = lazy(() => import("./pages/Analytics"));
-
-// Create a QueryClient with optimized settings for better performance
+// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Optimize aggressive refetching behavior for better performance
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 30, // 30 minutes (formerly cacheTime)
+      refetchOnWindowFocus: false,
       retry: 1,
-      // Modern error handling approach for React Query v5+
-      meta: {
-        errorHandler: (error: Error) => {
-          console.error("Query error:", error);
-        }
-      }
-    },
-    mutations: {
-      // Modern error handling approach for React Query v5+
-      meta: {
-        errorHandler: (error: Error) => {
-          console.error("Mutation error:", error);
-        }
-      }
+      staleTime: 1000 * 60 * 5, // 5 minutes
     },
   },
 });
 
-// Loading fallback component
-const PageLoader = () => (
-  <div className="flex h-screen w-full items-center justify-center">
-    <div className="flex flex-col items-center gap-2">
-      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
-      <p className="text-sm text-muted-foreground">Loading...</p>
-    </div>
-  </div>
-);
-
-const App: React.FC = () => {
-  // Log application startup
+function App() {
+  const { setupRealtimeListeners, cleanupRealtimeListeners } = useRealTimeUpdates();
+  
+  // Track application open/close for audit
   useEffect(() => {
+    // Log application start
     logAuditEvent({
       action: 'settings_change',
       resource: 'setting',
       description: 'Application started',
-      severity: 'low',
+      severity: 'low'
     });
     
-    // Add window unload event for cleanup
+    // Setup page visibility change monitoring
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        logAuditEvent({
+          action: 'settings_change',
+          resource: 'setting',
+          description: 'Application backgrounded',
+          severity: 'low'
+        });
+      } else {
+        logAuditEvent({
+          action: 'settings_change',
+          resource: 'setting',
+          description: 'Application foregrounded',
+          severity: 'low'
+        });
+      }
+    };
+    
+    // Setup unload event for when user closes tab/browser
     const handleUnload = () => {
       logAuditEvent({
         action: 'settings_change',
         resource: 'setting',
         description: 'Application closed',
-        severity: 'low',
+        severity: 'low'
       });
     };
     
-    // Performance monitoring
-    if ('performance' in window && 'PerformanceObserver' in window) {
-      // Set up observers for performance monitoring
-      observeLongTasks();
-      observeLayoutShifts();
-    }
-    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('beforeunload', handleUnload);
-    return () => window.removeEventListener('beforeunload', handleUnload);
-  }, []);
+    
+    // Set up realtime listeners
+    setupRealtimeListeners();
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleUnload);
+      cleanupRealtimeListeners();
+    };
+  }, [setupRealtimeListeners, cleanupRealtimeListeners]);
   
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <LanguageProvider>
-            <AuthProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <Suspense fallback={<PageLoader />}>
-                    <IntegratedAppExperience />
-                    <Routes>
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/signup" element={<Signup />} />
-                      <Route path="/forgot-password" element={<ForgotPassword />} />
-                      <Route path="/reset-password" element={<ResetPassword />} />
-                      <Route path="/mfa-verify" element={<MfaVerify />} />
-                      <Route path="/access-denied" element={<AccessDenied />} />
-                      
-                      <Route path="/" element={<AuthGuard><Index /></AuthGuard>} />
-                      <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />
-                      <Route path="/industry" element={<AuthGuard requiredRoles={['analyst', 'manager', 'admin']} resourceType="industry"><Industry /></AuthGuard>} />
-                      <Route path="/planning" element={<AuthGuard requiredRoles={['manager', 'admin']} resourceType="planning"><Planning /></AuthGuard>} />
-                      <Route path="/goals" element={<AuthGuard resourceType="goal"><Goals /></AuthGuard>} />
-                      <Route path="/resources" element={<AuthGuard requiredRoles={['analyst', 'manager', 'admin']} resourceType="resource"><Resources /></AuthGuard>} />
-                      <Route path="/teams" element={<AuthGuard requiredRoles={['manager', 'admin']} resourceType="team"><Teams /></AuthGuard>} />
-                      <Route path="/settings" element={<AuthGuard resourceType="setting"><Settings /></AuthGuard>} />
-                      <Route path="/profile" element={<AuthGuard resourceType="user"><Profile /></AuthGuard>} />
-                      <Route path="/admin" element={<AuthGuard requiredRoles={['admin']} resourceType="admin" actionType="admin" requireMfa={true}><Admin /></AuthGuard>} />
-                      
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </Suspense>
-                </BrowserRouter>
-              </TooltipProvider>
-            </AuthProvider>
-          </LanguageProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <Router>
+              <SEO />
+              {/* Rest of the app */}
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/goals" element={<Goals />} />
+                <Route path="/industry" element={<Industry />} />
+                <Route path="/planning" element={<Planning />} />
+                <Route path="/teams" element={<Teams />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/access-denied" element={<AccessDenied />} />
+                <Route path="/organization-management" element={<OrganizationManagement />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/mfa-verify" element={<MfaVerify />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Toaster position="top-right" />
+            </Router>
+          </AuthProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
-};
+}
 
 export default App;
