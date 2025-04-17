@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -26,6 +25,7 @@ import Admin from './pages/Admin';
 import { useRealTimeUpdates } from '@/hooks/useRealTimeUpdates';
 import { logAuditEvent } from '@/services/auditService';
 import SEO from '@/components/SEO';
+import SecurityHeaders from '@/components/SecurityHeaders';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -100,7 +100,7 @@ function App() {
           <AuthProvider>
             <Router>
               <SEO />
-              {/* Rest of the app */}
+              <SecurityHeaders />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/goals" element={<Goals />} />

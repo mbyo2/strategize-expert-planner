@@ -5,6 +5,7 @@ import { useAuth, UserRole } from '@/hooks/useAuth';
 import AccessDenied from '@/pages/AccessDenied';
 import { logAuditEvent } from '@/services/auditService';
 import { toast } from 'sonner';
+import { sanitizeInput } from '@/utils/securityUtils';
 
 // List of IP ranges for IP-based access restrictions
 // This would be loaded from a configuration or API in a real app
@@ -12,6 +13,14 @@ const RESTRICTED_IP_RANGES: string[] = [];
 
 // Timeout in minutes for automatic session logout
 const SESSION_TIMEOUT_MINUTES = 30;
+
+// List of known attack patterns to detect suspicious activities
+const SUSPICIOUS_PATTERNS = [
+  /(\%27)|(\')|(\-\-)|(\%23)|(#)/i, // SQL Injection attempts
+  /((\%3C)|<)((\%2F)|\/)*[a-z0-9\%]+((\%3E)|>)/i, // XSS attempts
+  /(((\%3C)|<)((\%69)|i|(\%49))((\%6D)|m|(\%4D))((\%67)|g|(\%47))[^\n]+((\%3E)|>))/i, // Image XSS attempts
+  /((\%3C)|<)[^\n]+((\%3E)|>)/i, // Other XSS attempts
+];
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -21,6 +30,17 @@ interface AuthGuardProps {
   actionType?: 'view' | 'edit' | 'delete' | 'admin';
   requireMfa?: boolean; // New prop for requiring MFA verification
 }
+
+// Function to detect suspicious request parameters
+const detectSuspiciousActivity = (url: string): boolean => {
+  // Check for suspicious patterns
+  for (const pattern of SUSPICIOUS_PATTERNS) {
+    if (pattern.test(url)) {
+      return true;
+    }
+  }
+  return false;
+};
 
 const AuthGuard: React.FC<AuthGuardProps> = ({
   children,
@@ -35,6 +55,30 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   const navigate = useNavigate();
   const [lastActivity, setLastActivity] = useState<number>(Date.now());
   const [ipAllowed, setIpAllowed] = useState<boolean>(true);
+  const [suspicious, setSuspicious] = useState<boolean>(false);
+
+  // Check for suspicious activity
+  useEffect(() => {
+    const fullUrl = window.location.href;
+    const isSuspicious = detectSuspiciousActivity(fullUrl);
+    
+    if (isSuspicious) {
+      setSuspicious(true);
+      
+      logAuditEvent({
+        action: 'view_sensitive',
+        resource: 'access_control',
+        description: 'Suspicious access attempt detected',
+        userId: user?.id,
+        severity: 'high',
+        metadata: { url: sanitizeInput(fullUrl) }
+      });
+      
+      toast.error('Security Alert', {
+        description: 'Suspicious activity detected. This incident has been logged.',
+      });
+    }
+  }, [location.pathname, location.search, user?.id]);
 
   // Check IP restriction and session timeout
   useEffect(() => {
@@ -49,7 +93,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
         const ipData = await ipCheckResponse.json();
         const clientIp = ipData.ip;
         
-        const isRestricted = RESTRICTED_IP_RANGES.some(range => 
+        // Also check if user has specific IP restrictions
+        const userIpRestrictions = user?.ipRestrictions || [];
+        const allRestrictions = [...RESTRICTED_IP_RANGES, ...userIpRestrictions];
+        
+        const isRestricted = allRestrictions.some(range => 
           clientIp.startsWith(range)
         );
         
@@ -132,6 +180,10 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  if (suspicious) {
+    return <Navigate to="/access-denied" state={{ reason: 'suspicious' }} replace />;
   }
 
   if (!isAuthenticated) {

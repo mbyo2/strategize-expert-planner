@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { z } from 'zod';
@@ -6,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Shield, LogIn, KeyRound, MailCheck, Github, Linkedin } from 'lucide-react';
+import { Shield, LogIn, KeyRound, MailCheck, Github, Linkedin, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +15,7 @@ import { logAuditEvent } from '@/services/auditService';
 import { sanitizeData } from '@/services/auditService';
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import { isRateLimited, generateCsrfToken, sanitizeInput } from '@/utils/securityUtils';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -33,6 +35,41 @@ const Login = () => {
   const [loginData, setLoginData] = useState<LoginFormValues | null>(null);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<Date | null>(null);
+  const [csrfToken, setCsrfToken] = useState('');
+  const [securityWarning, setSecurityWarning] = useState<string | null>(null);
+  
+  // Generate CSRF token on component mount
+  useEffect(() => {
+    const token = generateCsrfToken();
+    setCsrfToken(token);
+    sessionStorage.setItem('csrfToken', token);
+    
+    // Check for suspicious activity
+    const userAgent = navigator.userAgent;
+    const knownBots = ['semrush', 'ahrefsbot', 'baiduspider', 'yandex', 'mj12bot'];
+    
+    if (knownBots.some(bot => userAgent.toLowerCase().includes(bot))) {
+      setSecurityWarning('Suspicious user agent detected. If you are a legitimate user, please continue.');
+      logAuditEvent({
+        action: 'view_sensitive',
+        resource: 'access_control',
+        description: 'Suspicious user agent detected on login page',
+        severity: 'medium',
+        metadata: { userAgent }
+      });
+    }
+    
+    // Check if the page is loaded in an iframe (potential clickjacking)
+    if (window.self !== window.top) {
+      setSecurityWarning('This login page is embedded in an iframe, which is a potential security risk.');
+      logAuditEvent({
+        action: 'view_sensitive',
+        resource: 'access_control',
+        description: 'Login page loaded in iframe (potential clickjacking)',
+        severity: 'high'
+      });
+    }
+  }, []);
   
   // Check if there's a session expiry message in the location state
   useEffect(() => {
@@ -71,6 +108,26 @@ const Login = () => {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
+    // Sanitize user input
+    const sanitizedEmail = sanitizeInput(data.email);
+    
+    // Check for rate limiting
+    if (isRateLimited(`login_${sanitizedEmail}`, 5, 15 * 60 * 1000)) {
+      toast.error("Too Many Attempts", {
+        description: "Please try again later or reset your password.",
+      });
+      
+      logAuditEvent({
+        action: 'login',
+        resource: 'user',
+        description: 'Rate-limited login attempt',
+        metadata: { email: sanitizeData(sanitizedEmail) },
+        severity: 'high'
+      });
+      
+      return;
+    }
+    
     // Check if account is locked
     if (lockedUntil && new Date() < lockedUntil) {
       const remainingMinutes = Math.ceil(
@@ -86,7 +143,7 @@ const Login = () => {
         action: 'login',
         resource: 'user',
         description: 'Login attempt on locked account',
-        metadata: { email: sanitizeData(data.email) },
+        metadata: { email: sanitizeData(sanitizedEmail) },
         severity: 'high'
       });
       
@@ -115,7 +172,7 @@ const Login = () => {
           action: 'mfa_verify',
           resource: 'user',
           description: 'MFA verification requested during login',
-          metadata: { email: sanitizeData(data.email) },
+          metadata: { email: sanitizeData(sanitizedEmail) },
           severity: 'medium'
         });
         
@@ -123,7 +180,7 @@ const Login = () => {
       }
       
       // Regular login flow without MFA
-      await login(data.email, data.password);
+      await login(sanitizedEmail, data.password);
       
       // Reset login attempts on success
       setLoginAttempts(0);
@@ -177,7 +234,7 @@ const Login = () => {
           resource: 'user',
           description: 'Account locked due to too many failed login attempts',
           metadata: { 
-            email: sanitizeData(data.email),
+            email: sanitizeData(sanitizedEmail),
             attemptsCount: newAttempts,
             lockedUntil: lockTime.toISOString()
           },
@@ -295,10 +352,19 @@ const Login = () => {
           <p className="mt-2 text-muted-foreground">Log in to your account</p>
         </div>
 
+        {securityWarning && (
+          <div className="p-3 bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-md flex gap-2 items-center">
+            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500 flex-shrink-0" />
+            <p className="text-sm text-amber-800 dark:text-amber-300">{securityWarning}</p>
+          </div>
+        )}
+
         {!isMfaRequired ? (
           <>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <input type="hidden" name="csrfToken" value={csrfToken} />
+                
                 <FormField
                   control={form.control}
                   name="email"
@@ -306,7 +372,11 @@ const Login = () => {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="you@example.com" {...field} />
+                        <Input 
+                          placeholder="you@example.com" 
+                          {...field} 
+                          autoComplete="email"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -320,7 +390,12 @@ const Login = () => {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
+                        <Input 
+                          type="password" 
+                          placeholder="••••••••" 
+                          {...field} 
+                          autoComplete="current-password"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
