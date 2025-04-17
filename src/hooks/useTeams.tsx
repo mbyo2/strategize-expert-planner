@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { Team, TeamMember } from '@/types/team';
+import { Team, TeamMember } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -96,8 +96,12 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         return {
           id: team.id,
           name: team.name,
-          description: team.description,
-          createdAt: new Date(team.created_at).toISOString().split('T')[0],
+          description: team.description || '',
+          created_at: new Date(team.created_at).toISOString().split('T')[0],
+          organization_id: team.organization_id,
+          team_type: team.team_type || 'department',
+          parent_team_id: team.parent_team_id,
+          updated_at: team.updated_at,
           members: teamMembers
         };
       });
