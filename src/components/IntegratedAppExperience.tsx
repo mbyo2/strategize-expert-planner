@@ -11,9 +11,11 @@ import SkipToContent from './a11y/SkipToContent';
 import KeyboardShortcuts from './a11y/KeyboardShortcuts';
 import A11yMenu from './a11y/A11yMenu';
 import { LanguageSwitcher } from '@/i18n';
+import { useAuth } from '@/hooks/useAuth';
 
 const IntegratedAppExperience: React.FC = () => {
   const [helpOpen, setHelpOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
   
   // Define main app tour steps
   const mainAppTourSteps: TourStep[] = [
@@ -51,6 +53,11 @@ const IntegratedAppExperience: React.FC = () => {
       placement: "center"
     }
   ];
+  
+  // Only render support tools for authenticated users
+  if (!isAuthenticated) {
+    return null;
+  }
   
   return (
     <>

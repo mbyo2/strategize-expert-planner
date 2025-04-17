@@ -1,4 +1,3 @@
-
 import { Database as SupabaseDatabase } from "@/integrations/supabase/types";
 
 // Extend Database types with our custom tables
@@ -91,4 +90,25 @@ export interface Notification {
   relatedEntityId?: string;
   relatedEntityType?: string;
   created_at?: string;
+}
+
+interface Profile {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  bio: string;
+  company: string;
+  department: string;
+  job_title: string;
+  created_at: string;
+  updated_at: string;
+  date_format: string;
+  app_notifications: boolean;
+  email_notifications: boolean;
+  weekly_digest: boolean;
+  mfa_enabled: boolean;
+  ip_restrictions: string[];
+  session_timeout_minutes: number;
+  require_mfa_for_admin: boolean;
 }

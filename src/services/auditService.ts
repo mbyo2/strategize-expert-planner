@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -12,33 +11,21 @@ const RETENTION_PERIOD_DAYS = {
 
 // Types for audit log entries
 export type AuditAction = 
-  | 'login' 
-  | 'logout' 
   | 'create' 
   | 'update' 
   | 'delete' 
-  | 'export' 
-  | 'view_sensitive' 
-  | 'role_change'
+  | 'read' 
+  | 'login' 
+  | 'logout' 
   | 'settings_change'
-  | 'data_access'
-  | 'mfa_setup'
-  | 'mfa_verify'
-  | 'password_change'
-  | 'password_reset';
+  | 'feedback_submitted';
 
 export type AuditResource = 
-  | 'user'
-  | 'goal'
-  | 'team'
-  | 'strategy'
-  | 'report'
-  | 'analysis'
-  | 'setting'
-  | 'document'
-  | 'access_control'
-  | 'event'
-  | 'security_setting';
+  | 'user' 
+  | 'setting' 
+  | 'security_setting' 
+  | 'admin'
+  | 'feedback';
 
 export interface AuditLogEntry {
   action: AuditAction;
@@ -296,5 +283,14 @@ const mockAuditLogs: AuditLogEntry[] = [
       action: 'update'
     },
     expiresAt: calculateExpirationDate('high')
+  },
+  {
+    action: 'feedback_submitted',
+    resource: 'feedback',
+    description: 'User submitted feedback',
+    userId: '123',
+    timestamp: new Date(Date.now() - 43200000).toISOString(),
+    severity: 'low',
+    expiresAt: calculateExpirationDate('low')
   },
 ];
