@@ -1,4 +1,3 @@
-
 import { Database as SupabaseDatabase } from "@/integrations/supabase/types";
 
 // Extend Database types with our custom tables
@@ -163,6 +162,31 @@ export interface Notification {
   created_at?: string;
 }
 
+export interface Organization {
+  id: string;
+  name: string;
+  description?: string;
+  logo_url?: string;
+  website?: string;
+  industry?: string;
+  size?: string;
+  created_at: string;
+  updated_at: string;
+  settings: OrganizationSettings;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  description?: string;
+  created_at: string;
+  updated_at?: string;
+  organization_id: string;
+  parent_team_id?: string;
+  team_type: 'department' | 'project' | 'workgroup' | 'other';
+  members: TeamMember[];
+}
+
 export interface Profile {
   id: string;
   name: string;
@@ -181,30 +205,15 @@ export interface Profile {
   language?: string;
   timezone?: string;
   theme?: string;
-  // Security-related fields
-  mfa_enabled?: boolean;
-  ip_restrictions?: string[];
-  session_timeout_minutes?: number;
-  require_mfa_for_admin?: boolean;
+  mfa_enabled: boolean;
+  ip_restrictions: string[];
+  session_timeout_minutes: number;
+  require_mfa_for_admin: boolean;
   organization_id?: string;
   primary_team_id?: string;
 }
 
 // Organization-related interfaces
-export interface Organization {
-  id: string;
-  name: string;
-  description?: string;
-  logo_url?: string;
-  website?: string;
-  industry?: string;
-  size?: string;
-  created_at: string;
-  updated_at: string;
-  settings: OrganizationSettings;
-  teams?: Team[];
-}
-
 export interface OrganizationSettings {
   sso_enabled: boolean;
   sso_provider?: 'saml' | 'oidc' | 'none';
@@ -222,20 +231,6 @@ export interface OrganizationSettings {
   webhook_urls?: string[];
   default_timezone?: string;
   default_language?: string;
-}
-
-// Team-related interfaces
-export interface Team {
-  id: string;
-  name: string;
-  description?: string;
-  created_at: string;
-  updated_at?: string;
-  organization_id: string;
-  parent_team_id?: string;
-  team_type: 'department' | 'project' | 'workgroup' | 'other';
-  members: TeamMember[];
-  subteams?: Team[];
 }
 
 export interface TeamMember {

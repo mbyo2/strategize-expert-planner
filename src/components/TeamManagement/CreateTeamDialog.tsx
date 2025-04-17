@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useTeams } from '@/hooks/useTeams';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,7 @@ interface CreateTeamDialogProps {
 
 const CreateTeamDialog = ({ open, onOpenChange }: CreateTeamDialogProps) => {
   const { addTeam } = useTeams();
+  const { currentOrganization } = useOrganizations();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,13 +31,21 @@ const CreateTeamDialog = ({ open, onOpenChange }: CreateTeamDialogProps) => {
     e.preventDefault();
     setIsSubmitting(true);
     
+    if (!currentOrganization) {
+      console.error('No organization selected');
+      return;
+    }
+    
     addTeam({
       name,
       description,
-      members: []
+      organization_id: currentOrganization.id,
+      team_type: 'department',
+      members: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     });
     
-    // Reset form
     setName('');
     setDescription('');
     setIsSubmitting(false);

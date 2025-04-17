@@ -18,7 +18,7 @@ const TeamList = () => {
 
   const filteredTeams = teams.filter(team => 
     team.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    team.description.toLowerCase().includes(searchQuery.toLowerCase())
+    (team.description?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
 
   if (isLoading) {

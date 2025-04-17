@@ -1,14 +1,14 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Team, TeamMember } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { supabase } from '@/integrations/supabase/client';
 
 interface TeamsContextType {
   teams: Team[];
   isLoading: boolean;
-  addTeam: (team: Omit<Team, 'id' | 'createdAt'>) => Promise<void>;
+  addTeam: (team: Omit<Team, 'id'>) => Promise<void>;
   updateTeam: (id: string, updates: Partial<Omit<Team, 'id' | 'createdAt'>>) => Promise<void>;
   deleteTeam: (id: string) => Promise<void>;
   addMember: (teamId: string, member: Omit<TeamMember, 'id'>) => Promise<void>;
@@ -24,28 +24,27 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { currentOrganization } = useOrganizations();
 
   useEffect(() => {
-    if (user) {
+    if (user && currentOrganization) {
       fetchTeams();
     } else {
       setTeams([]);
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, currentOrganization]);
 
   const fetchTeams = async () => {
     try {
       setIsLoading(true);
       
-      // Get all teams
       const { data: teamsData, error: teamsError } = await supabase
         .from('teams')
         .select('*');
       
       if (teamsError) throw teamsError;
       
-      // Get team members with profiles data
       const { data: membersData, error: membersError } = await supabase
         .from('team_members')
         .select(`
@@ -60,7 +59,6 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       
       if (membersError) throw membersError;
       
-      // Fetch profiles separately
       const userIds = membersData.map(member => member.user_id);
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
@@ -69,13 +67,11 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         
       if (profilesError) throw profilesError;
       
-      // Create a map for quick profile lookup
       const profilesMap = new Map();
       profilesData?.forEach(profile => {
         profilesMap.set(profile.id, profile);
       });
       
-      // Process and combine the data
       const processedTeams: Team[] = teamsData.map(team => {
         const teamMembers = membersData
           .filter(member => member.team_id === team.id)
@@ -119,21 +115,21 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
-  const addTeam = async (team: Omit<Team, 'id' | 'createdAt'>) => {
+  const addTeam = async (team: Omit<Team, 'id'>) => {
     try {
-      // Insert the new team
       const { data, error } = await supabase
         .from('teams')
         .insert({
           name: team.name,
-          description: team.description
+          description: team.description,
+          organization_id: team.organization_id,
+          team_type: team.team_type
         })
         .select()
         .single();
       
       if (error) throw error;
       
-      // Add initial members if provided
       if (team.members && team.members.length > 0 && data) {
         const memberPromises = team.members.map(member => 
           addMember(data.id, member)
@@ -141,7 +137,6 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         await Promise.all(memberPromises);
       }
       
-      // Refresh teams data
       await fetchTeams();
       
       toast({
@@ -172,7 +167,6 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       
       if (error) throw error;
       
-      // Update local state
       setTeams(prevTeams => prevTeams.map(team => 
         team.id === id ? { ...team, ...updates } : team
       ));
@@ -203,7 +197,6 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       
       if (error) throw error;
       
-      // Update local state
       setTeams(prevTeams => prevTeams.filter(team => team.id !== id));
       
       toast({
@@ -223,7 +216,6 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const addMember = async (teamId: string, member: Omit<TeamMember, 'id'>) => {
     try {
-      // Get user profile from email
       const { data: userData, error: userError } = await supabase
         .from('profiles')
         .select('id')
@@ -231,7 +223,6 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         .single();
       
       if (userError) {
-        // If user doesn't exist, create a placeholder profile
         const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
           email: member.email,
           password: Math.random().toString(36).slice(-8),
@@ -250,7 +241,6 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         throw new Error('User not found and could not be created');
       }
       
-      // Add the member to the team
       const { error } = await supabase
         .from('team_members')
         .insert({
@@ -264,7 +254,6 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       
       if (error) throw error;
       
-      // Refresh teams data
       await fetchTeams();
       
       toast({
@@ -296,7 +285,6 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       
       if (error) throw error;
       
-      // Refresh teams data
       await fetchTeams();
       
       toast({
@@ -324,7 +312,6 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       
       if (error) throw error;
       
-      // Refresh teams data
       await fetchTeams();
       
       toast({

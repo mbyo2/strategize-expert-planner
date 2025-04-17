@@ -135,6 +135,45 @@ export type Database = {
         }
         Relationships: []
       }
+      organizations: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          industry: string | null
+          logo_url: string | null
+          name: string
+          settings: Json
+          size: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          logo_url?: string | null
+          name: string
+          settings?: Json
+          size?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          logo_url?: string | null
+          name?: string
+          settings?: Json
+          size?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       planning_initiatives: {
         Row: {
           created_at: string
@@ -186,9 +225,15 @@ export type Database = {
           email: string | null
           email_notifications: boolean | null
           id: string
+          ip_restrictions: string[] | null
           job_title: string | null
           language: string | null
+          mfa_enabled: boolean | null
           name: string | null
+          organization_id: string | null
+          primary_team_id: string | null
+          require_mfa_for_admin: boolean | null
+          session_timeout_minutes: number | null
           theme: string | null
           timezone: string | null
           updated_at: string
@@ -205,9 +250,15 @@ export type Database = {
           email?: string | null
           email_notifications?: boolean | null
           id: string
+          ip_restrictions?: string[] | null
           job_title?: string | null
           language?: string | null
+          mfa_enabled?: boolean | null
           name?: string | null
+          organization_id?: string | null
+          primary_team_id?: string | null
+          require_mfa_for_admin?: boolean | null
+          session_timeout_minutes?: number | null
           theme?: string | null
           timezone?: string | null
           updated_at?: string
@@ -224,9 +275,15 @@ export type Database = {
           email?: string | null
           email_notifications?: boolean | null
           id?: string
+          ip_restrictions?: string[] | null
           job_title?: string | null
           language?: string | null
+          mfa_enabled?: boolean | null
           name?: string | null
+          organization_id?: string | null
+          primary_team_id?: string | null
+          require_mfa_for_admin?: boolean | null
+          session_timeout_minutes?: number | null
           theme?: string | null
           timezone?: string | null
           updated_at?: string
@@ -407,6 +464,9 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          organization_id: string | null
+          parent_team_id: string | null
+          team_type: string
           updated_at: string
         }
         Insert: {
@@ -414,6 +474,9 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          organization_id?: string | null
+          parent_team_id?: string | null
+          team_type?: string
           updated_at?: string
         }
         Update: {
@@ -421,6 +484,9 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          organization_id?: string | null
+          parent_team_id?: string | null
+          team_type?: string
           updated_at?: string
         }
         Relationships: []
