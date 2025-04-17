@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Team, TeamMember } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
@@ -90,13 +89,15 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             };
           });
         
+        const typedTeamType = (team.team_type || 'department') as 'department' | 'project' | 'workgroup' | 'other';
+        
         return {
           id: team.id,
           name: team.name,
           description: team.description || '',
           created_at: new Date(team.created_at).toISOString().split('T')[0],
           organization_id: team.organization_id,
-          team_type: team.team_type as 'department' | 'project' | 'workgroup' | 'other',
+          team_type: typedTeamType,
           parent_team_id: team.parent_team_id,
           updated_at: team.updated_at,
           members: teamMembers

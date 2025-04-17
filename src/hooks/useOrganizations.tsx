@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Organization, OrganizationSettings, Team, TeamMember, UserRole } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
@@ -54,7 +53,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
     try {
       setIsLoading(true);
       
-      // Get organizations the user belongs to (via team membership)
       const { data: teamMemberships, error: teamError } = await supabase
         .from('team_members')
         .select('team_id')
@@ -63,7 +61,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
       if (teamError) throw teamError;
       
       if (teamMemberships && teamMemberships.length > 0) {
-        // Get teams to find organization IDs
         const teamIds = teamMemberships.map(tm => tm.team_id);
         const { data: teams, error: teamsError } = await supabase
           .from('teams')
@@ -73,8 +70,7 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
         if (teamsError) throw teamsError;
         
         if (teams && teams.length > 0) {
-          // Get organizations
-          const orgIds = [...new Set(teams.map(t => t.organization_id))]; // Remove duplicates
+          const orgIds = [...new Set(teams.map(t => t.organization_id))];
           const { data: orgs, error: orgsError } = await supabase
             .from('organizations')
             .select('*')
@@ -82,7 +78,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
           
           if (orgsError) throw orgsError;
           
-          // Convert settings from Json to OrganizationSettings
           const processedOrgs: Organization[] = (orgs || []).map(org => ({
             ...org,
             settings: processSettings(org.settings)
@@ -90,9 +85,7 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
           
           setOrganizations(processedOrgs);
           
-          // Set current organization
           if (processedOrgs.length > 0) {
-            // Check if user has a primary organization set in their profile
             const { data: profile } = await supabase
               .from('profiles')
               .select('organization_id')
@@ -124,7 +117,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
     }
   };
 
-  // Helper function to convert JSON settings to OrganizationSettings
   const processSettings = (settings: Json): OrganizationSettings => {
     if (!settings) return defaultOrganizationSettings;
     
@@ -154,7 +146,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
 
   const createOrganization = async (organization: Omit<Organization, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      // Create organization
       const settings = organization.settings || defaultOrganizationSettings;
       
       const { data: orgData, error: orgError } = await supabase
@@ -174,7 +165,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
       if (orgError) throw orgError;
       
       if (orgData) {
-        // Create default team for organization
         const { data: teamData, error: teamError } = await supabase
           .from('teams')
           .insert({
@@ -189,7 +179,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
         if (teamError) throw teamError;
         
         if (teamData) {
-          // Add current user to the team
           await supabase
             .from('team_members')
             .insert({
@@ -199,7 +188,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
               department: 'Management'
             });
           
-          // Update user's profile with new organization
           await supabase
             .from('profiles')
             .update({
@@ -209,7 +197,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
             .eq('id', user?.id);
         }
         
-        // Refresh organizations
         await fetchOrganizations();
         
         toast({
@@ -245,12 +232,10 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
       
       if (error) throw error;
       
-      // Update local state
       setOrganizations(prevOrgs => 
         prevOrgs.map(org => org.id === id ? { ...org, ...updates, updated_at: new Date().toISOString() } : org)
       );
       
-      // Update current organization if it's the one being updated
       if (currentOrganization && currentOrganization.id === id) {
         setCurrentOrganization(prev => prev ? { ...prev, ...updates, updated_at: new Date().toISOString() } : prev);
       }
@@ -272,8 +257,7 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
 
   const deleteOrganization = async (id: string) => {
     try {
-      // Check if user is admin of this organization
-      const isAdmin = user?.role === 'admin'; // This should be replaced with proper permission check
+      const isAdmin = user?.role === 'admin';
       
       if (!isAdmin) {
         throw new Error('You do not have permission to delete this organization');
@@ -286,15 +270,12 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
       
       if (error) throw error;
       
-      // Update local state
       setOrganizations(prevOrgs => prevOrgs.filter(org => org.id !== id));
       
-      // If current organization is deleted, set to another one or null
       if (currentOrganization && currentOrganization.id === id) {
         const nextOrg = organizations.find(org => org.id !== id);
         setCurrentOrganization(nextOrg || null);
         
-        // Update user's profile to remove the deleted organization
         if (nextOrg) {
           await supabase
             .from('profiles')
@@ -336,7 +317,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
         throw new Error('Organization not found');
       }
       
-      // Update user's profile with new current organization
       await supabase
         .from('profiles')
         .update({
@@ -351,7 +331,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
         description: `Switched to ${orgToSwitch.name}`,
       });
       
-      // Force reload to update all content
       window.location.reload();
     } catch (error) {
       console.error('Error switching organization:', error);
@@ -366,7 +345,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
 
   const updateOrganizationSettings = async (id: string, settings: Partial<OrganizationSettings>) => {
     try {
-      // First get current settings
       const { data: currentOrg, error: fetchError } = await supabase
         .from('organizations')
         .select('settings')
@@ -375,12 +353,13 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
       
       if (fetchError) throw fetchError;
       
+      const currentSettings = processSettings(currentOrg.settings);
+      
       const updatedSettings = {
-        ...currentOrg.settings,
+        ...currentSettings,
         ...settings
       };
       
-      // Update settings
       const { error } = await supabase
         .from('organizations')
         .update({
@@ -391,7 +370,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
       
       if (error) throw error;
       
-      // Update local state
       setOrganizations(prevOrgs => 
         prevOrgs.map(org => org.id === id ? { 
           ...org, 
@@ -400,7 +378,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
         } : org)
       );
       
-      // Update current organization if it's the one being updated
       if (currentOrganization && currentOrganization.id === id) {
         setCurrentOrganization(prev => prev ? { 
           ...prev, 
@@ -426,7 +403,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
 
   const getOrganizationMembers = async (id: string): Promise<TeamMember[]> => {
     try {
-      // Get all teams in the organization
       const { data: teams, error: teamsError } = await supabase
         .from('teams')
         .select('id')
@@ -440,7 +416,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
       
       const teamIds = teams.map(team => team.id);
       
-      // Get all team members
       const { data: teamMembers, error: membersError } = await supabase
         .from('team_members')
         .select(`
@@ -460,7 +435,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
         return [];
       }
       
-      // Get profiles for all users
       const userIds = [...new Set(teamMembers.map(member => member.user_id))];
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
@@ -473,13 +447,11 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
         return [];
       }
       
-      // Map profiles to team members
       const profileMap = new Map();
       profiles.forEach(profile => {
         profileMap.set(profile.id, profile);
       });
       
-      // Create TeamMember objects
       const members: TeamMember[] = teamMembers.map(member => {
         const profile = profileMap.get(member.user_id);
         return {
@@ -494,7 +466,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
         };
       });
       
-      // Remove duplicates (same user in multiple teams)
       const uniqueMembers = Array.from(
         new Map(members.map(member => [member.email, member])).values()
       );
@@ -508,10 +479,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
 
   const inviteUserToOrganization = async (organizationId: string, email: string, role: UserRole) => {
     try {
-      // In a real-world implementation, this would send an email invitation.
-      // For this example, we'll just create a team membership if the user exists.
-      
-      // First, check if user already exists
       const { data: existingUser, error: userError } = await supabase
         .from('profiles')
         .select('id')
@@ -525,11 +492,9 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
       let userId = existingUser?.id;
       
       if (!userId) {
-        // In a real implementation, we would send an invitation email
-        // For this demo, we'll simulate creating a new user
         const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
           email: email,
-          password: Math.random().toString(36).substring(2, 10), // Generate random password
+          password: Math.random().toString(36).substring(2, 10),
           email_confirm: true
         });
         
@@ -542,7 +507,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
         throw new Error('Could not create or find user');
       }
       
-      // Get the default team for the organization
       const { data: defaultTeam, error: teamError } = await supabase
         .from('teams')
         .select('id')
@@ -552,7 +516,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
       
       if (teamError) throw teamError;
       
-      // Add user to the default team
       const { error: memberError } = await supabase
         .from('team_members')
         .insert({
@@ -581,7 +544,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
 
   const getOrganizationTeamHierarchy = async (id: string): Promise<Team[]> => {
     try {
-      // Get all teams in the organization
       const { data: teams, error: teamsError } = await supabase
         .from('teams')
         .select('*')
@@ -593,7 +555,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
         return [];
       }
       
-      // Get all team members
       const { data: teamMembers, error: membersError } = await supabase
         .from('team_members')
         .select(`
@@ -608,7 +569,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
       
       if (membersError) throw membersError;
       
-      // Get profiles for all users
       const userIds = teamMembers ? teamMembers.map(member => member.user_id) : [];
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
@@ -617,7 +577,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
       
       if (profilesError) throw profilesError;
       
-      // Create a map for profile lookups
       const profileMap = new Map();
       if (profiles) {
         profiles.forEach(profile => {
@@ -625,7 +584,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
         });
       }
       
-      // Create a map of teams with their members
       const teamsWithMembers = teams.map(team => {
         const members = teamMembers
           ? teamMembers
@@ -645,7 +603,6 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
               })
           : [];
           
-        // Cast team_type to the correct type
         const typedTeamType = (team.team_type || 'department') as 'department' | 'project' | 'workgroup' | 'other';
         
         return {
@@ -656,13 +613,11 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
         };
       });
       
-      // Create a map for team lookups
       const teamMap = new Map();
       teamsWithMembers.forEach(team => {
         teamMap.set(team.id, team);
       });
       
-      // Build the team hierarchy
       const rootTeams: Team[] = [];
       
       teamsWithMembers.forEach(team => {

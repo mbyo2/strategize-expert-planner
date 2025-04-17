@@ -13,8 +13,8 @@ export interface TeamMember {
 export interface Team {
   id: string;
   name: string;
-  description: string;
-  created_at: string;  // Changed from createdAt to match database.ts
+  description?: string;  // Making this optional to match database.ts
+  created_at: string;  // Using created_at instead of createdAt to match database.ts
   updated_at?: string;
   organization_id: string;
   parent_team_id?: string;
