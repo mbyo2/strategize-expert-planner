@@ -40,6 +40,76 @@ export interface Database extends SupabaseDatabase {
           created_at?: string;
         };
       };
+      organizations: {
+        Row: {
+          id: string;
+          name: string;
+          description?: string;
+          logo_url?: string;
+          website?: string;
+          industry?: string;
+          size?: string;
+          created_at: string;
+          updated_at: string;
+          settings: OrganizationSettings;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string;
+          logo_url?: string;
+          website?: string;
+          industry?: string;
+          size?: string;
+          created_at?: string;
+          updated_at?: string;
+          settings?: OrganizationSettings;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string;
+          logo_url?: string;
+          website?: string;
+          industry?: string;
+          size?: string;
+          created_at?: string;
+          updated_at?: string;
+          settings?: OrganizationSettings;
+        };
+      };
+      teams: {
+        Row: {
+          id: string;
+          name: string;
+          description?: string;
+          created_at: string;
+          updated_at?: string;
+          organization_id: string;
+          parent_team_id?: string;
+          team_type: 'department' | 'project' | 'workgroup' | 'other';
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string;
+          created_at?: string;
+          updated_at?: string;
+          organization_id: string;
+          parent_team_id?: string;
+          team_type?: 'department' | 'project' | 'workgroup' | 'other';
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string;
+          created_at?: string;
+          updated_at?: string;
+          organization_id?: string;
+          parent_team_id?: string;
+          team_type?: 'department' | 'project' | 'workgroup' | 'other';
+        };
+      };
       // Additional custom tables can be added here
     };
     Views: SupabaseDatabase['public']['Views'];
@@ -116,4 +186,68 @@ export interface Profile {
   ip_restrictions?: string[];
   session_timeout_minutes?: number;
   require_mfa_for_admin?: boolean;
+  organization_id?: string;
+  primary_team_id?: string;
 }
+
+// Organization-related interfaces
+export interface Organization {
+  id: string;
+  name: string;
+  description?: string;
+  logo_url?: string;
+  website?: string;
+  industry?: string;
+  size?: string;
+  created_at: string;
+  updated_at: string;
+  settings: OrganizationSettings;
+  teams?: Team[];
+}
+
+export interface OrganizationSettings {
+  sso_enabled: boolean;
+  sso_provider?: 'saml' | 'oidc' | 'none';
+  sso_domain?: string;
+  sso_config?: any;
+  default_user_role: UserRole;
+  allowed_email_domains?: string[];
+  enforce_mfa: boolean;
+  session_duration_minutes: number;
+  ip_restrictions_enabled: boolean;
+  allowed_ip_ranges?: string[];
+  compliance_mode: 'standard' | 'hipaa' | 'gdpr' | 'custom';
+  data_retention_days: number;
+  api_rate_limit_per_minute: number;
+  webhook_urls?: string[];
+  default_timezone?: string;
+  default_language?: string;
+}
+
+// Team-related interfaces
+export interface Team {
+  id: string;
+  name: string;
+  description?: string;
+  created_at: string;
+  updated_at?: string;
+  organization_id: string;
+  parent_team_id?: string;
+  team_type: 'department' | 'project' | 'workgroup' | 'other';
+  members: TeamMember[];
+  subteams?: Team[];
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  avatar?: string;
+  department?: string;
+  position?: string;
+  joinedDate: string;
+}
+
+// Role types
+export type UserRole = 'admin' | 'manager' | 'analyst' | 'viewer';
