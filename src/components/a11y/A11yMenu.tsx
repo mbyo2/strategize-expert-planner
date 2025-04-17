@@ -99,7 +99,7 @@ const A11yMenu: React.FC<A11yMenuProps> = ({ className }) => {
   
   return (
     <>
-      <style jsx global>{`
+      <style>{`
         :root {
           --a11y-font-scale: 100%;
         }

@@ -416,18 +416,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     user,
     isAuthenticated: !!user,
     isLoading,
-    login: async (email: string, password: string) => {
-      // Implement login logic here for the test
-      console.log('Login called with', email, password);
-    },
-    signup: async (name: string, email: string, password: string) => {
-      // Implement signup logic here for the test
-      console.log('Signup called with', name, email, password);
-    },
-    logout: () => {
-      // Implement logout logic here for the test
-      console.log('Logout called');
-    },
+    login,
+    signup,
+    logout,
     hasPermission,
     updateProfile,
     getSecuritySettings,

@@ -1,3 +1,4 @@
+
 import { Database as SupabaseDatabase } from "@/integrations/supabase/types";
 
 // Extend Database types with our custom tables
@@ -107,8 +108,9 @@ interface Profile {
   app_notifications: boolean;
   email_notifications: boolean;
   weekly_digest: boolean;
-  mfa_enabled: boolean;
-  ip_restrictions: string[];
-  session_timeout_minutes: number;
-  require_mfa_for_admin: boolean;
+  // Security-related fields
+  mfa_enabled?: boolean;
+  ip_restrictions?: string[];
+  session_timeout_minutes?: number;
+  require_mfa_for_admin?: boolean;
 }

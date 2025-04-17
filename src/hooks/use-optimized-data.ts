@@ -1,3 +1,4 @@
+
 import { UseQueryOptions, useQuery } from '@tanstack/react-query';
 
 export function useOptimizedData<TData, TError>(
@@ -13,6 +14,7 @@ export function useOptimizedData<TData, TError>(
     gcTime: 1000 * 60 * 30,   // 30 minutes
     retry: 1,
     meta: {
+      ...options?.meta,
       errorHandler: (error: Error) => {
         console.error('Query error:', error);
       }

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -18,14 +19,24 @@ export type AuditAction =
   | 'login' 
   | 'logout' 
   | 'settings_change'
-  | 'feedback_submitted';
+  | 'feedback_submitted'
+  | 'view_sensitive'
+  | 'export'
+  | 'role_change'
+  | 'mfa_setup'
+  | 'mfa_verify'
+  | 'role_change';
 
 export type AuditResource = 
   | 'user' 
   | 'setting' 
   | 'security_setting' 
   | 'admin'
-  | 'feedback';
+  | 'feedback'
+  | 'access_control'
+  | 'report'
+  | 'analysis'
+  | 'event';
 
 export interface AuditLogEntry {
   action: AuditAction;
