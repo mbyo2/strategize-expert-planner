@@ -1,13 +1,14 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { customSupabase } from "@/integrations/supabase/customClient";
 import { notifyEvent } from '@/services/notificationsService';
 
 // This hook centralizes all real-time updates and triggers notifications
 export const useRealTimeUpdates = () => {
   const [isConnected, setIsConnected] = useState(false);
-
-  useEffect(() => {
+  
+  // Setup real-time listeners
+  const setupRealtimeListeners = useCallback(() => {
     // Set up real-time subscription for strategy reviews
     const reviewsChannel = customSupabase
       .channel('strategy-reviews-changes')
@@ -128,15 +129,29 @@ export const useRealTimeUpdates = () => {
       
     setIsConnected(true);
     
-    // Clean up subscriptions
-    return () => {
-      customSupabase.removeChannel(reviewsChannel);
-      customSupabase.removeChannel(goalsChannel);
-      customSupabase.removeChannel(initiativesChannel);
-      customSupabase.removeChannel(marketChangesChannel);
-      setIsConnected(false);
+    return { 
+      reviewsChannel,
+      goalsChannel,
+      initiativesChannel,
+      marketChangesChannel
     };
   }, []);
-
-  return { isConnected };
+  
+  // Cleanup real-time listeners
+  const cleanupRealtimeListeners = useCallback((channels) => {
+    if (channels) {
+      customSupabase.removeChannel(channels.reviewsChannel);
+      customSupabase.removeChannel(channels.goalsChannel);
+      customSupabase.removeChannel(channels.initiativesChannel);
+      customSupabase.removeChannel(channels.marketChangesChannel);
+    }
+    setIsConnected(false);
+  }, []);
+  
+  // Return hook state and functions
+  return { 
+    isConnected,
+    setupRealtimeListeners,
+    cleanupRealtimeListeners 
+  };
 };

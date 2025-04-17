@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -83,12 +84,12 @@ function App() {
     window.addEventListener('beforeunload', handleUnload);
     
     // Set up realtime listeners
-    setupRealtimeListeners();
+    const channels = setupRealtimeListeners();
     
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleUnload);
-      cleanupRealtimeListeners();
+      cleanupRealtimeListeners(channels);
     };
   }, [setupRealtimeListeners, cleanupRealtimeListeners]);
   
