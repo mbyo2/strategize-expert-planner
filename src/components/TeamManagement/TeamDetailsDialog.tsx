@@ -84,7 +84,7 @@ const TeamDetailsDialog = ({ team, open, onOpenChange }: TeamDetailsDialogProps)
 
                 <div className="grid gap-2">
                   <Label>Created On</Label>
-                  <div className="text-sm text-muted-foreground">{team.createdAt}</div>
+                  <div className="text-sm text-muted-foreground">{team.created_at}</div>
                 </div>
               </div>
             </TabsContent>

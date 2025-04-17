@@ -1,9 +1,10 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { Organization, OrganizationSettings, Team, UserRole } from '@/types/database';
+import { Organization, OrganizationSettings, Team, TeamMember, UserRole } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 interface OrganizationsContextType {
   organizations: Organization[];
@@ -81,10 +82,16 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
           
           if (orgsError) throw orgsError;
           
-          setOrganizations(orgs || []);
+          // Convert settings from Json to OrganizationSettings
+          const processedOrgs: Organization[] = (orgs || []).map(org => ({
+            ...org,
+            settings: processSettings(org.settings)
+          }));
+          
+          setOrganizations(processedOrgs);
           
           // Set current organization
-          if (orgs && orgs.length > 0) {
+          if (processedOrgs.length > 0) {
             // Check if user has a primary organization set in their profile
             const { data: profile } = await supabase
               .from('profiles')
@@ -93,14 +100,14 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
               .single();
             
             if (profile && profile.organization_id) {
-              const primaryOrg = orgs.find(org => org.id === profile.organization_id);
+              const primaryOrg = processedOrgs.find(org => org.id === profile.organization_id);
               if (primaryOrg) {
                 setCurrentOrganization(primaryOrg);
               } else {
-                setCurrentOrganization(orgs[0]);
+                setCurrentOrganization(processedOrgs[0]);
               }
             } else {
-              setCurrentOrganization(orgs[0]);
+              setCurrentOrganization(processedOrgs[0]);
             }
           }
         }
@@ -117,9 +124,39 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
     }
   };
 
+  // Helper function to convert JSON settings to OrganizationSettings
+  const processSettings = (settings: Json): OrganizationSettings => {
+    if (!settings) return defaultOrganizationSettings;
+    
+    const settingsObj = typeof settings === 'string' 
+      ? JSON.parse(settings) 
+      : settings;
+      
+    return {
+      sso_enabled: settingsObj.sso_enabled ?? defaultOrganizationSettings.sso_enabled,
+      sso_provider: settingsObj.sso_provider ?? defaultOrganizationSettings.sso_provider,
+      sso_domain: settingsObj.sso_domain ?? defaultOrganizationSettings.sso_domain,
+      sso_config: settingsObj.sso_config ?? defaultOrganizationSettings.sso_config,
+      default_user_role: settingsObj.default_user_role ?? defaultOrganizationSettings.default_user_role,
+      allowed_email_domains: settingsObj.allowed_email_domains ?? defaultOrganizationSettings.allowed_email_domains,
+      enforce_mfa: settingsObj.enforce_mfa ?? defaultOrganizationSettings.enforce_mfa,
+      session_duration_minutes: settingsObj.session_duration_minutes ?? defaultOrganizationSettings.session_duration_minutes,
+      ip_restrictions_enabled: settingsObj.ip_restrictions_enabled ?? defaultOrganizationSettings.ip_restrictions_enabled,
+      allowed_ip_ranges: settingsObj.allowed_ip_ranges ?? defaultOrganizationSettings.allowed_ip_ranges,
+      compliance_mode: settingsObj.compliance_mode ?? defaultOrganizationSettings.compliance_mode,
+      data_retention_days: settingsObj.data_retention_days ?? defaultOrganizationSettings.data_retention_days,
+      api_rate_limit_per_minute: settingsObj.api_rate_limit_per_minute ?? defaultOrganizationSettings.api_rate_limit_per_minute,
+      webhook_urls: settingsObj.webhook_urls ?? defaultOrganizationSettings.webhook_urls,
+      default_timezone: settingsObj.default_timezone ?? defaultOrganizationSettings.default_timezone,
+      default_language: settingsObj.default_language ?? defaultOrganizationSettings.default_language
+    };
+  };
+
   const createOrganization = async (organization: Omit<Organization, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       // Create organization
+      const settings = organization.settings || defaultOrganizationSettings;
+      
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
         .insert({
@@ -129,7 +166,7 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
           website: organization.website,
           industry: organization.industry,
           size: organization.size,
-          settings: organization.settings || defaultOrganizationSettings
+          settings: settings as any
         })
         .select()
         .single();
@@ -607,9 +644,13 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
                 };
               })
           : [];
+          
+        // Cast team_type to the correct type
+        const typedTeamType = (team.team_type || 'department') as 'department' | 'project' | 'workgroup' | 'other';
         
         return {
           ...team,
+          team_type: typedTeamType,
           members,
           subteams: []
         };
@@ -628,7 +669,10 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
         if (team.parent_team_id) {
           const parentTeam = teamMap.get(team.parent_team_id);
           if (parentTeam) {
-            parentTeam.subteams = [...(parentTeam.subteams || []), team];
+            if (!parentTeam.subteams) {
+              parentTeam.subteams = [];
+            }
+            parentTeam.subteams.push(team);
           } else {
             rootTeams.push(team);
           }
@@ -637,7 +681,7 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
         }
       });
       
-      return rootTeams;
+      return rootTeams as Team[];
     } catch (error) {
       console.error('Error getting team hierarchy:', error);
       throw error;

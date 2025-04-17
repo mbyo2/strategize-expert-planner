@@ -1,4 +1,6 @@
+
 import { Database as SupabaseDatabase } from "@/integrations/supabase/types";
+import { Json } from "@/integrations/supabase/types";
 
 // Extend Database types with our custom tables
 export interface Database extends SupabaseDatabase {

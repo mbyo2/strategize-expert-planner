@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Team, TeamMember } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
@@ -9,7 +10,7 @@ interface TeamsContextType {
   teams: Team[];
   isLoading: boolean;
   addTeam: (team: Omit<Team, 'id'>) => Promise<void>;
-  updateTeam: (id: string, updates: Partial<Omit<Team, 'id' | 'createdAt'>>) => Promise<void>;
+  updateTeam: (id: string, updates: Partial<Omit<Team, 'id' | 'created_at'>>) => Promise<void>;
   deleteTeam: (id: string) => Promise<void>;
   addMember: (teamId: string, member: Omit<TeamMember, 'id'>) => Promise<void>;
   updateMember: (teamId: string, memberId: string, updates: Partial<Omit<TeamMember, 'id'>>) => Promise<void>;
@@ -95,7 +96,7 @@ export const TeamsProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           description: team.description || '',
           created_at: new Date(team.created_at).toISOString().split('T')[0],
           organization_id: team.organization_id,
-          team_type: team.team_type || 'department',
+          team_type: team.team_type as 'department' | 'project' | 'workgroup' | 'other',
           parent_team_id: team.parent_team_id,
           updated_at: team.updated_at,
           members: teamMembers
