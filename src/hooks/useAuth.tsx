@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -157,13 +158,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         severity: 'low',
       });
       
-      // If user_security table doesn't exist in Supabase yet, we'll simulate it from profile
-      // Instead of trying to fetch from a non-existent table
+      // Get the security settings from profile or use defaults
+      // Fix: Safely extract security settings with optional chaining and null coalescing
       const userSecuritySettings = {
-        mfaEnabled: profile?.mfa_enabled || false,
-        ipRestrictions: profile?.ip_restrictions || [],
-        sessionTimeoutMinutes: profile?.session_timeout_minutes || 30,
-        requireMfaForAdmin: profile?.require_mfa_for_admin || true
+        mfaEnabled: profile?.mfa_enabled ?? false,
+        ipRestrictions: profile?.ip_restrictions ?? [],
+        sessionTimeoutMinutes: profile?.session_timeout_minutes ?? 30,
+        requireMfaForAdmin: profile?.require_mfa_for_admin ?? true
       };
       
       setSecuritySettings(userSecuritySettings);

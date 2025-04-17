@@ -93,7 +93,7 @@ export interface Notification {
   created_at?: string;
 }
 
-interface Profile {
+export interface Profile {
   id: string;
   name: string;
   email: string;
@@ -108,6 +108,9 @@ interface Profile {
   app_notifications: boolean;
   email_notifications: boolean;
   weekly_digest: boolean;
+  language?: string;
+  timezone?: string;
+  theme?: string;
   // Security-related fields
   mfa_enabled?: boolean;
   ip_restrictions?: string[];
