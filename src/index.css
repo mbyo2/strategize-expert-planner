@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -46,6 +45,26 @@
   --border: 215 27.9% 16.9%;
   --input: 215 27.9% 16.9%;
   --ring: 216 34% 17%;
+}
+
+/* Base text color settings for better readability */
+@layer base {
+  body {
+    @apply text-slate-800 dark:text-slate-100;
+  }
+  
+  /* Ensure text readability on different backgrounds */
+  .text-on-primary {
+    @apply text-white dark:text-slate-100;
+  }
+  
+  .text-on-light {
+    @apply text-slate-800 dark:text-slate-100;
+  }
+  
+  .text-on-dark {
+    @apply text-slate-100 dark:text-slate-200;
+  }
 }
 
 /* Adding sensible default focus styles for better accessibility */
