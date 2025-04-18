@@ -26,7 +26,7 @@ import { useRealTimeUpdates } from '@/hooks/useRealTimeUpdates';
 import { logAuditEvent } from '@/services/auditService';
 import SEO from '@/components/SEO';
 import SecurityHeaders from '@/components/SecurityHeaders';
-import { AuthGuard } from '@/components/AuthGuard';
+import AuthGuard from '@/components/AuthGuard';
 
 const queryClient = new QueryClient({
   defaultOptions: {
