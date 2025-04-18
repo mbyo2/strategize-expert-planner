@@ -15,12 +15,23 @@ const SecurityHeaders: React.FC = () => {
     }
   }, []);
 
+  // Check if we're in a development/preview environment
+  const isLovablePreview = window.location.hostname.includes('lovable.app');
+  
+  // Adjust CSP for preview environments
+  const cspContent = isLovablePreview
+    ? "default-src 'self'; script-src 'self' 'unsafe-inline' https://storage.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://api.dicebear.com; connect-src 'self' https://ublzhmimdynqzqsdicyn.supabase.co wss://ublzhmimdynqzqsdicyn.supabase.co; frame-ancestors 'self' https://*.lovable.app; object-src 'none'; base-uri 'self';"
+    : "default-src 'self'; script-src 'self' 'unsafe-inline' https://storage.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://api.dicebear.com; connect-src 'self' https://ublzhmimdynqzqsdicyn.supabase.co wss://ublzhmimdynqzqsdicyn.supabase.co; frame-ancestors 'none'; object-src 'none'; base-uri 'self';";
+
+  // Adjust X-Frame-Options for preview environments  
+  const xFrameOptions = isLovablePreview ? "SAMEORIGIN" : "DENY";
+
   return (
     <Helmet>
       {/* Content Security Policy */}
       <meta
         http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://storage.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://api.dicebear.com; connect-src 'self' https://ublzhmimdynqzqsdicyn.supabase.co wss://ublzhmimdynqzqsdicyn.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'self';"
+        content={cspContent}
       />
       
       {/* Prevent MIME sniffing attacks */}
@@ -32,7 +43,7 @@ const SecurityHeaders: React.FC = () => {
       {/* Disable loading in frame (anti-clickjacking) */}
       <meta 
         http-equiv="X-Frame-Options" 
-        content="DENY" 
+        content={xFrameOptions}
       />
       
       {/* XSS protection as an extra layer of defense */}

@@ -42,6 +42,11 @@ const detectSuspiciousActivity = (url: string): boolean => {
   return false;
 };
 
+// Check if we're in the Lovable preview environment
+const isLovablePreview = () => {
+  return window.location.hostname.includes('lovable.app');
+};
+
 const AuthGuard: React.FC<AuthGuardProps> = ({
   children,
   requiredRoles = [],
@@ -187,6 +192,19 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   }
 
   if (!isAuthenticated) {
+    // Check for iframe embedding - Skip this check in Lovable preview
+    const isInIframe = !isLovablePreview() && window.self !== window.top;
+    
+    if (isInIframe) {
+      // Log iframe embedding attempt
+      logAuditEvent({
+        action: 'view_sensitive',
+        resource: 'access_control',
+        description: 'Login page loaded in iframe (potential clickjacking)',
+        severity: 'high'
+      });
+    }
+    
     // Log access attempt
     logAuditEvent({
       action: 'view_sensitive',

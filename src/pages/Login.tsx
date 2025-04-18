@@ -60,7 +60,11 @@ const Login = () => {
     }
     
     // Check if the page is loaded in an iframe (potential clickjacking)
-    if (window.self !== window.top) {
+    const isInIframe = window.self !== window.top;
+    const isLovablePreview = window.location.hostname.includes('lovable.app');
+    
+    // Only show warning if in iframe and NOT in lovable preview
+    if (isInIframe && !isLovablePreview) {
       setSecurityWarning('This login page is embedded in an iframe, which is a potential security risk.');
       logAuditEvent({
         action: 'view_sensitive',
