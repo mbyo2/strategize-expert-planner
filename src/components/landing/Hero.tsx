@@ -8,19 +8,19 @@ const Hero = () => {
   const { isAuthenticated } = useAuth();
   
   return (
-    <div className="relative overflow-hidden bg-gradient-to-b from, from-slate-900 to-slate 800 py-20 sm:py-32">
+    <div className="relative overflow-hidden bg-gradient-to-b from-slate-900 to-slate-800 py-20 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center">
           <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-white mb-6">
             Strategic Intelligence Platform
           </h1>
-          <p className="text-xl text-slate-300 max-w-3xl mx-auto mb-8">
+          <p className="text-xl text-slate-200 max-w-3xl mx-auto mb-8">
             Transform your business strategy with real-time insights, collaborative planning, and data-driven decision making.
           </p>
           <div className="flex justify-center gap-4">
             {!isAuthenticated ? (
               <>
-                <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
+                <Button asChild size="lg" variant="default" className="bg-white text-slate-900 hover:bg-slate-100">
                   <Link to="/signup">Get Started</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="text-white border-white hover:bg-white/10">
@@ -28,7 +28,7 @@ const Hero = () => {
                 </Button>
               </>
             ) : (
-              <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
+              <Button asChild size="lg" className="bg-white text-slate-900 hover:bg-slate-100">
                 <Link to="/dashboard">Go to Dashboard</Link>
               </Button>
             )}
