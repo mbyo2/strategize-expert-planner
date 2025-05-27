@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -97,13 +98,20 @@ function App() {
               <SEO />
               <SecurityHeaders />
               <Routes>
-                <Route path="/" element={<Index />} />
+                {/* Public routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/access-denied" element={<AccessDenied />} />
+                <Route path="/mfa-verify" element={<MfaVerify />} />
                 
+                {/* Protected routes */}
+                <Route path="/" element={
+                  <AuthGuard>
+                    <Index />
+                  </AuthGuard>
+                } />
                 <Route path="/goals" element={
                   <AuthGuard>
                     <Goals />
@@ -144,7 +152,6 @@ function App() {
                     <Analytics />
                   </AuthGuard>
                 } />
-                <Route path="/mfa-verify" element={<MfaVerify />} />
                 <Route path="/admin" element={
                   <AuthGuard requiredRoles={['admin']}>
                     <Admin />

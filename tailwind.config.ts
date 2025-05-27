@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 import plugin from 'tailwindcss/plugin';
 
@@ -28,16 +29,16 @@ export default {
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))',
-					50: 'hsl(var(--primary) / 0.05)',
-					100: 'hsl(var(--primary) / 0.1)',
-					200: 'hsl(var(--primary) / 0.2)',
-					300: 'hsl(var(--primary) / 0.3)',
-					400: 'hsl(var(--primary) / 0.4)',
-					500: 'hsl(var(--primary) / 0.5)',
-					600: 'hsl(var(--primary) / 0.6)',
-					700: 'hsl(var(--primary) / 0.7)',
-					800: 'hsl(var(--primary) / 0.8)',
-					900: 'hsl(var(--primary) / 0.9)',
+					50: 'hsl(221.2 83.2% 95%)',
+					100: 'hsl(221.2 83.2% 90%)',
+					200: 'hsl(221.2 83.2% 80%)',
+					300: 'hsl(221.2 83.2% 70%)',
+					400: 'hsl(221.2 83.2% 60%)',
+					500: 'hsl(var(--primary))',
+					600: 'hsl(221.2 83.2% 45%)',
+					700: 'hsl(221.2 83.2% 35%)',
+					800: 'hsl(221.2 83.2% 25%)',
+					900: 'hsl(221.2 83.2% 15%)',
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -127,5 +128,24 @@ export default {
 			},
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		plugin(function({ addUtilities }) {
+			addUtilities({
+				'.text-contrast': {
+					'color': 'hsl(var(--foreground))',
+				},
+				'.text-contrast-high': {
+					'color': 'hsl(222.2 84% 4.9%)',
+					'@media (prefers-color-scheme: dark)': {
+						'color': 'hsl(210 40% 98%)',
+					},
+				},
+				'.bg-contrast': {
+					'background-color': 'hsl(var(--background))',
+					'color': 'hsl(var(--foreground))',
+				},
+			})
+		})
+	],
 } satisfies Config;

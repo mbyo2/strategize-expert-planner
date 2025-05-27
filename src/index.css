@@ -1,103 +1,166 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   --background: 0 0% 100%;
-  --foreground: 224 71.4% 4.1%;
+  --foreground: 222.2 84% 4.9%;
   --card: 0 0% 100%;
-  --card-foreground: 224 71.4% 4.1%;
+  --card-foreground: 222.2 84% 4.9%;
   --popover: 0 0% 100%;
-  --popover-foreground: 224 71.4% 4.1%;
+  --popover-foreground: 222.2 84% 4.9%;
   --primary: 221.2 83.2% 53.3%;
-  --primary-foreground: 210 20% 98%;
-  --secondary: 220 14.3% 95.9%;
-  --secondary-foreground: 220.9 39.3% 11%;
-  --muted: 220 14.3% 95.9%;
-  --muted-foreground: 220 8.9% 46.1%;
-  --accent: 220 14.3% 95.9%;
-  --accent-foreground: 220.9 39.3% 11%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 84% 4.9%;
   --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 20% 98%;
-  --border: 220 13% 91%;
-  --input: 220 13% 91%;
-  --ring: 224 71.4% 4.1%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
   --radius: 0.5rem;
 }
 
 .dark {
-  --background: 224 71.4% 4.1%;
-  --foreground: 210 20% 98%;
-  --card: 224 71.4% 4.1%;
-  --card-foreground: 210 20% 98%;
-  --popover: 224 71.4% 4.1%;
-  --popover-foreground: 210 20% 98%;
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
   --primary: 217.2 91.2% 59.8%;
-  --primary-foreground: 210 20% 98%;
-  --secondary: 215 27.9% 16.9%;
-  --secondary-foreground: 210 20% 98%;
-  --muted: 215 27.9% 16.9%;
-  --muted-foreground: 217.9 10.6% 64.9%;
-  --accent: 215 27.9% 16.9%;
-  --accent-foreground: 210 20% 98%;
+  --primary-foreground: 222.2 84% 4.9%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
   --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 20% 98%;
-  --border: 215 27.9% 16.9%;
-  --input: 215 27.9% 16.9%;
-  --ring: 216 34% 17%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 224.3 76.3% 94.1%;
 }
 
-/* Base text color settings for better readability and contrast */
+/* Enhanced base text color settings for better readability and contrast */
 @layer base {
+  * {
+    @apply border-border;
+  }
+  
   body {
-    @apply text-slate-900 dark:text-slate-50 bg-white dark:bg-slate-900;
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
   
-  /* Ensure text readability on different backgrounds */
-  .text-on-primary {
-    @apply text-white dark:text-slate-50;
+  /* Ensure high contrast text on all backgrounds */
+  .text-primary-contrast {
+    @apply text-white dark:text-slate-900;
   }
   
-  .text-on-light {
-    @apply text-slate-900 dark:text-slate-50;
+  .text-secondary-contrast {
+    @apply text-slate-900 dark:text-slate-100;
   }
   
-  .text-on-dark {
-    @apply text-slate-50 dark:text-slate-100;
+  .text-muted-contrast {
+    @apply text-slate-700 dark:text-slate-300;
   }
 
-  /* Improved text contrast for different sections */
+  /* Enhanced contrast for different background combinations */
   .bg-primary {
-    @apply text-white dark:text-slate-50;
+    @apply text-primary-foreground;
   }
   
   .bg-secondary {
-    @apply text-slate-900 dark:text-slate-50;
+    @apply text-secondary-foreground;
   }
   
   .bg-muted {
-    @apply text-slate-900 dark:text-slate-50;
+    @apply text-muted-foreground;
+  }
+  
+  .bg-card {
+    @apply text-card-foreground;
+  }
+  
+  .bg-popover {
+    @apply text-popover-foreground;
+  }
+  
+  /* Enhanced contrast for interactive elements */
+  button {
+    @apply text-foreground;
+  }
+  
+  button.bg-primary {
+    @apply text-primary-foreground;
+  }
+  
+  button.bg-secondary {
+    @apply text-secondary-foreground;
+  }
+  
+  button.bg-destructive {
+    @apply text-destructive-foreground;
   }
   
   /* Enhanced contrast for links */
   a:not(.no-contrast) {
-    @apply text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300;
+    @apply text-primary hover:text-primary/80 dark:text-primary dark:hover:text-primary/80;
   }
   
   /* Better contrast for form elements */
   input, textarea, select {
-    @apply text-slate-900 dark:text-slate-50 bg-white dark:bg-slate-800;
+    @apply text-foreground bg-background border-input;
+  }
+  
+  input::placeholder, textarea::placeholder {
+    @apply text-muted-foreground;
   }
   
   /* Improved contrast for headings */
   h1, h2, h3, h4, h5, h6 {
-    @apply text-slate-900 dark:text-slate-50 font-semibold;
+    @apply text-foreground font-semibold;
+  }
+  
+  /* Better contrast for labels */
+  label {
+    @apply text-foreground font-medium;
+  }
+  
+  /* Enhanced contrast for alerts and notifications */
+  .alert {
+    @apply text-foreground;
+  }
+  
+  /* Ensure proper contrast for navigation elements */
+  nav a {
+    @apply text-foreground hover:text-primary;
+  }
+  
+  /* Better contrast for table elements */
+  table {
+    @apply text-foreground;
+  }
+  
+  th {
+    @apply text-foreground font-semibold;
+  }
+  
+  td {
+    @apply text-foreground;
   }
 }
 
-/* Adding sensible default focus styles for better accessibility */
+/* Enhanced focus styles for better accessibility */
 *:focus-visible {
-  outline: 2px solid hsl(var(--primary));
+  outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
 }
 
@@ -119,14 +182,14 @@ p, h1, h2, h3, h4, h5, h6 {
   
   body {
     font-size: 12pt;
-    color: #000;
-    background-color: #fff;
+    color: #000 !important;
+    background-color: #fff !important;
   }
   
   a::after {
     content: " (" attr(href) ")";
     font-size: 90%;
-    color: #333;
+    color: #333 !important;
   }
 }
 
@@ -144,4 +207,24 @@ p, h1, h2, h3, h4, h5, h6 {
 /* Remove the ugly blue highlight on mobile taps */
 * {
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure minimum contrast ratios */
+.contrast-enhanced {
+  @apply text-slate-900 dark:text-slate-100;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --foreground: 0 0% 0%;
+    --background: 0 0% 100%;
+    --muted-foreground: 0 0% 20%;
+  }
+  
+  .dark {
+    --foreground: 0 0% 100%;
+    --background: 0 0% 0%;
+    --muted-foreground: 0 0% 80%;
+  }
 }
