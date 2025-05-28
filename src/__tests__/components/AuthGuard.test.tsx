@@ -57,7 +57,7 @@ describe('AuthGuard', () => {
       </AuthGuard>
     );
 
-    expect(screen.getByRole('status', { hidden: true })).toBeInTheDocument();
+    expect(document.querySelector('.animate-spin')).toBeInTheDocument();
   });
 
   it('redirects to login when user is not authenticated', () => {
@@ -89,7 +89,12 @@ describe('AuthGuard', () => {
   it('renders children when user is authenticated', () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
-      user: { id: '1', email: 'test@test.com', role: 'viewer' as any },
+      user: { 
+        id: '1', 
+        email: 'test@test.com', 
+        role: 'viewer' as any,
+        name: 'Test User'
+      },
       isLoading: false,
       hasPermission: vi.fn().mockReturnValue(true),
       login: vi.fn(),

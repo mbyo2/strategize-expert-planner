@@ -6,7 +6,7 @@ import { isSecureConnection } from '@/utils/securityUtils';
 
 interface SecurityThreat {
   type: 'injection' | 'xss' | 'csrf' | 'session' | 'network';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: 'low' | 'medium' | 'high';
   message: string;
   timestamp: Date;
 }
@@ -151,12 +151,12 @@ const SecurityMonitor: React.FC = () => {
     setThreats(currentThreats);
     setSecurityScore(Math.max(0, score));
     
-    // Log critical threats
+    // Log high severity threats
     currentThreats.forEach(threat => {
-      if (threat.severity === 'critical' || threat.severity === 'high') {
+      if (threat.severity === 'high') {
         logAuditEvent({
           action: 'view_sensitive',
-          resource: 'security',
+          resource: 'user',
           description: `Security threat detected: ${threat.message}`,
           severity: threat.severity,
           metadata: { 
@@ -266,7 +266,7 @@ const SecurityMonitor: React.FC = () => {
     // Log the threat
     logAuditEvent({
       action: 'view_sensitive',
-      resource: 'security',
+      resource: 'user',
       description: `Security threat: ${threat.message}`,
       severity: threat.severity,
       metadata: { 
@@ -275,8 +275,8 @@ const SecurityMonitor: React.FC = () => {
       }
     });
     
-    // Show notification for high/critical threats
-    if (threat.severity === 'high' || threat.severity === 'critical') {
+    // Show notification for high severity threats
+    if (threat.severity === 'high') {
       toast.error('Security Alert', {
         description: threat.message,
       });

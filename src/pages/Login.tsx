@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Shield, LogIn, KeyRound, MailCheck, Github, Linkedin, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Shield, LogIn, KeyRound, MailCheck, Github, Linkedin, AlertTriangle, Eye, EyeOff, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +23,12 @@ import {
   detectSqlInjection,
   isSecureConnection
 } from '@/utils/securityUtils';
+import { 
+  performIframeSecurityCheck, 
+  breakOutOfIframe, 
+  addFrameBustingScript,
+  isTrustedEnvironment
+} from '@/utils/iframeProtection';
 
 const loginSchema = z.object({
   email: z.string()
@@ -53,10 +59,11 @@ const Login = () => {
   const [lockedUntil, setLockedUntil] = useState<Date | null>(null);
   const [csrfToken, setCsrfToken] = useState('');
   const [securityWarning, setSecurityWarning] = useState<string | null>(null);
+  const [iframeWarning, setIframeWarning] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<{ valid: boolean; reason?: string }>({ valid: true });
   
-  // Generate CSRF token on component mount
+  // Generate CSRF token and perform security checks on component mount
   useEffect(() => {
     const token = generateCsrfToken();
     setCsrfToken(token);
@@ -64,7 +71,37 @@ const Login = () => {
     
     // Enhanced security checks
     performSecurityChecks();
+    
+    // Enhanced iframe protection
+    performIframeChecks();
+    
+    // Add frame busting script
+    addFrameBustingScript();
   }, []);
+  
+  const performIframeChecks = () => {
+    const iframeCheck = performIframeSecurityCheck();
+    
+    if (!iframeCheck.isSecure) {
+      setIframeWarning(iframeCheck.reason!);
+      
+      // Log the security incident
+      logAuditEvent({
+        action: 'view_sensitive',
+        resource: 'access_control',
+        description: iframeCheck.reason!,
+        severity: iframeCheck.severity
+      });
+      
+      // If it's a high severity threat and not in trusted environment, attempt to break out
+      if (iframeCheck.severity === 'high' && !isTrustedEnvironment()) {
+        // Give user a chance to see the warning before attempting breakout
+        setTimeout(() => {
+          breakOutOfIframe();
+        }, 3000);
+      }
+    }
+  };
   
   const performSecurityChecks = () => {
     const warnings: string[] = [];
@@ -92,20 +129,6 @@ const Login = () => {
         description: 'Suspicious user agent detected on login page',
         severity: 'medium',
         metadata: { userAgent }
-      });
-    }
-    
-    // Check if the page is loaded in an iframe (potential clickjacking)
-    const isInIframe = window.self !== window.top;
-    const isLovablePreview = window.location.hostname.includes('lovable.app');
-    
-    if (isInIframe && !isLovablePreview) {
-      warnings.push('This login page is embedded in an iframe, which is a potential security risk.');
-      logAuditEvent({
-        action: 'view_sensitive',
-        resource: 'access_control',
-        description: 'Login page loaded in iframe (potential clickjacking)',
-        severity: 'high'
       });
     }
     
@@ -431,6 +454,10 @@ const Login = () => {
     }
   };
 
+  const dismissIframeWarning = () => {
+    setIframeWarning(null);
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
       <div className="w-full max-w-md space-y-8">
@@ -442,6 +469,29 @@ const Login = () => {
           <h2 className="text-2xl font-semibold text-primary">Strategic Intelligence Platform</h2>
           <p className="mt-2 text-muted-foreground">Log in to your account</p>
         </div>
+
+        {iframeWarning && (
+          <div className="p-4 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md">
+            <div className="flex gap-2 items-start">
+              <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-medium text-red-800 dark:text-red-300 mb-1">Security Warning</h3>
+                <p className="text-sm text-red-700 dark:text-red-400">{iframeWarning}</p>
+                <p className="text-xs text-red-600 dark:text-red-500 mt-2">
+                  This page will redirect to a secure context in a few seconds.
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={dismissIframeWarning}
+                className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
 
         {securityWarning && (
           <div className="p-3 bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-md flex gap-2 items-center">
