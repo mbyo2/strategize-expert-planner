@@ -108,3 +108,106 @@ export const validatePasswordStrength = (password: string): { valid: boolean; re
   
   return { valid: true };
 };
+
+/**
+ * Detect potential SQL injection patterns
+ * @param input The input string to check
+ * @returns Whether SQL injection patterns are detected
+ */
+export const detectSqlInjection = (input: string): boolean => {
+  const sqlPatterns = [
+    /(\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b|\bDROP\b|\bCREATE\b|\bALTER\b)/i,
+    /(\bUNION\b|\bOR\b|\bAND\b).*(\b1\s*=\s*1\b|\b1\s*=\s*0\b)/i,
+    /('|\"|`|;|--|\*|\||&)/,
+    /(\bexec\b|\bexecute\b|\bsp_\b|\bxp_\b)/i
+  ];
+  
+  return sqlPatterns.some(pattern => pattern.test(input));
+};
+
+/**
+ * Validate email format and detect suspicious patterns
+ * @param email The email to validate
+ * @returns Validation result
+ */
+export const validateEmail = (email: string): { valid: boolean; reason?: string } => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  
+  if (!emailRegex.test(email)) {
+    return { valid: false, reason: 'Invalid email format' };
+  }
+  
+  // Check for suspicious patterns
+  if (detectSqlInjection(email)) {
+    return { valid: false, reason: 'Email contains suspicious characters' };
+  }
+  
+  // Check for common disposable email domains
+  const disposableDomains = ['10minutemail.com', 'tempmail.org', 'guerrillamail.com'];
+  const domain = email.split('@')[1].toLowerCase();
+  
+  if (disposableDomains.includes(domain)) {
+    return { valid: false, reason: 'Disposable email addresses are not allowed' };
+  }
+  
+  return { valid: true };
+};
+
+/**
+ * Generate a secure session token
+ * @returns A cryptographically secure random token
+ */
+export const generateSecureToken = (): string => {
+  const array = new Uint8Array(64);
+  window.crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+};
+
+/**
+ * Check if the current environment is secure (HTTPS)
+ * @returns Whether the connection is secure
+ */
+export const isSecureConnection = (): boolean => {
+  return window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+};
+
+/**
+ * Validate file uploads for security
+ * @param file The file to validate
+ * @returns Validation result
+ */
+export const validateFileUpload = (file: File): { valid: boolean; reason?: string } => {
+  // Check file size (max 10MB)
+  const maxSize = 10 * 1024 * 1024;
+  if (file.size > maxSize) {
+    return { valid: false, reason: 'File size exceeds 10MB limit' };
+  }
+  
+  // Check file type
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain'];
+  if (!allowedTypes.includes(file.type)) {
+    return { valid: false, reason: 'File type not allowed' };
+  }
+  
+  // Check file extension
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.txt'];
+  const extension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+  if (!allowedExtensions.includes(extension)) {
+    return { valid: false, reason: 'File extension not allowed' };
+  }
+  
+  return { valid: true };
+};
+
+/**
+ * Hash a password client-side before sending to server
+ * @param password The password to hash
+ * @returns Promise that resolves to the hashed password
+ */
+export const hashPassword = async (password: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};

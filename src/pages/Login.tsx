@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { z } from 'zod';
@@ -7,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Shield, LogIn, KeyRound, MailCheck, Github, Linkedin, AlertTriangle } from 'lucide-react';
+import { Shield, LogIn, KeyRound, MailCheck, Github, Linkedin, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
@@ -15,11 +14,28 @@ import { logAuditEvent } from '@/services/auditService';
 import { sanitizeData } from '@/services/auditService';
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { isRateLimited, generateCsrfToken, sanitizeInput } from '@/utils/securityUtils';
+import { 
+  isRateLimited, 
+  generateCsrfToken, 
+  sanitizeInput, 
+  validatePasswordStrength,
+  validateEmail,
+  detectSqlInjection,
+  isSecureConnection
+} from '@/utils/securityUtils';
 
 const loginSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
+  email: z.string()
+    .email({ message: "Please enter a valid email address" })
+    .refine((email) => {
+      const validation = validateEmail(email);
+      return validation.valid;
+    }, { message: "Invalid or suspicious email format" }),
+  password: z.string()
+    .min(8, { message: "Password must be at least 8 characters" })
+    .refine((password) => !detectSqlInjection(password), {
+      message: "Password contains invalid characters"
+    }),
   rememberMe: z.boolean().optional(),
 });
 
@@ -37,6 +53,8 @@ const Login = () => {
   const [lockedUntil, setLockedUntil] = useState<Date | null>(null);
   const [csrfToken, setCsrfToken] = useState('');
   const [securityWarning, setSecurityWarning] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState<{ valid: boolean; reason?: string }>({ valid: true });
   
   // Generate CSRF token on component mount
   useEffect(() => {
@@ -44,12 +62,30 @@ const Login = () => {
     setCsrfToken(token);
     sessionStorage.setItem('csrfToken', token);
     
-    // Check for suspicious activity
+    // Enhanced security checks
+    performSecurityChecks();
+  }, []);
+  
+  const performSecurityChecks = () => {
+    const warnings: string[] = [];
+    
+    // Check for secure connection
+    if (!isSecureConnection()) {
+      warnings.push('Insecure connection detected. Your data may be at risk.');
+      logAuditEvent({
+        action: 'view_sensitive',
+        resource: 'access_control',
+        description: 'Login page accessed over insecure connection',
+        severity: 'high'
+      });
+    }
+    
+    // Check for suspicious user agent
     const userAgent = navigator.userAgent;
-    const knownBots = ['semrush', 'ahrefsbot', 'baiduspider', 'yandex', 'mj12bot'];
+    const knownBots = ['semrush', 'ahrefsbot', 'baiduspider', 'yandex', 'mj12bot', 'crawler', 'spider'];
     
     if (knownBots.some(bot => userAgent.toLowerCase().includes(bot))) {
-      setSecurityWarning('Suspicious user agent detected. If you are a legitimate user, please continue.');
+      warnings.push('Suspicious user agent detected. If you are a legitimate user, please continue.');
       logAuditEvent({
         action: 'view_sensitive',
         resource: 'access_control',
@@ -63,9 +99,8 @@ const Login = () => {
     const isInIframe = window.self !== window.top;
     const isLovablePreview = window.location.hostname.includes('lovable.app');
     
-    // Only show warning if in iframe and NOT in lovable preview
     if (isInIframe && !isLovablePreview) {
-      setSecurityWarning('This login page is embedded in an iframe, which is a potential security risk.');
+      warnings.push('This login page is embedded in an iframe, which is a potential security risk.');
       logAuditEvent({
         action: 'view_sensitive',
         resource: 'access_control',
@@ -73,7 +108,36 @@ const Login = () => {
         severity: 'high'
       });
     }
-  }, []);
+    
+    // Check for browser extensions that might interfere
+    if ((window as any).chrome && (window as any).chrome.runtime) {
+      logAuditEvent({
+        action: 'view_sensitive',
+        resource: 'access_control',
+        description: 'Browser extensions detected during login',
+        severity: 'low'
+      });
+    }
+    
+    // Check for developer tools
+    let devtools = { open: false };
+    const threshold = 160;
+    
+    if (window.outerHeight - window.innerHeight > threshold || 
+        window.outerWidth - window.innerWidth > threshold) {
+      devtools.open = true;
+      logAuditEvent({
+        action: 'view_sensitive',
+        resource: 'access_control',
+        description: 'Developer tools detected during login',
+        severity: 'medium'
+      });
+    }
+    
+    if (warnings.length > 0) {
+      setSecurityWarning(warnings.join(' '));
+    }
+  };
   
   // Check if there's a session expiry message in the location state
   useEffect(() => {
@@ -111,12 +175,35 @@ const Login = () => {
     },
   });
 
+  // Password strength validation
+  const handlePasswordChange = (password: string) => {
+    const strength = validatePasswordStrength(password);
+    setPasswordStrength(strength);
+  };
+
   const onSubmit = async (data: LoginFormValues) => {
-    // Sanitize user input
+    // Enhanced input validation
     const sanitizedEmail = sanitizeInput(data.email);
     
-    // Check for rate limiting
-    if (isRateLimited(`login_${sanitizedEmail}`, 5, 15 * 60 * 1000)) {
+    // Additional security checks
+    if (detectSqlInjection(data.email) || detectSqlInjection(data.password)) {
+      toast.error("Security Alert", {
+        description: "Suspicious input detected. Please try again with valid credentials.",
+      });
+      
+      logAuditEvent({
+        action: 'login',
+        resource: 'user',
+        description: 'SQL injection attempt detected in login form',
+        metadata: { email: sanitizeData(sanitizedEmail) },
+        severity: 'high'
+      });
+      
+      return;
+    }
+    
+    // Check for rate limiting with more aggressive limits
+    if (isRateLimited(`login_${sanitizedEmail}`, 3, 15 * 60 * 1000)) {
       toast.error("Too Many Attempts", {
         description: "Please try again later or reset your password.",
       });
@@ -222,14 +309,14 @@ const Login = () => {
       const newAttempts = loginAttempts + 1;
       setLoginAttempts(newAttempts);
       
-      // Lock account after 5 failed attempts
-      if (newAttempts >= 5) {
+      // More aggressive account locking
+      if (newAttempts >= 3) {
         const lockTime = new Date();
-        lockTime.setMinutes(lockTime.getMinutes() + 15); // Lock for 15 minutes
+        lockTime.setMinutes(lockTime.getMinutes() + 30); // Lock for 30 minutes
         setLockedUntil(lockTime);
         
         toast.error("Account Locked", {
-          description: "Too many failed attempts. Try again in 15 minutes.",
+          description: "Too many failed attempts. Try again in 30 minutes.",
         });
         
         // Log account lock
@@ -380,6 +467,7 @@ const Login = () => {
                           placeholder="you@example.com" 
                           {...field} 
                           autoComplete="email"
+                          className="transition-all duration-200 focus:ring-2 focus:ring-primary"
                         />
                       </FormControl>
                       <FormMessage />
@@ -394,13 +482,38 @@ const Login = () => {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="••••••••" 
-                          {...field} 
-                          autoComplete="current-password"
-                        />
+                        <div className="relative">
+                          <Input 
+                            type={showPassword ? "text" : "password"}
+                            placeholder="••••••••" 
+                            {...field} 
+                            autoComplete="current-password"
+                            className="pr-10 transition-all duration-200 focus:ring-2 focus:ring-primary"
+                            onChange={(e) => {
+                              field.onChange(e);
+                              handlePasswordChange(e.target.value);
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
                       </FormControl>
+                      {!passwordStrength.valid && field.value && (
+                        <p className="text-sm text-amber-600 dark:text-amber-400">
+                          {passwordStrength.reason}
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -432,7 +545,11 @@ const Login = () => {
                   </Link>
                 </div>
 
-                <Button type="submit" className="w-full" disabled={form.formState.isSubmitting || (lockedUntil && new Date() < lockedUntil)}>
+                <Button 
+                  type="submit" 
+                  className="w-full transition-all duration-200 hover:scale-[1.02]" 
+                  disabled={form.formState.isSubmitting || (lockedUntil && new Date() < lockedUntil)}
+                >
                   {form.formState.isSubmitting ? (
                     <span className="flex items-center gap-2">
                       <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />

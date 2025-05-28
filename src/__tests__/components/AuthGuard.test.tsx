@@ -2,21 +2,22 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import AuthGuard from '@/components/AuthGuard';
 import { useAuth } from '@/hooks/useAuth';
 
 // Mock the useAuth hook
-jest.mock('@/hooks/useAuth');
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+vi.mock('@/hooks/useAuth');
+const mockUseAuth = vi.mocked(useAuth);
 
 // Mock the audit service
-jest.mock('@/services/auditService', () => ({
-  logAuditEvent: jest.fn(),
+vi.mock('@/services/auditService', () => ({
+  logAuditEvent: vi.fn(),
 }));
 
 // Mock the security utils
-jest.mock('@/utils/securityUtils', () => ({
-  sanitizeInput: jest.fn((input) => input),
+vi.mock('@/utils/securityUtils', () => ({
+  sanitizeInput: vi.fn((input) => input),
 }));
 
 const TestComponent = () => <div>Protected Content</div>;
@@ -31,7 +32,7 @@ const renderWithRouter = (component: React.ReactElement) => {
 
 describe('AuthGuard', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('shows loading spinner when authentication is loading', () => {
@@ -39,15 +40,15 @@ describe('AuthGuard', () => {
       isAuthenticated: false,
       user: null,
       isLoading: true,
-      hasPermission: jest.fn(),
-      login: jest.fn(),
-      signup: jest.fn(),
-      logout: jest.fn(),
-      updateProfile: jest.fn(),
-      getSecuritySettings: jest.fn(),
-      updateSecuritySettings: jest.fn(),
-      verifyMfa: jest.fn(),
-      setupMfa: jest.fn(),
+      hasPermission: vi.fn(),
+      login: vi.fn(),
+      signup: vi.fn(),
+      logout: vi.fn(),
+      updateProfile: vi.fn(),
+      getSecuritySettings: vi.fn(),
+      updateSecuritySettings: vi.fn(),
+      verifyMfa: vi.fn(),
+      setupMfa: vi.fn(),
     });
 
     renderWithRouter(
@@ -64,15 +65,15 @@ describe('AuthGuard', () => {
       isAuthenticated: false,
       user: null,
       isLoading: false,
-      hasPermission: jest.fn(),
-      login: jest.fn(),
-      signup: jest.fn(),
-      logout: jest.fn(),
-      updateProfile: jest.fn(),
-      getSecuritySettings: jest.fn(),
-      updateSecuritySettings: jest.fn(),
-      verifyMfa: jest.fn(),
-      setupMfa: jest.fn(),
+      hasPermission: vi.fn(),
+      login: vi.fn(),
+      signup: vi.fn(),
+      logout: vi.fn(),
+      updateProfile: vi.fn(),
+      getSecuritySettings: vi.fn(),
+      updateSecuritySettings: vi.fn(),
+      verifyMfa: vi.fn(),
+      setupMfa: vi.fn(),
     });
 
     renderWithRouter(
@@ -90,15 +91,15 @@ describe('AuthGuard', () => {
       isAuthenticated: true,
       user: { id: '1', email: 'test@test.com', role: 'viewer' as any },
       isLoading: false,
-      hasPermission: jest.fn().mockReturnValue(true),
-      login: jest.fn(),
-      signup: jest.fn(),
-      logout: jest.fn(),
-      updateProfile: jest.fn(),
-      getSecuritySettings: jest.fn(),
-      updateSecuritySettings: jest.fn(),
-      verifyMfa: jest.fn(),
-      setupMfa: jest.fn(),
+      hasPermission: vi.fn().mockReturnValue(true),
+      login: vi.fn(),
+      signup: vi.fn(),
+      logout: vi.fn(),
+      updateProfile: vi.fn(),
+      getSecuritySettings: vi.fn(),
+      updateSecuritySettings: vi.fn(),
+      verifyMfa: vi.fn(),
+      setupMfa: vi.fn(),
     });
 
     renderWithRouter(

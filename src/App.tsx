@@ -27,6 +27,7 @@ import { useRealTimeUpdates } from '@/hooks/useRealTimeUpdates';
 import { logAuditEvent } from '@/services/auditService';
 import SEO from '@/components/SEO';
 import SecurityHeaders from '@/components/SecurityHeaders';
+import SecurityMonitor from '@/components/SecurityMonitor';
 import AuthGuard from '@/components/AuthGuard';
 
 const queryClient = new QueryClient({
@@ -190,6 +191,7 @@ function App() {
             <Router>
               <SEO />
               <SecurityHeaders />
+              <SecurityMonitor />
               <AppRoutes />
               <Toaster position="top-right" />
             </Router>
