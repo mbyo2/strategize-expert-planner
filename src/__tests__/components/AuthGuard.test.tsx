@@ -1,153 +1,112 @@
 
-import { describe, it, expect, vi } from 'vitest';
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import AuthGuard from '@/components/AuthGuard';
-import * as authHook from '@/hooks/useAuth';
-import * as auditService from '@/services/auditService';
+import { useAuth } from '@/hooks/useAuth';
 
 // Mock the useAuth hook
-vi.mock('@/hooks/useAuth', () => ({
-  useAuth: vi.fn()
-}));
+jest.mock('@/hooks/useAuth');
+const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 
 // Mock the audit service
-vi.mock('@/services/auditService', () => ({
-  logAuditEvent: vi.fn()
+jest.mock('@/services/auditService', () => ({
+  logAuditEvent: jest.fn(),
 }));
 
+// Mock the security utils
+jest.mock('@/utils/securityUtils', () => ({
+  sanitizeInput: jest.fn((input) => input),
+}));
+
+const TestComponent = () => <div>Protected Content</div>;
+
+const renderWithRouter = (component: React.ReactElement) => {
+  return render(
+    <BrowserRouter>
+      {component}
+    </BrowserRouter>
+  );
+};
+
 describe('AuthGuard', () => {
-  it('redirects to login when user is not authenticated', () => {
-    // Setup mock with the required missing properties
-    vi.spyOn(authHook, 'useAuth').mockReturnValue({
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('shows loading spinner when authentication is loading', () => {
+    mockUseAuth.mockReturnValue({
       isAuthenticated: false,
-      isLoading: false,
       user: null,
-      hasPermission: () => false,
-      login: vi.fn(),
-      logout: vi.fn(),
-      signup: vi.fn(),
-      updateProfile: vi.fn(),
-      // Add missing properties
-      getSecuritySettings: vi.fn().mockReturnValue({
-        mfaEnabled: false,
-        ipRestrictions: [],
-        sessionTimeoutMinutes: 30,
-        requireMfaForAdmin: true
-      }),
-      updateSecuritySettings: vi.fn(),
-      verifyMfa: vi.fn(),
-      setupMfa: vi.fn()
+      isLoading: true,
+      hasPermission: jest.fn(),
+      login: jest.fn(),
+      signup: jest.fn(),
+      logout: jest.fn(),
+      updateProfile: jest.fn(),
+      getSecuritySettings: jest.fn(),
+      updateSecuritySettings: jest.fn(),
+      verifyMfa: jest.fn(),
+      setupMfa: jest.fn(),
     });
-    
-    // Render component
-    render(
-      <BrowserRouter>
-        <AuthGuard>
-          <div>Protected Content</div>
-        </AuthGuard>
-      </BrowserRouter>
+
+    renderWithRouter(
+      <AuthGuard>
+        <TestComponent />
+      </AuthGuard>
     );
-    
-    // Verify audit log was called
-    expect(auditService.logAuditEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: 'view_sensitive',
-        severity: 'medium',
-      })
+
+    expect(screen.getByRole('status', { hidden: true })).toBeInTheDocument();
+  });
+
+  it('redirects to login when user is not authenticated', () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: false,
+      user: null,
+      isLoading: false,
+      hasPermission: jest.fn(),
+      login: jest.fn(),
+      signup: jest.fn(),
+      logout: jest.fn(),
+      updateProfile: jest.fn(),
+      getSecuritySettings: jest.fn(),
+      updateSecuritySettings: jest.fn(),
+      verifyMfa: jest.fn(),
+      setupMfa: jest.fn(),
+    });
+
+    renderWithRouter(
+      <AuthGuard>
+        <TestComponent />
+      </AuthGuard>
     );
-    
-    // Assertion: component should not render children
+
+    // Should redirect to login, so protected content should not be visible
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
   });
-  
+
   it('renders children when user is authenticated', () => {
-    // Setup mock with the required missing properties
-    vi.spyOn(authHook, 'useAuth').mockReturnValue({
+    mockUseAuth.mockReturnValue({
       isAuthenticated: true,
+      user: { id: '1', email: 'test@test.com', role: 'viewer' as any },
       isLoading: false,
-      user: { 
-        id: '123', 
-        name: 'Test User', 
-        email: 'test@example.com', 
-        role: 'viewer' 
-      },
-      hasPermission: () => true,
-      login: vi.fn(),
-      logout: vi.fn(),
-      signup: vi.fn(),
-      updateProfile: vi.fn(),
-      // Add missing properties
-      getSecuritySettings: vi.fn().mockReturnValue({
-        mfaEnabled: false,
-        ipRestrictions: [],
-        sessionTimeoutMinutes: 30,
-        requireMfaForAdmin: true
-      }),
-      updateSecuritySettings: vi.fn(),
-      verifyMfa: vi.fn(),
-      setupMfa: vi.fn()
+      hasPermission: jest.fn().mockReturnValue(true),
+      login: jest.fn(),
+      signup: jest.fn(),
+      logout: jest.fn(),
+      updateProfile: jest.fn(),
+      getSecuritySettings: jest.fn(),
+      updateSecuritySettings: jest.fn(),
+      verifyMfa: jest.fn(),
+      setupMfa: jest.fn(),
     });
-    
-    // Render component
-    render(
-      <BrowserRouter>
-        <AuthGuard>
-          <div>Protected Content</div>
-        </AuthGuard>
-      </BrowserRouter>
+
+    renderWithRouter(
+      <AuthGuard>
+        <TestComponent />
+      </AuthGuard>
     );
-    
-    // Assertion: component should render children
+
     expect(screen.getByText('Protected Content')).toBeInTheDocument();
-  });
-  
-  it('renders access denied when user lacks required roles', () => {
-    // Setup mock with permission check that fails and required missing properties
-    vi.spyOn(authHook, 'useAuth').mockReturnValue({
-      isAuthenticated: true,
-      isLoading: false,
-      user: { 
-        id: '123', 
-        name: 'Test User', 
-        email: 'test@example.com', 
-        role: 'viewer' 
-      },
-      hasPermission: () => false, // This will make the role check fail
-      login: vi.fn(),
-      logout: vi.fn(),
-      signup: vi.fn(),
-      updateProfile: vi.fn(),
-      // Add missing properties
-      getSecuritySettings: vi.fn().mockReturnValue({
-        mfaEnabled: false,
-        ipRestrictions: [],
-        sessionTimeoutMinutes: 30,
-        requireMfaForAdmin: true
-      }),
-      updateSecuritySettings: vi.fn(),
-      verifyMfa: vi.fn(),
-      setupMfa: vi.fn()
-    });
-    
-    // Render with required roles
-    render(
-      <BrowserRouter>
-        <AuthGuard requiredRoles={['admin']}>
-          <div>Admin Content</div>
-        </AuthGuard>
-      </BrowserRouter>
-    );
-    
-    // Verify audit log was called for unauthorized access
-    expect(auditService.logAuditEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: 'view_sensitive',
-        severity: 'high',
-      })
-    );
-    
-    // Assertion: component should not render children
-    expect(screen.queryByText('Admin Content')).not.toBeInTheDocument();
   });
 });

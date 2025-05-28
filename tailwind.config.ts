@@ -145,6 +145,25 @@ export default {
 					'background-color': 'hsl(var(--background))',
 					'color': 'hsl(var(--foreground))',
 				},
+				// High contrast text utilities
+				'.text-high-contrast': {
+					'color': 'rgb(15 23 42)', // slate-900
+					'@media (prefers-color-scheme: dark)': {
+						'color': 'rgb(248 250 252)', // slate-50
+					},
+				},
+				'.text-medium-contrast': {
+					'color': 'rgb(30 41 59)', // slate-800
+					'@media (prefers-color-scheme: dark)': {
+						'color': 'rgb(226 232 240)', // slate-200
+					},
+				},
+				'.text-low-contrast': {
+					'color': 'rgb(71 85 105)', // slate-600
+					'@media (prefers-color-scheme: dark)': {
+						'color': 'rgb(148 163 184)', // slate-400
+					},
+				},
 			})
 		})
 	],
