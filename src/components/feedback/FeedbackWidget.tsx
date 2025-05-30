@@ -1,185 +1,130 @@
 
 import React, { useState } from 'react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { 
-  MessageSquare, 
-  ThumbsUp, 
-  ThumbsDown, 
-  AlertCircle, 
-  Lightbulb, 
-  CheckCircle2
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { logAuditEvent } from "@/services/auditService";
-import { useLocalStorage } from '@/hooks/use-local-storage';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { MessageCircle, Star, Send } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface FeedbackWidgetProps {
   position?: 'left' | 'right';
-  className?: string;
 }
 
-type FeedbackType = 'praise' | 'issue' | 'suggestion' | null;
-
-const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({ 
-  position = 'right',
-  className 
-}) => {
+const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({ position = 'right' }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [feedbackType, setFeedbackType] = useState<FeedbackType>(null);
-  const [feedbackText, setFeedbackText] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [feedbackSubmitted, setFeedbackSubmitted] = useLocalStorage('feedback-submitted', false);
-  
-  const handleSubmit = async () => {
-    if (!feedbackText.trim() || !feedbackType) return;
-    
-    setSubmitting(true);
-    
-    try {
-      // Log the feedback event
-      await logAuditEvent({
-        action: 'feedback_submitted',
-        resource: 'feedback',
-        description: `Feedback type: ${feedbackType}, Content: ${feedbackText}`,
-        severity: 'low',
-      });
-      
-      // In a real app, you would send this to your feedback endpoint
-      console.log('Feedback submitted:', { type: feedbackType, text: feedbackText });
-      
-      // Show success state
-      setSuccess(true);
-      setFeedbackSubmitted(true);
-      
-      // Reset after delay
-      setTimeout(() => {
-        setIsOpen(false);
-        
-        // Reset form after sheet closes
-        setTimeout(() => {
-          setSuccess(false);
-          setFeedbackType(null);
-          setFeedbackText('');
-        }, 300);
-      }, 2000);
-    } catch (error) {
-      console.error('Error submitting feedback:', error);
-    } finally {
-      setSubmitting(false);
+  const [rating, setRating] = useState('');
+  const [feedbackType, setFeedbackType] = useState('');
+  const [message, setMessage] = useState('');
+
+  const handleSubmit = () => {
+    if (!feedbackType || !message.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
     }
+
+    // Here you would typically send the feedback to your backend
+    toast.success('Feedback submitted', {
+      description: 'Thank you for your feedback! We\'ll review it shortly.'
+    });
+
+    // Reset form
+    setRating('');
+    setFeedbackType('');
+    setMessage('');
+    setIsOpen(false);
   };
-  
-  const feedbackOptions = [
-    { value: 'praise', label: 'Praise', icon: <ThumbsUp className="h-4 w-4" /> },
-    { value: 'issue', label: 'Report Issue', icon: <AlertCircle className="h-4 w-4" /> },
-    { value: 'suggestion', label: 'Suggestion', icon: <Lightbulb className="h-4 w-4" /> },
-  ];
-  
+
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
         <Button
           variant="outline"
           size="sm"
-          className={cn(
-            "fixed bottom-20 z-50 gap-2 hover:bg-primary hover:text-primary-foreground",
-            position === 'right' ? 'right-4' : 'left-4',
-            className
-          )}
-          onClick={() => setIsOpen(true)}
-          aria-label="Provide feedback"
+          className={`fixed bottom-32 ${position}-4 z-50 gap-2 hover:bg-primary hover:text-primary-foreground`}
+          aria-label="Give feedback"
         >
-          <MessageSquare className="h-4 w-4" />
+          <MessageCircle className="h-4 w-4" />
           <span className="sr-only md:not-sr-only md:inline-flex">Feedback</span>
         </Button>
-      </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
-            Share your feedback
-          </SheetTitle>
-        </SheetHeader>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <MessageCircle className="h-5 w-5" />
+            Share Your Feedback
+          </DialogTitle>
+        </DialogHeader>
         
-        {success ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-6 animate-fade-in">
-            <div className="rounded-full bg-green-100 dark:bg-green-900/20 p-3 mb-4">
-              <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Thank you for your feedback!</h3>
-            <p className="text-muted-foreground">
-              Your input helps us improve the platform for everyone.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-6 py-6">
-            <div className="space-y-3">
-              <Label>What kind of feedback do you have?</Label>
-              <RadioGroup 
-                value={feedbackType || ''} 
-                onValueChange={(value) => setFeedbackType(value as FeedbackType)}
-              >
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {feedbackOptions.map((option) => (
-                    <div key={option.value} className="flex items-center space-x-2">
-                      <RadioGroupItem 
-                        value={option.value} 
-                        id={`feedback-type-${option.value}`} 
-                        className="sr-only"
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            <div>
+              <Label className="text-sm font-medium">How would you rate your experience?</Label>
+              <RadioGroup value={rating} onValueChange={setRating} className="flex gap-2 mt-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <div key={star} className="flex items-center space-x-1">
+                    <RadioGroupItem value={star.toString()} id={`star-${star}`} className="sr-only" />
+                    <Label htmlFor={`star-${star}`} className="cursor-pointer">
+                      <Star 
+                        className={`h-6 w-6 ${
+                          rating && parseInt(rating) >= star 
+                            ? 'text-yellow-400 fill-yellow-400' 
+                            : 'text-gray-300'
+                        }`} 
                       />
-                      <Label
-                        htmlFor={`feedback-type-${option.value}`}
-                        className={cn(
-                          "flex flex-1 items-center justify-center gap-2 rounded-md border border-muted py-3 px-4 cursor-pointer hover:bg-muted/50",
-                          feedbackType === option.value && "border-primary bg-primary/10"
-                        )}
-                      >
-                        {option.icon}
-                        <span>{option.label}</span>
-                      </Label>
-                    </div>
-                  ))}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium">Feedback Type *</Label>
+              <RadioGroup value={feedbackType} onValueChange={setFeedbackType} className="mt-2">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="bug" id="bug" />
+                  <Label htmlFor="bug" className="text-sm">Bug Report</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="feature" id="feature" />
+                  <Label htmlFor="feature" className="text-sm">Feature Request</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="improvement" id="improvement" />
+                  <Label htmlFor="improvement" className="text-sm">Improvement Suggestion</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="accessibility" id="accessibility" />
+                  <Label htmlFor="accessibility" className="text-sm">Accessibility Issue</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="other" id="other" />
+                  <Label htmlFor="other" className="text-sm">Other</Label>
                 </div>
               </RadioGroup>
             </div>
-            
-            <div className="space-y-3">
-              <Label htmlFor="feedback-text">Tell us more</Label>
+
+            <div>
+              <Label htmlFor="message" className="text-sm font-medium">Your Message *</Label>
               <Textarea
-                id="feedback-text"
-                value={feedbackText}
-                onChange={(e) => setFeedbackText(e.target.value)}
-                placeholder="Share your experience, report a bug, or suggest an improvement..."
-                className="min-h-[120px]"
+                id="message"
+                placeholder="Please describe your feedback in detail..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="mt-2 min-h-[100px]"
               />
             </div>
-            
-            <Button 
-              onClick={handleSubmit} 
-              disabled={!feedbackText.trim() || !feedbackType || submitting}
-              className="w-full"
-            >
-              {submitting ? 'Submitting...' : 'Submit feedback'}
+
+            <Button onClick={handleSubmit} className="w-full">
+              <Send className="h-4 w-4 mr-2" />
+              Submit Feedback
             </Button>
-            
-            <p className="text-xs text-muted-foreground text-center">
-              Your feedback is anonymous unless you include your contact information.
-            </p>
-          </div>
-        )}
-      </SheetContent>
-    </Sheet>
+          </CardContent>
+        </Card>
+      </DialogContent>
+    </Dialog>
   );
 };
 

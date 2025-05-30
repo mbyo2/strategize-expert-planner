@@ -1,141 +1,104 @@
 
-import React, { useEffect, useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Keyboard } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
-interface ShortcutProps {
+interface Shortcut {
   keys: string[];
   description: string;
   category: string;
 }
 
 const KeyboardShortcuts: React.FC = () => {
-  const [open, setOpen] = useState(false);
-  
-  // Listen for keyboard shortcut to open dialog
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Open shortcuts dialog when pressing Shift + ?
-      if (event.shiftKey && event.key === '?') {
-        event.preventDefault();
-        setOpen(true);
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-  
-  const shortcuts: ShortcutProps[] = [
-    { keys: ['?'], description: 'Show keyboard shortcuts', category: 'General' },
-    { keys: ['h'], description: 'Go to home dashboard', category: 'Navigation' },
-    { keys: ['g', 'i'], description: 'Go to industry analysis', category: 'Navigation' },
-    { keys: ['g', 'p'], description: 'Go to planning', category: 'Navigation' },
-    { keys: ['g', 'g'], description: 'Go to goals', category: 'Navigation' },
-    { keys: ['g', 'r'], description: 'Go to resources', category: 'Navigation' },
-    { keys: ['g', 's'], description: 'Go to settings', category: 'Navigation' },
-    { keys: ['g', 'a'], description: 'Go to analytics', category: 'Navigation' },
-    { keys: ['s'], description: 'Focus search', category: 'General' },
-    { keys: ['n'], description: 'Create new item', category: 'Actions' },
-    { keys: ['e'], description: 'Edit current item', category: 'Actions' },
-    { keys: ['d'], description: 'Delete current item', category: 'Actions' },
-    { keys: ['r'], description: 'Refresh data', category: 'Actions' },
-    { keys: ['ctrl', 's'], description: 'Save changes', category: 'Actions' },
-    { keys: ['esc'], description: 'Close dialogs/menus', category: 'General' },
-    { keys: ['f'], description: 'Toggle full screen view', category: 'Display' },
-    { keys: ['ctrl', '+'], description: 'Zoom in', category: 'Display' },
-    { keys: ['ctrl', '-'], description: 'Zoom out', category: 'Display' },
-    { keys: ['ctrl', '0'], description: 'Reset zoom', category: 'Display' },
+  const [isOpen, setIsOpen] = useState(false);
+
+  const shortcuts: Shortcut[] = [
+    { keys: ['Alt', 'H'], description: 'Open help center', category: 'Navigation' },
+    { keys: ['Alt', 'M'], description: 'Open main menu', category: 'Navigation' },
+    { keys: ['Alt', 'S'], description: 'Open search', category: 'Navigation' },
+    { keys: ['Ctrl', 'K'], description: 'Command palette', category: 'Navigation' },
+    { keys: ['Ctrl', 'Shift', 'A'], description: 'Open accessibility menu', category: 'Accessibility' },
+    { keys: ['Ctrl', 'Shift', 'T'], description: 'Toggle tactical mode', category: 'Accessibility' },
+    { keys: ['Ctrl', 'Shift', 'C'], description: 'Toggle high contrast', category: 'Accessibility' },
+    { keys: ['Escape'], description: 'Close dialog/modal', category: 'General' },
+    { keys: ['Tab'], description: 'Navigate forward', category: 'General' },
+    { keys: ['Shift', 'Tab'], description: 'Navigate backward', category: 'General' },
   ];
-  
-  // Group by category
-  const shortcutsByCategory = shortcuts.reduce<Record<string, ShortcutProps[]>>((acc, shortcut) => {
+
+  const groupedShortcuts = shortcuts.reduce((acc, shortcut) => {
     if (!acc[shortcut.category]) {
       acc[shortcut.category] = [];
     }
     acc[shortcut.category].push(shortcut);
     return acc;
-  }, {});
-  
-  // Order of categories
-  const categoryOrder = ['General', 'Navigation', 'Actions', 'Display'];
-  
-  // Sort categories
-  const sortedCategories = Object.keys(shortcutsByCategory).sort(
-    (a, b) => categoryOrder.indexOf(a) - categoryOrder.indexOf(b)
-  );
-  
-  const Shortcut: React.FC<{ keys: string[] }> = ({ keys }) => {
-    return (
-      <div className="flex gap-1">
-        {keys.map((key, index) => (
-          <React.Fragment key={index}>
-            <kbd className="px-2 py-1 text-xs bg-muted border rounded-md font-mono">
-              {key}
-            </kbd>
-            {index < keys.length - 1 && key !== 'ctrl' && key !== 'alt' && key !== 'shift' && (
-              <span className="text-muted-foreground">then</span>
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-    );
-  };
-  
+  }, {} as Record<string, Shortcut[]>);
+
+  useEffect(() => {
+    const handleKeydown = (event: KeyboardEvent) => {
+      // Open keyboard shortcuts with Ctrl+Shift+?
+      if (event.ctrlKey && event.shiftKey && event.key === '?') {
+        event.preventDefault();
+        setIsOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeydown);
+    return () => document.removeEventListener('keydown', handleKeydown);
+  }, []);
+
   return (
-    <>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className="fixed bottom-36 right-4 z-50 gap-2 hover:bg-primary hover:text-primary-foreground"
-            aria-label="Keyboard shortcuts"
-          >
-            <Keyboard className="h-4 w-4" />
-            <span className="sr-only md:not-sr-only md:inline-flex">Shortcuts</span>
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-auto p-6">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Keyboard className="h-5 w-5" />
-              Keyboard Shortcuts
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-6 mt-4">
-            {sortedCategories.map(category => (
-              <div key={category} className="space-y-2">
-                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">
-                  {category}
-                </h3>
-                <div className="space-y-2">
-                  {shortcutsByCategory[category].map((shortcut, index) => (
-                    <div key={index} className="flex justify-between items-center py-1">
-                      <span className="text-sm">{shortcut.description}</span>
-                      <Shortcut keys={shortcut.keys} />
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="fixed bottom-4 left-4 z-50"
+          aria-label="View keyboard shortcuts"
+        >
+          <Keyboard className="h-4 w-4" />
+          <span className="sr-only">Keyboard shortcuts</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Keyboard className="h-5 w-5" />
+            Keyboard Shortcuts
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6">
+          {Object.entries(groupedShortcuts).map(([category, shortcuts]) => (
+            <div key={category}>
+              <h3 className="font-semibold mb-3">{category}</h3>
+              <div className="space-y-2">
+                {shortcuts.map((shortcut, index) => (
+                  <div key={index} className="flex items-center justify-between py-2 px-3 rounded-lg border">
+                    <span className="text-sm">{shortcut.description}</span>
+                    <div className="flex items-center gap-1">
+                      {shortcut.keys.map((key, keyIndex) => (
+                        <React.Fragment key={keyIndex}>
+                          <Badge variant="outline" className="text-xs px-2 py-1">
+                            {key}
+                          </Badge>
+                          {keyIndex < shortcut.keys.length - 1 && (
+                            <span className="text-xs text-muted-foreground">+</span>
+                          )}
+                        </React.Fragment>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+          ))}
+          <div className="text-sm text-muted-foreground border-t pt-4">
+            <p>Press <Badge variant="outline" className="mx-1">Ctrl</Badge> + <Badge variant="outline" className="mx-1">Shift</Badge> + <Badge variant="outline" className="mx-1">?</Badge> to open this dialog</p>
           </div>
-          
-          <p className="text-xs text-muted-foreground mt-6">
-            Press <kbd className="px-1 py-0.5 text-xs bg-muted border rounded-md font-mono">Shift</kbd> + <kbd className="px-1 py-0.5 text-xs bg-muted border rounded-md font-mono">?</kbd> at any time to show this dialog.
-          </p>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

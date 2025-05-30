@@ -1,222 +1,144 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Sun, Moon, Eye, Volume2, VolumeX, Wifi, WifiOff } from 'lucide-react';
-import { useLocalStorage } from '@/hooks/use-local-storage';
+import { Shield, Zap, Eye, Volume, Wifi, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface BattlefieldModeProps {
-  className?: string;
-}
+const BattlefieldMode: React.FC = () => {
+  const [tacticalMode, setTacticalMode] = useState(false);
+  const [silentMode, setSilentMode] = useState(false);
+  const [highContrast, setHighContrast] = useState(false);
+  const [secureComms, setSecureComms] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(false);
 
-const BattlefieldMode: React.FC<BattlefieldModeProps> = ({ className }) => {
-  const [battlefieldMode, setBattlefieldMode] = useLocalStorage('battlefield-mode', false);
-  const [nightVision, setNightVision] = useLocalStorage('night-vision', false);
-  const [highContrast, setHighContrast] = useLocalStorage('military-high-contrast', false);
-  const [soundEnabled, setSoundEnabled] = useLocalStorage('military-sound', true);
-  const [emergencyMode, setEmergencyMode] = useLocalStorage('emergency-mode', false);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-
-  // Monitor network status
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  // Apply battlefield mode styles
-  useEffect(() => {
-    const root = document.documentElement;
-    
-    if (battlefieldMode) {
-      root.classList.add('battlefield-mode');
-      // Ultra-high contrast for visibility in harsh conditions
-      root.style.setProperty('--background', '0 0% 5%');
-      root.style.setProperty('--foreground', '0 0% 95%');
-      root.style.setProperty('--primary', '120 100% 50%'); // Military green
-      root.style.setProperty('--border', '0 0% 30%');
-      
-      // Increase all font sizes for better visibility
-      root.style.setProperty('--font-scale', '1.2');
-    } else {
-      root.classList.remove('battlefield-mode');
-      // Reset to default values
-      root.style.removeProperty('--background');
-      root.style.removeProperty('--foreground');
-      root.style.removeProperty('--primary');
-      root.style.removeProperty('--border');
-      root.style.removeProperty('--font-scale');
-    }
-    
-    if (nightVision) {
-      root.classList.add('night-vision');
-      // Green tint for night vision
-      root.style.setProperty('--background', '120 20% 5%');
-      root.style.setProperty('--foreground', '120 100% 80%');
-      root.style.filter = 'hue-rotate(90deg) saturate(1.5)';
-    } else {
-      root.classList.remove('night-vision');
-      root.style.removeProperty('filter');
-    }
-    
-    if (highContrast) {
-      root.classList.add('military-contrast');
-      // Maximum contrast for extreme conditions
-      root.style.setProperty('--background', '0 0% 0%');
-      root.style.setProperty('--foreground', '0 0% 100%');
-    } else {
-      root.classList.remove('military-contrast');
-    }
-    
-    if (emergencyMode) {
-      root.classList.add('emergency-mode');
-      // Red theme for emergency situations
-      root.style.setProperty('--primary', '0 100% 50%');
-      root.style.setProperty('--destructive', '0 100% 70%');
-    } else {
-      root.classList.remove('emergency-mode');
-    }
-  }, [battlefieldMode, nightVision, highContrast, emergencyMode]);
-
-  const toggleBattlefieldMode = () => {
-    const newMode = !battlefieldMode;
-    setBattlefieldMode(newMode);
-    
-    if (newMode) {
-      // Auto-enable optimal settings for battlefield
+  const handleTacticalToggle = () => {
+    setTacticalMode(!tacticalMode);
+    if (!tacticalMode) {
+      // Enable all battlefield optimizations
       setHighContrast(true);
-      setSoundEnabled(false); // Silent by default
-      toast.success('Battlefield Mode Activated', {
-        description: 'Optimized for extreme conditions'
+      setSilentMode(true);
+      setSecureComms(true);
+      toast.success('Tactical mode activated', {
+        description: 'Interface optimized for battlefield conditions'
       });
     } else {
-      toast.info('Battlefield Mode Deactivated');
+      toast.info('Tactical mode deactivated');
     }
-  };
-
-  const activateEmergencyMode = () => {
-    setEmergencyMode(true);
-    setBattlefieldMode(true);
-    setHighContrast(true);
-    setNightVision(false);
-    setSoundEnabled(true); // Enable sound for emergency alerts
-    
-    toast.error('EMERGENCY MODE ACTIVATED', {
-      description: 'All systems optimized for critical operations',
-      duration: 10000,
-    });
   };
 
   return (
-    <div className={`space-y-4 p-4 border rounded-lg ${className}`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Shield className="h-5 w-5" />
-          <h3 className="font-semibold">Military Operations</h3>
-          <Badge variant={isOnline ? "default" : "destructive"}>
-            {isOnline ? <Wifi className="h-3 w-3 mr-1" /> : <WifiOff className="h-3 w-3 mr-1" />}
-            {isOnline ? 'ONLINE' : 'OFFLINE'}
-          </Badge>
-        </div>
-        {emergencyMode && (
-          <Badge variant="destructive" className="animate-pulse">
-            EMERGENCY
-          </Badge>
-        )}
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="battlefield-mode" className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              Battlefield Mode
-            </Label>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Battlefield Mode Configuration
+          </CardTitle>
+          <CardDescription>
+            Optimize the interface for high-stress tactical environments
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="tactical-mode" className="font-semibold">
+                  Tactical Mode
+                </Label>
+                {tacticalMode && <Badge variant="destructive">ACTIVE</Badge>}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Enable all battlefield optimizations at once
+              </p>
+            </div>
             <Switch
-              id="battlefield-mode"
-              checked={battlefieldMode}
-              onCheckedChange={toggleBattlefieldMode}
+              id="tactical-mode"
+              checked={tacticalMode}
+              onCheckedChange={handleTacticalToggle}
             />
           </div>
-          
-          <div className="flex items-center justify-between">
-            <Label htmlFor="night-vision" className="flex items-center gap-2">
-              <Moon className="h-4 w-4" />
-              Night Vision
-            </Label>
-            <Switch
-              id="night-vision"
-              checked={nightVision}
-              onCheckedChange={setNightVision}
-            />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-2">
+                <Volume className="h-4 w-4" />
+                <div>
+                  <Label htmlFor="silent-mode">Silent Operation</Label>
+                  <p className="text-xs text-muted-foreground">No audio alerts</p>
+                </div>
+              </div>
+              <Switch
+                id="silent-mode"
+                checked={silentMode}
+                onCheckedChange={setSilentMode}
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-2">
+                <Eye className="h-4 w-4" />
+                <div>
+                  <Label htmlFor="high-contrast">High Contrast</Label>
+                  <p className="text-xs text-muted-foreground">Enhanced visibility</p>
+                </div>
+              </div>
+              <Switch
+                id="high-contrast"
+                checked={highContrast}
+                onCheckedChange={setHighContrast}
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-2">
+                <Lock className="h-4 w-4" />
+                <div>
+                  <Label htmlFor="secure-comms">Secure Communications</Label>
+                  <p className="text-xs text-muted-foreground">Encrypted channels</p>
+                </div>
+              </div>
+              <Switch
+                id="secure-comms"
+                checked={secureComms}
+                onCheckedChange={setSecureComms}
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-2">
+                <Wifi className="h-4 w-4" />
+                <div>
+                  <Label htmlFor="offline-mode">Offline Operation</Label>
+                  <p className="text-xs text-muted-foreground">Local data cache</p>
+                </div>
+              </div>
+              <Switch
+                id="offline-mode"
+                checked={offlineMode}
+                onCheckedChange={setOfflineMode}
+              />
+            </div>
           </div>
-          
-          <div className="flex items-center justify-between">
-            <Label htmlFor="military-contrast" className="flex items-center gap-2">
-              <Eye className="h-4 w-4" />
-              Max Contrast
-            </Label>
-            <Switch
-              id="military-contrast"
-              checked={highContrast}
-              onCheckedChange={setHighContrast}
-            />
+
+          <div className="mt-6 p-4 bg-muted rounded-lg">
+            <h4 className="font-semibold mb-2">Emergency Protocols</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" size="sm">
+                <Zap className="h-4 w-4 mr-1" />
+                Emergency Alert
+              </Button>
+              <Button variant="outline" size="sm">
+                <Shield className="h-4 w-4 mr-1" />
+                Secure Wipe
+              </Button>
+            </div>
           </div>
-          
-          <div className="flex items-center justify-between">
-            <Label htmlFor="military-sound" className="flex items-center gap-2">
-              {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-              Audio Alerts
-            </Label>
-            <Switch
-              id="military-sound"
-              checked={soundEnabled}
-              onCheckedChange={setSoundEnabled}
-            />
-          </div>
-        </div>
-        
-        <div className="space-y-3">
-          <Button 
-            onClick={activateEmergencyMode}
-            variant="destructive"
-            className="w-full"
-            size="sm"
-          >
-            EMERGENCY MODE
-          </Button>
-          
-          <Button 
-            onClick={() => setEmergencyMode(false)}
-            variant="outline"
-            className="w-full"
-            size="sm"
-            disabled={!emergencyMode}
-          >
-            Reset Emergency
-          </Button>
-          
-          <div className="text-xs text-muted-foreground">
-            Optimized for:
-            <ul className="list-disc list-inside mt-1">
-              <li>Low-light conditions</li>
-              <li>High-stress environments</li>
-              <li>Tactical operations</li>
-              <li>Emergency response</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

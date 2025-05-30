@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import AuthGuard from '@/components/AuthGuard';
@@ -51,13 +51,13 @@ describe('AuthGuard', () => {
       setupMfa: vi.fn(),
     });
 
-    renderWithRouter(
+    const { container } = renderWithRouter(
       <AuthGuard>
         <TestComponent />
       </AuthGuard>
     );
 
-    expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+    expect(container.querySelector('.animate-spin')).toBeInTheDocument();
   });
 
   it('redirects to login when user is not authenticated', () => {
@@ -76,14 +76,14 @@ describe('AuthGuard', () => {
       setupMfa: vi.fn(),
     });
 
-    renderWithRouter(
+    const { queryByText } = renderWithRouter(
       <AuthGuard>
         <TestComponent />
       </AuthGuard>
     );
 
     // Should redirect to login, so protected content should not be visible
-    expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
+    expect(queryByText('Protected Content')).not.toBeInTheDocument();
   });
 
   it('renders children when user is authenticated', () => {
@@ -107,12 +107,12 @@ describe('AuthGuard', () => {
       setupMfa: vi.fn(),
     });
 
-    renderWithRouter(
+    const { getByText } = renderWithRouter(
       <AuthGuard>
         <TestComponent />
       </AuthGuard>
     );
 
-    expect(screen.getByText('Protected Content')).toBeInTheDocument();
+    expect(getByText('Protected Content')).toBeInTheDocument();
   });
 });
