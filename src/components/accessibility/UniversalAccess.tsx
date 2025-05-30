@@ -5,14 +5,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Universal, 
+  Settings, 
   Eye, 
   Ear, 
   Hand, 
   Brain, 
   Heart,
   Shield,
-  Settings,
   Users
 } from 'lucide-react';
 import BattlefieldMode from '@/components/military/BattlefieldMode';
@@ -154,7 +153,7 @@ const UniversalAccess: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Universal className="h-6 w-6" />
+            <Settings className="h-6 w-6" />
             Universal Access Center
           </CardTitle>
           <CardDescription>

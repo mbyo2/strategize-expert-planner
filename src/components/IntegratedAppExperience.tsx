@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { startMeasure, endMeasure } from "@/utils/performanceMonitoring";
 import { Button } from './ui/button';
-import { Info, Universal } from 'lucide-react';
+import { Info, Settings } from 'lucide-react';
 import OnboardingTour, { TourStep } from './onboarding/OnboardingTour';
 import HelpCenter from './help/HelpCenter';
 import ContextualHelp from './help/ContextualHelp';
@@ -96,14 +96,14 @@ const IntegratedAppExperience: React.FC = () => {
             className="fixed bottom-20 right-4 z-50 gap-2 hover:bg-primary hover:text-primary-foreground"
             aria-label="Open Universal Access Center"
           >
-            <Universal className="h-4 w-4" />
+            <Settings className="h-4 w-4" />
             <span className="sr-only md:not-sr-only md:inline-flex">Universal Access</span>
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Universal className="h-5 w-5" />
+              <Settings className="h-5 w-5" />
               Universal Access Center
             </DialogTitle>
           </DialogHeader>
