@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -31,7 +30,7 @@ import { LanguageProvider } from "@/i18n";
 import IntegratedAppExperience from "@/components/IntegratedAppExperience";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import SecurityHeaders from "@/components/SecurityHeaders";
-import { SEO } from "@/components/SEO";
+import SEO from "@/components/SEO";
 import { useRealTimeUpdates } from "@/hooks/useRealTimeUpdates";
 import { useEffect } from "react";
 
@@ -83,8 +82,8 @@ function AppWithRealTime() {
           <Route path="/ai-operations" element={<AuthGuard><AIOperationsPage /></AuthGuard>} />
           
           {/* Admin routes */}
-          <Route path="/admin" element={<AuthGuard requiredRole="admin"><Admin /></AuthGuard>} />
-          <Route path="/organization" element={<AuthGuard requiredRole="admin"><OrganizationManagement /></AuthGuard>} />
+          <Route path="/admin" element={<AuthGuard requiredRoles={["admin"]}><Admin /></AuthGuard>} />
+          <Route path="/organization" element={<AuthGuard requiredRoles={["admin"]}><OrganizationManagement /></AuthGuard>} />
           
           {/* 404 fallback */}
           <Route path="*" element={<NotFound />} />
