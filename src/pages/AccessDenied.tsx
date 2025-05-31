@@ -3,15 +3,15 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Lock, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth, UserRole } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 
 interface AccessDeniedProps {
-  requiredRoles?: UserRole[];
+  requiredRole?: string;
 }
 
-const AccessDenied: React.FC<AccessDeniedProps> = ({ requiredRoles = [] }) => {
+const AccessDenied: React.FC<AccessDeniedProps> = ({ requiredRole }) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { session } = useSimpleAuth();
   
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
@@ -34,16 +34,16 @@ const AccessDenied: React.FC<AccessDeniedProps> = ({ requiredRoles = [] }) => {
             <p className="text-sm font-medium">Your current role:</p>
             <div className="bg-background p-2 rounded flex items-center justify-center">
               <span className="font-semibold text-primary">
-                {user?.role || 'No role assigned'}
+                {session.user?.role || 'No role assigned'}
               </span>
             </div>
             
-            {requiredRoles.length > 0 && (
+            {requiredRole && (
               <>
-                <p className="text-sm font-medium mt-4">Required roles:</p>
+                <p className="text-sm font-medium mt-4">Required role:</p>
                 <div className="bg-background p-2 rounded flex items-center justify-center">
                   <span className="font-semibold text-primary">
-                    {requiredRoles.join(' or ')}
+                    {requiredRole}
                   </span>
                 </div>
               </>

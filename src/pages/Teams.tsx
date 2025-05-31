@@ -1,7 +1,6 @@
 
 import React from 'react';
 import PageLayout from '@/components/PageLayout';
-import { withAuth } from '@/hooks/useAuth';
 import TeamList from '@/components/TeamManagement/TeamList';
 import TeamCollaboration from '@/components/TeamManagement/TeamCollaboration';
 import { TeamsProvider } from '@/hooks/useTeams';
@@ -33,5 +32,4 @@ const Teams = () => {
   );
 };
 
-// Only admins and managers can access team management
-export default withAuth(['admin', 'manager'])(Teams);
+export default Teams;

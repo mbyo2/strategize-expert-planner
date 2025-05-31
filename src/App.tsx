@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -23,8 +24,9 @@ import AccessDenied from "./pages/AccessDenied";
 import NotFound from "./pages/NotFound";
 import DataFoundryPage from "./pages/DataFoundry";
 import AIOperationsPage from "./pages/AIOperations";
-import AuthGuard from "./components/AuthGuard";
-import { AuthProvider } from "@/hooks/useAuth";
+import SimpleAuthGuard from "./components/SimpleAuthGuard";
+import SimpleAuthForm from "./components/SimpleAuthForm";
+import { SimpleAuthProvider } from "@/hooks/useSimpleAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { LanguageProvider } from "@/i18n";
 import IntegratedAppExperience from "@/components/IntegratedAppExperience";
@@ -60,30 +62,30 @@ function AppWithRealTime() {
       <SecurityHeaders />
       <ErrorBoundary>
         <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          {/* Public routes - using the new simplified auth form */}
+          <Route path="/login" element={<SimpleAuthForm />} />
+          <Route path="/signup" element={<SimpleAuthForm />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/mfa-verify" element={<MfaVerify />} />
           <Route path="/access-denied" element={<AccessDenied />} />
           
-          {/* Protected routes */}
-          <Route path="/" element={<AuthGuard><Index /></AuthGuard>} />
-          <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
-          <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
-          <Route path="/goals" element={<AuthGuard><Goals /></AuthGuard>} />
-          <Route path="/planning" element={<AuthGuard><Planning /></AuthGuard>} />
-          <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />
-          <Route path="/industry" element={<AuthGuard><Industry /></AuthGuard>} />
-          <Route path="/teams" element={<AuthGuard><Teams /></AuthGuard>} />
-          <Route path="/resources" element={<AuthGuard><Resources /></AuthGuard>} />
-          <Route path="/data-foundry" element={<AuthGuard><DataFoundryPage /></AuthGuard>} />
-          <Route path="/ai-operations" element={<AuthGuard><AIOperationsPage /></AuthGuard>} />
+          {/* Protected routes using SimpleAuthGuard */}
+          <Route path="/" element={<SimpleAuthGuard><Index /></SimpleAuthGuard>} />
+          <Route path="/profile" element={<SimpleAuthGuard><Profile /></SimpleAuthGuard>} />
+          <Route path="/settings" element={<SimpleAuthGuard><Settings /></SimpleAuthGuard>} />
+          <Route path="/goals" element={<SimpleAuthGuard><Goals /></SimpleAuthGuard>} />
+          <Route path="/planning" element={<SimpleAuthGuard><Planning /></SimpleAuthGuard>} />
+          <Route path="/analytics" element={<SimpleAuthGuard><Analytics /></SimpleAuthGuard>} />
+          <Route path="/industry" element={<SimpleAuthGuard><Industry /></SimpleAuthGuard>} />
+          <Route path="/teams" element={<SimpleAuthGuard><Teams /></SimpleAuthGuard>} />
+          <Route path="/resources" element={<SimpleAuthGuard><Resources /></SimpleAuthGuard>} />
+          <Route path="/data-foundry" element={<SimpleAuthGuard><DataFoundryPage /></SimpleAuthGuard>} />
+          <Route path="/ai-operations" element={<SimpleAuthGuard><AIOperationsPage /></SimpleAuthGuard>} />
           
-          {/* Admin routes */}
-          <Route path="/admin" element={<AuthGuard requiredRoles={["admin"]}><Admin /></AuthGuard>} />
-          <Route path="/organization" element={<AuthGuard requiredRoles={["admin"]}><OrganizationManagement /></AuthGuard>} />
+          {/* Admin routes with role requirements */}
+          <Route path="/admin" element={<SimpleAuthGuard requiredRole="admin"><Admin /></SimpleAuthGuard>} />
+          <Route path="/organization" element={<SimpleAuthGuard requiredRole="admin"><OrganizationManagement /></SimpleAuthGuard>} />
           
           {/* 404 fallback */}
           <Route path="*" element={<NotFound />} />
@@ -99,12 +101,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <LanguageProvider>
-          <AuthProvider>
+          <SimpleAuthProvider>
             <TooltipProvider>
               <AppWithRealTime />
               <Toaster />
             </TooltipProvider>
-          </AuthProvider>
+          </SimpleAuthProvider>
         </LanguageProvider>
       </ThemeProvider>
     </QueryClientProvider>
