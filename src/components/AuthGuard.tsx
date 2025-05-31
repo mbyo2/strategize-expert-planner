@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, UserRole } from '@/hooks/useAuth';
@@ -256,7 +255,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
       }
     });
     
-    return <AccessDenied requiredRoles={requiredRoles} />;
+    return <AccessDenied requiredRole={requiredRoles[0]} />;
   }
   
   // If the user has permission, log access for audit purposes

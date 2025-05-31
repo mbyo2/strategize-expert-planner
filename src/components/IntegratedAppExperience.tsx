@@ -12,7 +12,7 @@ import KeyboardShortcuts from './a11y/KeyboardShortcuts';
 import A11yMenu from './a11y/A11yMenu';
 import UniversalAccess from './accessibility/UniversalAccess';
 import { LanguageSwitcher } from '@/i18n';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuthCompat';
 import {
   Dialog,
   DialogContent,
