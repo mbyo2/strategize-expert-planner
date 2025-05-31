@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@/hooks/useAuth';
+import { DatabaseService } from './databaseService';
 import { toast } from 'sonner';
 
 // Constants for data retention
@@ -35,20 +35,23 @@ export type AuditResource =
   | 'access_control'
   | 'report'
   | 'analysis'
-  | 'event';
+  | 'event'
+  | 'strategic_goals'
+  | 'planning_initiatives'
+  | 'teams'
+  | 'team_members';
 
 export interface AuditLogEntry {
+  id?: string;
   action: AuditAction;
-  resource: AuditResource;
-  resourceId?: string;
-  description: string;
-  metadata?: Record<string, any>;
-  severity?: 'low' | 'medium' | 'high';
-  userId?: string;
-  userIp?: string;
-  userAgent?: string;
-  timestamp?: string;
-  expiresAt?: string; // New field for data retention
+  resource_type: AuditResource;
+  resource_id?: string;
+  old_values?: Record<string, any>;
+  new_values?: Record<string, any>;
+  user_id?: string;
+  ip_address?: string;
+  user_agent?: string;
+  created_at?: string;
 }
 
 /**
@@ -106,25 +109,23 @@ const calculateExpirationDate = (severity: 'low' | 'medium' | 'high' = 'medium')
 export const logAuditEvent = async (entry: AuditLogEntry): Promise<boolean> => {
   try {
     // Get client IP if not provided
-    const userIp = entry.userIp || await getClientIp();
+    const userIp = entry.ip_address || await getClientIp();
     
     // Add timestamp and expiration if not provided
-    const timestamp = entry.timestamp || new Date().toISOString();
-    const expiresAt = entry.expiresAt || calculateExpirationDate(entry.severity);
+    const timestamp = entry.created_at || new Date().toISOString();
     
     // Sanitize any user-provided input
-    const sanitizedDescription = sanitizeData(entry.description);
-    const sanitizedMetadata = entry.metadata ? sanitizeData(entry.metadata) : undefined;
+    const sanitizedOldValues = entry.old_values ? sanitizeData(entry.old_values) : undefined;
+    const sanitizedNewValues = entry.new_values ? sanitizeData(entry.new_values) : undefined;
     
     // Create the complete log entry
     const logEntry = {
       ...entry,
-      timestamp,
-      expiresAt,
-      description: sanitizedDescription,
-      metadata: sanitizedMetadata,
-      userIp,
-      userAgent: entry.userAgent || navigator.userAgent,
+      created_at: timestamp,
+      old_values: sanitizedOldValues,
+      new_values: sanitizedNewValues,
+      ip_address: userIp,
+      user_agent: entry.user_agent || navigator.userAgent,
     };
 
     // In a real application, this would insert into a database table
@@ -196,21 +197,20 @@ export const getAuditLogs = async (
     // For now, return mock data
     return mockAuditLogs
       .filter(log => {
-        if (filters.userId && log.userId !== filters.userId) return false;
-        if (filters.resource && log.resource !== filters.resource) return false;
-        if (filters.resourceId && log.resourceId !== filters.resourceId) return false;
+        if (filters.userId && log.user_id !== filters.userId) return false;
+        if (filters.resource && log.resource_type !== filters.resource) return false;
+        if (filters.resourceId && log.resource_id !== filters.resourceId) return false;
         if (filters.action && log.action !== filters.action) return false;
-        if (filters.severity && log.severity !== filters.severity) return false;
         
         if (filters.startDate) {
           const startDate = new Date(filters.startDate);
-          const logDate = new Date(log.timestamp || '');
+          const logDate = new Date(log.created_at || '');
           if (logDate < startDate) return false;
         }
         
         if (filters.endDate) {
           const endDate = new Date(filters.endDate);
-          const logDate = new Date(log.timestamp || '');
+          const logDate = new Date(log.created_at || '');
           if (logDate > endDate) return false;
         }
         
@@ -227,80 +227,65 @@ export const getAuditLogs = async (
 const mockAuditLogs: AuditLogEntry[] = [
   {
     action: 'login',
-    resource: 'user',
-    description: 'User logged in',
-    userId: '123',
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-    severity: 'low',
-    expiresAt: calculateExpirationDate('low')
+    resource_type: 'user',
+    user_id: '123',
+    created_at: new Date(Date.now() - 3600000).toISOString(),
   },
   {
     action: 'export',
-    resource: 'report',
-    resourceId: 'rep-123',
-    description: 'User exported strategic analysis report',
-    userId: '123',
-    timestamp: new Date(Date.now() - 7200000).toISOString(),
-    severity: 'medium',
-    expiresAt: calculateExpirationDate('medium')
+    resource_type: 'report',
+    resource_id: 'rep-123',
+    user_id: '123',
+    created_at: new Date(Date.now() - 7200000).toISOString(),
   },
   {
     action: 'view_sensitive',
-    resource: 'analysis',
-    resourceId: 'ana-456',
-    description: 'User viewed confidential market analysis',
-    userId: '123',
-    timestamp: new Date(Date.now() - 86400000).toISOString(),
-    severity: 'high',
-    expiresAt: calculateExpirationDate('high')
+    resource_type: 'analysis',
+    resource_id: 'ana-456',
+    user_id: '123',
+    created_at: new Date(Date.now() - 86400000).toISOString(),
   },
   {
     action: 'role_change',
-    resource: 'user',
-    resourceId: '456',
-    description: 'User role changed from viewer to analyst',
-    userId: '123',
-    timestamp: new Date(Date.now() - 172800000).toISOString(),
-    severity: 'high',
-    metadata: { 
-      previousRole: 'viewer', 
-      newRole: 'analyst' 
+    resource_type: 'user',
+    resource_id: '456',
+    user_id: '123',
+    created_at: new Date(Date.now() - 172800000).toISOString(),
+    old_values: { 
+      role: 'viewer'
     },
-    expiresAt: calculateExpirationDate('high')
+    new_values: {
+      role: 'analyst'
+    }
   },
   {
     action: 'mfa_setup',
-    resource: 'user',
-    resourceId: '123',
-    description: 'User enabled MFA',
-    userId: '123',
-    timestamp: new Date(Date.now() - 259200000).toISOString(),
-    severity: 'medium',
-    metadata: { 
+    resource_type: 'user',
+    resource_id: '123',
+    user_id: '123',
+    created_at: new Date(Date.now() - 259200000).toISOString(),
+    new_values: { 
       mfaType: 'totp'
-    },
-    expiresAt: calculateExpirationDate('medium')
+    }
   },
   {
     action: 'settings_change',
-    resource: 'security_setting',
-    description: 'IP restrictions updated',
-    userId: '123',
-    timestamp: new Date(Date.now() - 345600000).toISOString(),
-    severity: 'high',
-    metadata: { 
+    resource_type: 'security_setting',
+    user_id: '123',
+    created_at: new Date(Date.now() - 345600000).toISOString(),
+    old_values: { 
       setting: 'ip_restrictions',
-      action: 'update'
+      value: []
     },
-    expiresAt: calculateExpirationDate('high')
+    new_values: {
+      setting: 'ip_restrictions',
+      value: ['192.168.1.0/24']
+    }
   },
   {
     action: 'feedback_submitted',
-    resource: 'feedback',
-    description: 'User submitted feedback',
-    userId: '123',
-    timestamp: new Date(Date.now() - 43200000).toISOString(),
-    severity: 'low',
-    expiresAt: calculateExpirationDate('low')
+    resource_type: 'feedback',
+    user_id: '123',
+    created_at: new Date(Date.now() - 43200000).toISOString(),
   },
 ];

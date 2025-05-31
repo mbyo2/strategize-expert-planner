@@ -9,6 +9,78 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          created_at: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          page_url: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          page_url?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          page_url?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          new_values: Json | null
+          old_values: Json | null
+          resource_id: string | null
+          resource_type: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          resource_id?: string | null
+          resource_type: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          resource_id?: string | null
+          resource_type?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       company_strategy: {
         Row: {
           id: string
@@ -30,6 +102,51 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           vision?: string | null
+        }
+        Relationships: []
+      }
+      data_imports: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_log: Json | null
+          failed_records: number | null
+          file_name: string
+          file_size: number | null
+          id: string
+          import_type: string
+          processed_records: number | null
+          status: string
+          total_records: number | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_log?: Json | null
+          failed_records?: number | null
+          file_name: string
+          file_size?: number | null
+          id?: string
+          import_type: string
+          processed_records?: number | null
+          status?: string
+          total_records?: number | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_log?: Json | null
+          failed_records?: number | null
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          import_type?: string
+          processed_records?: number | null
+          status?: string
+          total_records?: number | null
+          user_id?: string
         }
         Relationships: []
       }
