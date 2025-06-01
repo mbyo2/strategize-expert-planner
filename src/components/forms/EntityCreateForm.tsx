@@ -62,12 +62,7 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
     }
   };
 
-  const form = useForm({
-    resolver: zodResolver(getSchema()),
-    defaultValues: getDefaultValues()
-  });
-
-  function getDefaultValues() {
+  const getDefaultValues = () => {
     switch (entityType) {
       case 'goal':
         return {
@@ -100,7 +95,12 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
       default:
         return {};
     }
-  }
+  };
+
+  const form = useForm({
+    resolver: zodResolver(getSchema()),
+    defaultValues: getDefaultValues()
+  });
 
   const getTitle = () => {
     switch (entityType) {

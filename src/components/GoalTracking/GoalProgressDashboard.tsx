@@ -51,7 +51,7 @@ const GoalProgressDashboard = () => {
     switch (status) {
       case 'completed':
         return <Check className="h-4 w-4 text-green-500" />;
-      case 'in-progress':
+      case 'active':
         return <Clock className="h-4 w-4 text-blue-500" />;
       default:
         return <Target className="h-4 w-4 text-gray-500" />;
@@ -144,8 +144,8 @@ const GoalProgressDashboard = () => {
                 <p className="text-lg font-bold">{goals.filter(g => g.status === 'completed').length}</p>
               </div>
               <div className="bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded-md text-center">
-                <p className="text-xs text-muted-foreground">In Progress</p>
-                <p className="text-lg font-bold">{goals.filter(g => g.status === 'in-progress').length}</p>
+                <p className="text-xs text-muted-foreground">Active</p>
+                <p className="text-lg font-bold">{goals.filter(g => g.status === 'active').length}</p>
               </div>
             </div>
           </div>
@@ -153,7 +153,7 @@ const GoalProgressDashboard = () => {
           <Tabs defaultValue="all" value={view} onValueChange={setView}>
             <TabsList className="grid grid-cols-3">
               <TabsTrigger value="all">All Goals</TabsTrigger>
-              <TabsTrigger value="in-progress">In Progress</TabsTrigger>
+              <TabsTrigger value="active">Active</TabsTrigger>
               <TabsTrigger value="completed">Completed</TabsTrigger>
             </TabsList>
             
@@ -161,8 +161,8 @@ const GoalProgressDashboard = () => {
               {renderGoalList(filterGoalsByStatus('all'))}
             </TabsContent>
             
-            <TabsContent value="in-progress" className="mt-4">
-              {renderGoalList(filterGoalsByStatus('in-progress'))}
+            <TabsContent value="active" className="mt-4">
+              {renderGoalList(filterGoalsByStatus('active'))}
             </TabsContent>
             
             <TabsContent value="completed" className="mt-4">
