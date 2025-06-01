@@ -39,6 +39,9 @@ const initiativeSchema = z.object({
 });
 
 type EntityType = 'goal' | 'metric' | 'initiative';
+type GoalFormData = z.infer<typeof goalSchema>;
+type MetricFormData = z.infer<typeof metricSchema>;
+type InitiativeFormData = z.infer<typeof initiativeSchema>;
 
 interface EntityCreateFormProps {
   entityType: EntityType;
@@ -62,45 +65,60 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
     }
   };
 
-  const getDefaultValues = () => {
+  const getGoalDefaults = (): GoalFormData => ({
+    name: '',
+    description: '',
+    status: 'planned' as const,
+    progress: 0,
+    target_value: undefined,
+    current_value: undefined,
+    start_date: '',
+    due_date: '',
+  });
+
+  const getMetricDefaults = (): MetricFormData => ({
+    name: '',
+    value: 0,
+    category: '',
+    source: '',
+    previous_value: undefined,
+  });
+
+  const getInitiativeDefaults = (): InitiativeFormData => ({
+    name: '',
+    description: '',
+    status: 'planning' as const,
+    progress: 0,
+    start_date: '',
+    end_date: '',
+  });
+
+  const createForm = () => {
     switch (entityType) {
       case 'goal':
-        return {
-          name: '',
-          description: '',
-          status: 'planned' as const,
-          progress: 0,
-          target_value: undefined,
-          current_value: undefined,
-          start_date: '',
-          due_date: '',
-        };
+        return useForm<GoalFormData>({
+          resolver: zodResolver(goalSchema),
+          defaultValues: getGoalDefaults()
+        });
       case 'metric':
-        return {
-          name: '',
-          value: 0,
-          category: '',
-          source: '',
-          previous_value: undefined,
-        };
+        return useForm<MetricFormData>({
+          resolver: zodResolver(metricSchema),
+          defaultValues: getMetricDefaults()
+        });
       case 'initiative':
-        return {
-          name: '',
-          description: '',
-          status: 'planning' as const,
-          progress: 0,
-          start_date: '',
-          end_date: '',
-        };
+        return useForm<InitiativeFormData>({
+          resolver: zodResolver(initiativeSchema),
+          defaultValues: getInitiativeDefaults()
+        });
       default:
-        return {};
+        return useForm<GoalFormData>({
+          resolver: zodResolver(goalSchema),
+          defaultValues: getGoalDefaults()
+        });
     }
   };
 
-  const form = useForm({
-    resolver: zodResolver(getSchema()),
-    defaultValues: getDefaultValues()
-  });
+  const form = createForm();
 
   const getTitle = () => {
     switch (entityType) {
