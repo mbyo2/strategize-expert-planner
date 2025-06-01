@@ -79,7 +79,7 @@ export class DatabaseService {
       }
 
       return {
-        data: (data || []) as T[],
+        data: (data || []) as unknown as T[], // Fixed type casting
         count: count || 0
       };
     } catch (error) {
@@ -107,7 +107,7 @@ export class DatabaseService {
         return { data: null, error: error.message };
       }
 
-      return { data: data as T };
+      return { data: data as unknown as T }; // Fixed type casting
     } catch (error) {
       console.error('Database service error:', error);
       return { data: null, error: 'Database operation failed' };
@@ -138,7 +138,7 @@ export class DatabaseService {
         return { data: null, error: error.message };
       }
 
-      return { data: data as T };
+      return { data: data as unknown as T }; // Fixed type casting
     } catch (error) {
       console.error('Database service error:', error);
       return { data: null, error: 'Database operation failed' };
@@ -206,7 +206,7 @@ export class DatabaseService {
       }
 
       return {
-        data: (data || []) as T[],
+        data: (data || []) as unknown as T[], // Fixed type casting
         count: count || 0
       };
     } catch (error) {
@@ -233,7 +233,7 @@ export class DatabaseService {
         return { data: null, error: error.message };
       }
 
-      return { data: data as T[] };
+      return { data: data as unknown as T[] }; // Fixed type casting
     } catch (error) {
       console.error('Database service error:', error);
       return { data: null, error: 'Database operation failed' };

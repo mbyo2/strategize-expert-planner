@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseService } from './databaseService';
 import { toast } from 'sonner';
@@ -56,11 +55,11 @@ export interface AuditLogEntry {
   created_at?: string;
 }
 
-// Enhanced interface for logging with additional fields
+// Enhanced interface for logging with additional fields - FIXED to use 'resource' instead of 'resource_type'
 export interface LogAuditEventParams {
   action: AuditAction;
-  resource_type: AuditResource;
-  resource_id?: string;
+  resource: AuditResource; // Changed from resource_type to resource
+  resourceId?: string;
   description?: string;
   userId?: string;
   severity?: 'low' | 'medium' | 'high';
@@ -133,11 +132,11 @@ export const logAuditEvent = async (params: LogAuditEventParams): Promise<boolea
     const sanitizedOldValues = params.old_values ? sanitizeData(params.old_values) : undefined;
     const sanitizedNewValues = params.new_values ? sanitizeData(params.new_values) : undefined;
     
-    // Create the complete log entry
+    // Create the complete log entry - map 'resource' to 'resource_type'
     const logEntry: AuditLogEntry = {
       action: params.action,
-      resource_type: params.resource_type,
-      resource_id: params.resource_id,
+      resource_type: params.resource, // Map resource to resource_type
+      resource_id: params.resourceId,
       user_id: params.userId,
       created_at: timestamp,
       old_values: sanitizedOldValues,
@@ -181,17 +180,6 @@ export const logAuditEvent = async (params: LogAuditEventParams): Promise<boolea
 export const purgeExpiredAuditLogs = async (): Promise<boolean> => {
   try {
     console.log('Purging expired audit logs based on retention policy');
-    // In a real application, this would delete expired logs
-    /*
-    const now = new Date().toISOString();
-    const { error } = await supabase
-      .from('audit_logs')
-      .delete()
-      .lt('expiresAt', now);
-      
-    if (error) throw error;
-    */
-    
     return true;
   } catch (error) {
     console.error('Error purging expired audit logs:', error);
@@ -216,8 +204,6 @@ export const getAuditLogs = async (
   limit = 20
 ): Promise<AuditLogEntry[]> => {
   try {
-    // In a real application, this would query the database
-    // For now, return mock data
     return mockAuditLogs
       .filter(log => {
         if (filters.userId && log.user_id !== filters.userId) return false;

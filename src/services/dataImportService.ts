@@ -1,7 +1,27 @@
 
-import { DatabaseService, DatabaseRecord } from './databaseService';
+import { DatabaseService } from './databaseService';
+import { logAuditEvent } from './auditService';
 
-export interface DataImport extends DatabaseRecord {
+export interface ImportValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  rowCount: number;
+}
+
+export interface ImportedGoal {
+  name: string;
+  description?: string;
+  status: 'planned' | 'active' | 'completed' | 'paused';
+  progress: number;
+  target_value?: number;
+  current_value?: number;
+  start_date?: string;
+  due_date?: string;
+}
+
+export interface DataImportRecord {
+  id: string;
   user_id: string;
   file_name: string;
   import_type: string;
@@ -11,250 +31,269 @@ export interface DataImport extends DatabaseRecord {
   processed_records: number;
   failed_records: number;
   error_log?: Record<string, any>;
+  created_at: string;
   completed_at?: string;
 }
 
 export class DataImportService {
   /**
-   * Export data to CSV format
+   * Validate CSV file content for strategic goals import
    */
-  static exportToCsv<T extends Record<string, any>>(data: T[], filename: string): void {
-    if (!data || data.length === 0) {
-      console.warn('No data to export');
-      return;
-    }
-
-    // Get headers from the first object
-    const headers = Object.keys(data[0]);
+  static validateCsvFile(csvContent: string): ImportValidationResult {
+    const errors: string[] = [];
+    const warnings: string[] = [];
     
-    // Create CSV content
-    const csvContent = [
-      // Header row
-      headers.join(','),
-      // Data rows
-      ...data.map(row => 
-        headers.map(header => {
-          const value = row[header];
-          // Escape commas and quotes in values
-          if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-            return `"${value.replace(/"/g, '""')}"`;
-          }
-          return value;
-        }).join(',')
-      )
-    ].join('\n');
-
-    // Create blob and download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', filename);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  }
-
-  /**
-   * Import CSV data
-   */
-  static async importFromCsv(
-    file: File,
-    tableName: string,
-    userId: string,
-    fieldMapping?: Record<string, string>
-  ): Promise<string> {
     try {
-      // Create import record
-      const importRecord: Omit<DataImport, 'id' | 'created_at' | 'updated_at'> = {
-        user_id: userId,
-        file_name: file.name,
-        import_type: 'csv',
-        status: 'pending',
-        file_size: file.size,
-        total_records: 0,
-        processed_records: 0,
-        failed_records: 0
-      };
-
-      const result = await DatabaseService.createRecord<DataImport>('data_imports', importRecord);
-      
-      if (!result.data) {
-        throw new Error('Failed to create import record');
-      }
-
-      const importId = result.data.id;
-
-      // Process the file
-      this.processCsvFile(file, tableName, importId, fieldMapping);
-
-      return importId;
-    } catch (error) {
-      console.error('Error starting CSV import:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Process CSV file content
-   */
-  private static async processCsvFile(
-    file: File,
-    tableName: string,
-    importId: string,
-    fieldMapping?: Record<string, string>
-  ): Promise<void> {
-    try {
-      // Update status to processing
-      await DatabaseService.updateRecord('data_imports', importId, {
-        status: 'processing'
-      });
-
-      const text = await file.text();
-      const lines = text.split('\n').filter(line => line.trim() !== '');
+      const lines = csvContent.trim().split('\n');
+      const rowCount = lines.length - 1; // Exclude header
       
       if (lines.length < 2) {
-        throw new Error('CSV file must have at least a header and one data row');
+        errors.push('CSV file must contain at least one data row');
+        return { isValid: false, errors, warnings, rowCount: 0 };
+      }
+      
+      const header = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const requiredColumns = ['name'];
+      const optionalColumns = ['description', 'status', 'progress', 'target_value', 'current_value', 'start_date', 'due_date'];
+      
+      // Check required columns
+      for (const required of requiredColumns) {
+        if (!header.includes(required)) {
+          errors.push(`Required column '${required}' is missing`);
+        }
+      }
+      
+      // Validate data rows
+      for (let i = 1; i < lines.length; i++) {
+        const row = lines[i].split(',');
+        const rowData: any = {};
+        
+        header.forEach((col, index) => {
+          rowData[col] = row[index]?.trim() || '';
+        });
+        
+        // Validate required fields
+        if (!rowData.name) {
+          errors.push(`Row ${i}: Name is required`);
+        }
+        
+        // Validate status if provided
+        if (rowData.status && !['planned', 'active', 'completed', 'paused'].includes(rowData.status)) {
+          errors.push(`Row ${i}: Invalid status '${rowData.status}'. Must be one of: planned, active, completed, paused`);
+        }
+        
+        // Validate progress if provided
+        if (rowData.progress) {
+          const progress = parseInt(rowData.progress);
+          if (isNaN(progress) || progress < 0 || progress > 100) {
+            errors.push(`Row ${i}: Progress must be a number between 0 and 100`);
+          }
+        }
+        
+        // Validate numeric fields
+        if (rowData.target_value && isNaN(parseFloat(rowData.target_value))) {
+          warnings.push(`Row ${i}: Target value '${rowData.target_value}' is not a valid number`);
+        }
+        
+        if (rowData.current_value && isNaN(parseFloat(rowData.current_value))) {
+          warnings.push(`Row ${i}: Current value '${rowData.current_value}' is not a valid number`);
+        }
+        
+        // Validate dates
+        if (rowData.start_date && rowData.start_date !== '' && isNaN(Date.parse(rowData.start_date))) {
+          warnings.push(`Row ${i}: Start date '${rowData.start_date}' is not a valid date`);
+        }
+        
+        if (rowData.due_date && rowData.due_date !== '' && isNaN(Date.parse(rowData.due_date))) {
+          warnings.push(`Row ${i}: Due date '${rowData.due_date}' is not a valid date`);
+        }
+      }
+      
+      return {
+        isValid: errors.length === 0,
+        errors,
+        warnings,
+        rowCount
+      };
+      
+    } catch (error) {
+      errors.push('Failed to parse CSV file. Please check the file format.');
+      return { isValid: false, errors, warnings, rowCount: 0 };
+    }
+  }
+
+  /**
+   * Import strategic goals from CSV content
+   */
+  static async importStrategicGoals(
+    csvContent: string,
+    userId: string,
+    fileName: string
+  ): Promise<{ success: boolean; importId: string; message: string }> {
+    try {
+      // Validate the CSV first
+      const validation = this.validateCsvFile(csvContent);
+      if (!validation.isValid) {
+        return {
+          success: false,
+          importId: '',
+          message: `Validation failed: ${validation.errors.join(', ')}`
+        };
       }
 
-      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-      const dataLines = lines.slice(1);
+      // Create import record
+      const importRecord: Omit<DataImportRecord, 'id' | 'created_at'> = {
+        user_id: userId,
+        file_name: fileName,
+        import_type: 'strategic_goals',
+        status: 'processing',
+        total_records: validation.rowCount,
+        processed_records: 0,
+        failed_records: 0,
+        file_size: csvContent.length
+      };
 
-      // Update total records count
-      await DatabaseService.updateRecord('data_imports', importId, {
-        total_records: dataLines.length
-      });
+      const importResult = await DatabaseService.createRecord<DataImportRecord>('data_imports', importRecord);
+      
+      if (!importResult.data) {
+        return {
+          success: false,
+          importId: '',
+          message: 'Failed to create import record'
+        };
+      }
 
+      const importId = importResult.data.id;
+
+      // Process the CSV data
+      const lines = csvContent.trim().split('\n');
+      const header = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const goals: ImportedGoal[] = [];
       let processedCount = 0;
       let failedCount = 0;
-      const errors: any[] = [];
 
-      // Process records in batches
-      const batchSize = 100;
-      for (let i = 0; i < dataLines.length; i += batchSize) {
-        const batch = dataLines.slice(i, i + batchSize);
-        const records = [];
-
-        for (const line of batch) {
-          try {
-            const values = this.parseCsvLine(line);
-            if (values.length !== headers.length) {
-              throw new Error('Column count mismatch');
+      for (let i = 1; i < lines.length; i++) {
+        try {
+          const row = lines[i].split(',');
+          const goalData: any = {};
+          
+          header.forEach((col, index) => {
+            const value = row[index]?.trim() || '';
+            if (value) {
+              goalData[col] = value;
             }
+          });
 
-            const record: any = {};
-            headers.forEach((header, index) => {
-              const mappedField = fieldMapping?.[header] || header;
-              record[mappedField] = values[index];
-            });
+          // Create goal object
+          const goal: ImportedGoal = {
+            name: goalData.name,
+            description: goalData.description || '',
+            status: goalData.status || 'planned',
+            progress: parseInt(goalData.progress) || 0,
+            target_value: goalData.target_value ? parseFloat(goalData.target_value) : undefined,
+            current_value: goalData.current_value ? parseFloat(goalData.current_value) : undefined,
+            start_date: goalData.start_date && goalData.start_date !== '' ? new Date(goalData.start_date).toISOString() : undefined,
+            due_date: goalData.due_date && goalData.due_date !== '' ? new Date(goalData.due_date).toISOString() : undefined
+          };
 
-            records.push(record);
+          // Create the goal in the database
+          const createResult = await DatabaseService.createRecord('strategic_goals', {
+            ...goal,
+            user_id: userId
+          });
+
+          if (createResult.data) {
             processedCount++;
-          } catch (error) {
+            goals.push(goal);
+          } else {
             failedCount++;
-            errors.push({
-              line: i + processedCount + failedCount,
-              error: error instanceof Error ? error.message : 'Unknown error'
-            });
           }
-        }
 
-        // Insert batch
-        if (records.length > 0) {
-          try {
-            await DatabaseService.batchCreate(tableName, records);
-          } catch (error) {
-            failedCount += records.length;
-            processedCount -= records.length;
-            errors.push({
-              batch: i / batchSize + 1,
-              error: error instanceof Error ? error.message : 'Batch insert failed'
-            });
-          }
-        }
+          // Update progress
+          await DatabaseService.updateRecord('data_imports', importId, {
+            processed_records: processedCount,
+            failed_records: failedCount
+          } as any);
 
-        // Update progress
-        await DatabaseService.updateRecord('data_imports', importId, {
-          processed_records: processedCount,
-          failed_records: failedCount,
-          error_log: errors.length > 0 ? { errors } : undefined
-        });
+        } catch (error) {
+          failedCount++;
+          console.error(`Error processing row ${i}:`, error);
+        }
       }
 
-      // Mark as completed
+      // Mark import as completed
       await DatabaseService.updateRecord('data_imports', importId, {
-        status: processedCount > 0 ? 'completed' : 'failed',
-        completed_at: new Date().toISOString()
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        processed_records: processedCount,
+        failed_records: failedCount
+      } as any);
+
+      // Log the import event
+      await logAuditEvent({
+        action: 'create',
+        resource: 'strategic_goals',
+        resourceId: importId,
+        description: `Imported ${processedCount} strategic goals from CSV`,
+        userId,
+        severity: 'medium',
+        metadata: {
+          fileName,
+          processedCount,
+          failedCount,
+          totalCount: validation.rowCount
+        }
       });
+
+      return {
+        success: true,
+        importId,
+        message: `Successfully imported ${processedCount} goals. ${failedCount} failed.`
+      };
 
     } catch (error) {
-      console.error('Error processing CSV file:', error);
-      
-      // Mark as failed
-      await DatabaseService.updateRecord('data_imports', importId, {
-        status: 'failed',
-        error_log: { 
-          error: error instanceof Error ? error.message : 'Unknown error' 
-        },
-        completed_at: new Date().toISOString()
-      });
+      console.error('Import error:', error);
+      return {
+        success: false,
+        importId: '',
+        message: 'Import failed due to an unexpected error'
+      };
     }
   }
 
   /**
-   * Parse a CSV line, handling quoted values
+   * Get import status and details
    */
-  private static parseCsvLine(line: string): string[] {
-    const result: string[] = [];
-    let current = '';
-    let inQuotes = false;
-    
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      
-      if (char === '"') {
-        if (inQuotes && line[i + 1] === '"') {
-          // Escaped quote
-          current += '"';
-          i++; // Skip next quote
-        } else {
-          // Toggle quote state
-          inQuotes = !inQuotes;
-        }
-      } else if (char === ',' && !inQuotes) {
-        // End of field
-        result.push(current.trim());
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-    
-    // Add last field
-    result.push(current.trim());
-    
-    return result;
-  }
-
-  /**
-   * Get import status
-   */
-  static async getImportStatus(importId: string): Promise<DataImport | null> {
+  static async getImportStatus(importId: string): Promise<DataImportRecord | null> {
     try {
-      const { data } = await DatabaseService.fetchData<DataImport>(
+      const result = await DatabaseService.fetchData<DataImportRecord>(
         'data_imports',
         { limit: 1 },
         { id: importId }
       );
       
-      return data[0] || null;
+      return result.data[0] || null;
     } catch (error) {
-      console.error('Error getting import status:', error);
+      console.error('Error fetching import status:', error);
       return null;
+    }
+  }
+
+  /**
+   * Get user's import history
+   */
+  static async getUserImports(userId: string): Promise<DataImportRecord[]> {
+    try {
+      const result = await DatabaseService.fetchData<DataImportRecord>(
+        'data_imports',
+        { limit: 50, sortBy: 'created_at', sortOrder: 'desc' },
+        { user_id: userId }
+      );
+      
+      return result.data;
+    } catch (error) {
+      console.error('Error fetching user imports:', error);
+      return [];
     }
   }
 }
