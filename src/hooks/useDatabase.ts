@@ -8,8 +8,8 @@ export interface UseDatabaseResult<T extends DatabaseRecord> {
   error: string | null;
   count: number;
   refresh: () => Promise<void>;
-  create: (record: Partial<T>) => Promise<T | null>;
-  update: (id: string, record: Partial<T>) => Promise<T | null>;
+  create: (record: Omit<T, 'id' | 'created_at' | 'updated_at'>) => Promise<T | null>;
+  update: (id: string, record: Partial<Omit<T, 'id' | 'created_at'>>) => Promise<T | null>;
   remove: (id: string) => Promise<boolean>;
   search: (term: string) => Promise<void>;
 }
@@ -50,7 +50,7 @@ export function useDatabase<T extends DatabaseRecord>(
   }, [tableName, options, filters]);
 
   // Create record
-  const create = useCallback(async (record: Partial<T>): Promise<T | null> => {
+  const create = useCallback(async (record: Omit<T, 'id' | 'created_at' | 'updated_at'>): Promise<T | null> => {
     const result = await DatabaseService.createRecord<T>(tableName, record);
     
     if (result.data) {
@@ -67,7 +67,7 @@ export function useDatabase<T extends DatabaseRecord>(
   }, [tableName, fetchData]);
 
   // Update record
-  const update = useCallback(async (id: string, record: Partial<T>): Promise<T | null> => {
+  const update = useCallback(async (id: string, record: Partial<Omit<T, 'id' | 'created_at'>>): Promise<T | null> => {
     const result = await DatabaseService.updateRecord<T>(tableName, id, record);
     
     if (result.data) {

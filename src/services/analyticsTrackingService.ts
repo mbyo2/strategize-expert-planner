@@ -65,13 +65,19 @@ export class AnalyticsTrackingService {
     if (this.eventQueue.length === 0 || this.isProcessing) return;
 
     this.isProcessing = true;
+    const eventsToProcess = this.eventQueue.splice(0, 10);
 
     try {
       // Take up to 10 events from the queue
-      const eventsToProcess = this.eventQueue.splice(0, 10);
-      
       if (eventsToProcess.length > 0) {
-        await DatabaseService.batchCreate('analytics_events', eventsToProcess);
+        // Convert AnalyticsEvent to match database record format
+        const eventsForDb = eventsToProcess.map(event => ({
+          id: crypto.randomUUID(),
+          ...event,
+          created_at: new Date().toISOString()
+        }));
+        
+        await DatabaseService.batchCreate('analytics_events', eventsForDb);
       }
     } catch (error) {
       console.error('Error processing analytics event queue:', error);
@@ -161,7 +167,7 @@ export class AnalyticsTrackingService {
         // Apply date filter in the query
       }
 
-      const { data } = await DatabaseService.fetchData<AnalyticsEvent>(
+      const { data } = await DatabaseService.fetchData<AnalyticsEvent & { id: string }>(
         'analytics_events',
         { limit: 100, sortBy: 'created_at', sortOrder: 'desc' },
         filters

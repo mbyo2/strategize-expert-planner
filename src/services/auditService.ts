@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseService } from './databaseService';
 import { toast } from 'sonner';
@@ -24,7 +25,8 @@ export type AuditAction =
   | 'export'
   | 'role_change'
   | 'mfa_setup'
-  | 'mfa_verify';
+  | 'mfa_verify'
+  | 'unauthorized_access';
 
 export type AuditResource = 
   | 'user' 
@@ -52,6 +54,19 @@ export interface AuditLogEntry {
   ip_address?: string;
   user_agent?: string;
   created_at?: string;
+}
+
+// Enhanced interface for logging with additional fields
+export interface LogAuditEventParams {
+  action: AuditAction;
+  resource_type: AuditResource;
+  resource_id?: string;
+  description?: string;
+  userId?: string;
+  severity?: 'low' | 'medium' | 'high';
+  metadata?: Record<string, any>;
+  old_values?: Record<string, any>;
+  new_values?: Record<string, any>;
 }
 
 /**
@@ -106,31 +121,39 @@ const calculateExpirationDate = (severity: 'low' | 'medium' | 'high' = 'medium')
 /**
  * Logs an action to the audit trail
  */
-export const logAuditEvent = async (entry: AuditLogEntry): Promise<boolean> => {
+export const logAuditEvent = async (params: LogAuditEventParams): Promise<boolean> => {
   try {
     // Get client IP if not provided
-    const userIp = entry.ip_address || await getClientIp();
+    const userIp = await getClientIp();
     
     // Add timestamp and expiration if not provided
-    const timestamp = entry.created_at || new Date().toISOString();
+    const timestamp = new Date().toISOString();
     
     // Sanitize any user-provided input
-    const sanitizedOldValues = entry.old_values ? sanitizeData(entry.old_values) : undefined;
-    const sanitizedNewValues = entry.new_values ? sanitizeData(entry.new_values) : undefined;
+    const sanitizedOldValues = params.old_values ? sanitizeData(params.old_values) : undefined;
+    const sanitizedNewValues = params.new_values ? sanitizeData(params.new_values) : undefined;
     
     // Create the complete log entry
-    const logEntry = {
-      ...entry,
+    const logEntry: AuditLogEntry = {
+      action: params.action,
+      resource_type: params.resource_type,
+      resource_id: params.resource_id,
+      user_id: params.userId,
       created_at: timestamp,
       old_values: sanitizedOldValues,
       new_values: sanitizedNewValues,
       ip_address: userIp,
-      user_agent: entry.user_agent || navigator.userAgent,
+      user_agent: navigator.userAgent,
     };
 
     // In a real application, this would insert into a database table
     // For now, we'll log to console and simulate storing it
-    console.log('[AUDIT LOG]', logEntry);
+    console.log('[AUDIT LOG]', {
+      ...logEntry,
+      description: params.description,
+      severity: params.severity,
+      metadata: params.metadata
+    });
     
     // In a production environment, you would store this in Supabase
     // Commented out to avoid creating schema changes

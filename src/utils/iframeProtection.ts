@@ -1,112 +1,91 @@
 
 /**
- * Enhanced iframe protection utilities to prevent clickjacking attacks
+ * Security check result interface
  */
-
-/**
- * Check if the current page is loaded in an iframe
- */
-export const isInIframe = (): boolean => {
-  try {
-    return window.self !== window.top;
-  } catch (e) {
-    // If we can't access window.top, we're definitely in an iframe
-    return true;
-  }
-};
-
-/**
- * Check if we're in a trusted environment (Lovable preview)
- */
-export const isTrustedEnvironment = (): boolean => {
-  return window.location.hostname.includes('lovable.app') || 
-         window.location.hostname === 'localhost' ||
-         window.location.hostname === '127.0.0.1';
-};
-
-/**
- * Get the parent frame's origin if accessible
- */
-export const getParentOrigin = (): string | null => {
-  try {
-    if (window.parent && window.parent !== window) {
-      return window.parent.location.origin;
-    }
-  } catch (e) {
-    // Cross-origin restrictions prevent access
-  }
-  return null;
-};
-
-/**
- * Comprehensive iframe security check
- */
-export const performIframeSecurityCheck = (): {
+interface SecurityCheckResult {
   isSecure: boolean;
   reason?: string;
   severity: 'low' | 'medium' | 'high';
-} => {
-  const inIframe = isInIframe();
-  const trustedEnv = isTrustedEnvironment();
-  
-  if (!inIframe) {
-    return { isSecure: true, severity: 'low' };
-  }
-  
-  if (trustedEnv) {
-    return { isSecure: true, severity: 'low' };
-  }
-  
-  // Check if we can determine the parent origin
-  const parentOrigin = getParentOrigin();
-  
-  if (!parentOrigin) {
+}
+
+/**
+ * Perform iframe security checks
+ */
+export const performIframeSecurityCheck = (): SecurityCheckResult => {
+  // Check if we're in an iframe
+  if (window.self !== window.top) {
+    // Check if it's a trusted environment
+    if (isTrustedEnvironment()) {
+      return {
+        isSecure: true,
+        severity: 'low'
+      };
+    }
+    
     return {
       isSecure: false,
-      reason: 'Login page embedded in iframe from unknown origin - potential clickjacking attack',
+      reason: 'Application loaded in iframe from untrusted domain. This may be a security risk.',
       severity: 'high'
     };
   }
   
-  // Even if we can get the parent origin, embedding login pages is risky
   return {
-    isSecure: false,
-    reason: `Login page embedded in iframe from ${parentOrigin} - security risk`,
-    severity: 'medium'
+    isSecure: true,
+    severity: 'low'
   };
 };
 
 /**
- * Break out of iframe if detected (frame busting)
+ * Check if we're in a trusted environment
  */
-export const breakOutOfIframe = (): void => {
-  if (isInIframe() && !isTrustedEnvironment()) {
-    try {
-      window.top!.location = window.location.href;
-    } catch (e) {
-      // If we can't redirect the parent, show a warning
-      console.warn('Iframe detected but cannot redirect parent frame');
-    }
+export const isTrustedEnvironment = (): boolean => {
+  const trustedDomains = [
+    'lovable.app',
+    'localhost',
+    '127.0.0.1'
+  ];
+  
+  try {
+    const parentDomain = window.top?.location.hostname;
+    return trustedDomains.some(domain => 
+      parentDomain?.includes(domain) || window.location.hostname.includes(domain)
+    );
+  } catch (e) {
+    // Cross-origin access blocked
+    return false;
   }
 };
 
 /**
- * Add frame busting script to prevent iframe embedding
+ * Attempt to break out of iframe
+ */
+export const breakOutOfIframe = (): void => {
+  try {
+    if (window.top && window.self !== window.top) {
+      window.top.location = window.self.location;
+    }
+  } catch (e) {
+    // Cross-origin access blocked, which is expected
+    console.warn('Cannot break out of iframe due to cross-origin restrictions');
+  }
+};
+
+/**
+ * Add frame busting script
  */
 export const addFrameBustingScript = (): void => {
-  // Create and inject frame busting script
-  const script = document.createElement('script');
-  script.textContent = `
-    (function() {
-      if (window.self !== window.top && !window.location.hostname.includes('lovable.app')) {
-        try {
-          window.top.location = window.location;
-        } catch(e) {
-          document.body.style.display = 'none';
-          alert('This page cannot be displayed in a frame for security reasons.');
+  // Only add if not already in trusted environment
+  if (!isTrustedEnvironment() && window.self !== window.top) {
+    const script = document.createElement('script');
+    script.textContent = `
+      try {
+        if (window.top !== window.self) {
+          window.top.location = window.self.location;
         }
+      } catch (e) {
+        // Silently fail if cross-origin
       }
-    })();
-  `;
-  document.head.appendChild(script);
+    `;
+    document.head.appendChild(script);
+  }
 };
