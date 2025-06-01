@@ -110,6 +110,8 @@ const EditMemberDialog = ({ teamId, member, open, onOpenChange }: EditMemberDial
                 <SelectContent>
                   <SelectItem value="Team Lead">Team Lead</SelectItem>
                   <SelectItem value="Member">Member</SelectItem>
+                  <SelectItem value="Contributor">Contributor</SelectItem>
+                  <SelectItem value="Observer">Observer</SelectItem>
                 </SelectContent>
               </Select>
             </div>

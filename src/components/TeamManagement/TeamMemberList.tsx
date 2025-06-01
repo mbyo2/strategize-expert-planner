@@ -87,7 +87,7 @@ const TeamMemberList = ({ teamId, members }: TeamMemberListProps) => {
                   </Badge>
                 </TableCell>
                 <TableCell>{member.position || 'N/A'}</TableCell>
-                <TableCell>{member.joinedDate}</TableCell>
+                <TableCell>{member.joined_date}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="icon" onClick={() => setEditingMember(member)}>
