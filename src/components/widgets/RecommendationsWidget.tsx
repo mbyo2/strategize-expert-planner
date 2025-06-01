@@ -1,75 +1,160 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WidgetProps } from './WidgetTypes';
-import { Button } from '@/components/ui/button';
-import { ChevronRight } from 'lucide-react';
 import WidgetWrapper from './WidgetWrapper';
-import { fetchTopRecommendations, Recommendation } from '@/services/recommendationsService';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useNavigate } from 'react-router-dom';
+import { Lightbulb, ArrowRight, CheckCircle } from 'lucide-react';
+
+interface Recommendation {
+  id: string;
+  title: string;
+  description: string;
+  priority: number;
+  status: 'pending' | 'in_progress' | 'completed';
+  category?: string;
+  created_at: string;
+}
 
 const RecommendationsWidget: React.FC<WidgetProps> = (props) => {
-  const isMobile = window.innerWidth < 640;
-  const navigate = useNavigate();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
-    const loadRecommendations = async () => {
-      try {
-        setLoading(true);
-        const topRecommendations = await fetchTopRecommendations(3);
-        setRecommendations(topRecommendations);
-      } catch (error) {
-        console.error('Error loading recommendations:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadRecommendations();
+    fetchRecommendations();
   }, []);
-  
-  const handleViewAll = () => {
-    navigate('/planning');
-  };
-  
-  return (
-    <WidgetWrapper {...props}>
-      <h3 className="text-base sm:text-lg font-medium mb-2">Strategic Recommendations</h3>
+
+  const fetchRecommendations = async () => {
+    try {
+      setLoading(true);
+      // Simulate API call - replace with actual service call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex items-start">
-              <Skeleton className="h-5 w-5 rounded-full mr-2" />
-              <Skeleton className="h-4 flex-1" />
+      const mockData: Recommendation[] = [
+        {
+          id: '1',
+          title: 'Expand digital marketing budget',
+          description: 'Increase digital marketing spend by 25% to capture growing online audience',
+          priority: 1,
+          status: 'pending',
+          category: 'Marketing',
+          created_at: new Date().toISOString()
+        },
+        {
+          id: '2',
+          title: 'Implement customer feedback system',
+          description: 'Deploy automated feedback collection to improve product development',
+          priority: 2,
+          status: 'in_progress',
+          category: 'Product',
+          created_at: new Date(Date.now() - 86400000).toISOString()
+        },
+        {
+          id: '3',
+          title: 'Optimize supply chain efficiency',
+          description: 'Review vendor contracts and consolidate suppliers for cost reduction',
+          priority: 1,
+          status: 'pending',
+          category: 'Operations',
+          created_at: new Date(Date.now() - 172800000).toISOString()
+        }
+      ];
+      
+      setRecommendations(mockData.sort((a, b) => a.priority - b.priority));
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getPriorityColor = (priority: number) => {
+    switch (priority) {
+      case 1:
+        return 'destructive';
+      case 2:
+        return 'secondary';
+      default:
+        return 'outline';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'in_progress':
+        return <ArrowRight className="h-4 w-4 text-blue-500" />;
+      default:
+        return <Lightbulb className="h-4 w-4 text-yellow-500" />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <WidgetWrapper {...props}>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-8 w-20" />
+          </div>
+          {[1, 2, 3].map(i => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-3 w-5/6" />
+              <div className="flex gap-2">
+                <Skeleton className="h-5 w-16" />
+                <Skeleton className="h-5 w-20" />
+              </div>
             </div>
           ))}
         </div>
-      ) : recommendations.length > 0 ? (
-        <ul className="space-y-2 sm:space-y-3 text-sm sm:text-base">
-          {recommendations.map((recommendation, index) => (
-            <li key={recommendation.id} className="flex items-start">
-              <span className="h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs mr-2">
-                {recommendation.priority}
-              </span>
-              <span>{recommendation.title}</span>
-            </li>
+      </WidgetWrapper>
+    );
+  }
+
+  return (
+    <WidgetWrapper {...props}>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-sm font-medium">Strategic Recommendations</h3>
+          <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
+            View All
+          </Button>
+        </div>
+        
+        <div className="space-y-3">
+          {recommendations.slice(0, 3).map((recommendation) => (
+            <div key={recommendation.id} className="space-y-2 p-3 rounded-lg border">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(recommendation.status)}
+                  <span className="text-sm font-medium">{recommendation.title}</span>
+                </div>
+                <Badge variant={getPriorityColor(recommendation.priority) as any} className="text-xs">
+                  P{recommendation.priority}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">{recommendation.description}</p>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-muted-foreground capitalize">
+                  {recommendation.status.replace('_', ' ')}
+                </span>
+                {recommendation.category && (
+                  <span className="text-xs text-muted-foreground">{recommendation.category}</span>
+                )}
+              </div>
+            </div>
           ))}
-        </ul>
-      ) : (
-        <div className="text-sm text-muted-foreground py-2">No recommendations found.</div>
-      )}
-      
-      <Button 
-        variant="ghost" 
-        size={isMobile ? "sm" : "default"} 
-        className="mt-3 sm:mt-4 text-primary hover:text-primary/80"
-        onClick={handleViewAll}
-      >
-        See all recommendations <ChevronRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
-      </Button>
+        </div>
+        
+        {recommendations.length === 0 && (
+          <div className="text-center py-4 text-sm text-muted-foreground">
+            No recommendations available
+          </div>
+        )}
+      </div>
     </WidgetWrapper>
   );
 };

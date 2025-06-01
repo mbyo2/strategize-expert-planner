@@ -1,104 +1,57 @@
 
-import { toast } from "sonner";
-import { customSupabase } from "@/integrations/supabase/customClient";
+import { DatabaseService } from './databaseService';
 
 export interface StrategicGoal {
   id: string;
   name: string;
   description?: string;
+  status: 'planned' | 'active' | 'completed' | 'paused';
   progress: number;
-  status: string;
-  start_date?: string;
-  due_date?: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
   target_value?: number;
   current_value?: number;
+  start_date?: string;
+  due_date?: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export const fetchStrategicGoals = async (): Promise<StrategicGoal[]> => {
   try {
-    const { data, error } = await customSupabase
-      .from('strategic_goals')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching strategic goals:', error);
-      throw error;
-    }
-
-    return data || [];
+    const result = await DatabaseService.fetchData<StrategicGoal>('strategic_goals');
+    return result.data || [];
   } catch (error) {
-    console.error('Failed to fetch strategic goals:', error);
-    toast.error('Failed to load strategic goals');
+    console.error('Error fetching strategic goals:', error);
     return [];
   }
 };
 
-export const createStrategicGoal = async (goal: Omit<StrategicGoal, 'id' | 'created_at' | 'updated_at'>) => {
+export const createStrategicGoal = async (goal: Omit<StrategicGoal, 'id' | 'created_at' | 'updated_at'>): Promise<StrategicGoal | null> => {
   try {
-    const { data, error } = await customSupabase
-      .from('strategic_goals')
-      .insert([goal])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating strategic goal:', error);
-      throw error;
-    }
-
-    toast.success('Strategic goal created successfully');
-    return data;
+    const result = await DatabaseService.createRecord<StrategicGoal>('strategic_goals', goal);
+    return result.data;
   } catch (error) {
-    console.error('Failed to create strategic goal:', error);
-    toast.error('Failed to create strategic goal');
-    throw error;
+    console.error('Error creating strategic goal:', error);
+    return null;
   }
 };
 
-export const updateStrategicGoal = async (id: string, updates: Partial<StrategicGoal>) => {
+export const updateStrategicGoal = async (id: string, updates: Partial<StrategicGoal>): Promise<StrategicGoal | null> => {
   try {
-    const { data, error } = await customSupabase
-      .from('strategic_goals')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating strategic goal:', error);
-      throw error;
-    }
-
-    toast.success('Strategic goal updated successfully');
-    return data;
+    const result = await DatabaseService.updateRecord<StrategicGoal>('strategic_goals', id, updates);
+    return result.data;
   } catch (error) {
-    console.error('Failed to update strategic goal:', error);
-    toast.error('Failed to update strategic goal');
-    throw error;
+    console.error('Error updating strategic goal:', error);
+    return null;
   }
 };
 
-export const deleteStrategicGoal = async (id: string) => {
+export const deleteStrategicGoal = async (id: string): Promise<boolean> => {
   try {
-    const { error } = await customSupabase
-      .from('strategic_goals')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting strategic goal:', error);
-      throw error;
-    }
-
-    toast.success('Strategic goal deleted successfully');
-    return true;
+    const result = await DatabaseService.deleteRecord('strategic_goals', id);
+    return result.success;
   } catch (error) {
-    console.error('Failed to delete strategic goal:', error);
-    toast.error('Failed to delete strategic goal');
-    throw error;
+    console.error('Error deleting strategic goal:', error);
+    return false;
   }
 };
