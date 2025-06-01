@@ -56,15 +56,6 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
   onCancel,
   isLoading = false
 }) => {
-  const getSchema = () => {
-    switch (entityType) {
-      case 'goal': return goalSchema;
-      case 'metric': return metricSchema;
-      case 'initiative': return initiativeSchema;
-      default: return goalSchema;
-    }
-  };
-
   const getGoalDefaults = (): GoalFormData => ({
     name: '',
     description: '',
@@ -93,32 +84,37 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
     end_date: '',
   });
 
-  const createForm = () => {
+  // Create typed forms for each entity type
+  const goalForm = useForm<GoalFormData>({
+    resolver: zodResolver(goalSchema),
+    defaultValues: getGoalDefaults()
+  });
+
+  const metricForm = useForm<MetricFormData>({
+    resolver: zodResolver(metricSchema),
+    defaultValues: getMetricDefaults()
+  });
+
+  const initiativeForm = useForm<InitiativeFormData>({
+    resolver: zodResolver(initiativeSchema),
+    defaultValues: getInitiativeDefaults()
+  });
+
+  // Get the appropriate form based on entity type
+  const getCurrentForm = () => {
     switch (entityType) {
       case 'goal':
-        return useForm<GoalFormData>({
-          resolver: zodResolver(goalSchema),
-          defaultValues: getGoalDefaults()
-        });
+        return goalForm;
       case 'metric':
-        return useForm<MetricFormData>({
-          resolver: zodResolver(metricSchema),
-          defaultValues: getMetricDefaults()
-        });
+        return metricForm;
       case 'initiative':
-        return useForm<InitiativeFormData>({
-          resolver: zodResolver(initiativeSchema),
-          defaultValues: getInitiativeDefaults()
-        });
+        return initiativeForm;
       default:
-        return useForm<GoalFormData>({
-          resolver: zodResolver(goalSchema),
-          defaultValues: getGoalDefaults()
-        });
+        return goalForm;
     }
   };
 
-  const form = createForm();
+  const form = getCurrentForm();
 
   const getTitle = () => {
     switch (entityType) {
@@ -144,10 +140,10 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
         <CardTitle>{getTitle()}</CardTitle>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
+        <Form {...(form as any)}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
-              control={form.control}
+              control={form.control as any}
               name="name"
               render={({ field }) => (
                 <FormItem>
@@ -162,7 +158,7 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
 
             {(entityType === 'goal' || entityType === 'initiative') && (
               <FormField
-                control={form.control}
+                control={form.control as any}
                 name="description"
                 render={({ field }) => (
                   <FormItem>
@@ -179,7 +175,7 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
             {entityType === 'goal' && (
               <>
                 <FormField
-                  control={form.control}
+                  control={form.control as any}
                   name="status"
                   render={({ field }) => (
                     <FormItem>
@@ -204,7 +200,7 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
 
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="target_value"
                     render={({ field }) => (
                       <FormItem>
@@ -223,7 +219,7 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
                   />
 
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="current_value"
                     render={({ field }) => (
                       <FormItem>
@@ -248,7 +244,7 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
               <>
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="value"
                     render={({ field }) => (
                       <FormItem>
@@ -267,7 +263,7 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
                   />
 
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="previous_value"
                     render={({ field }) => (
                       <FormItem>
@@ -288,7 +284,7 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
 
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="category"
                     render={({ field }) => (
                       <FormItem>
@@ -302,7 +298,7 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
                   />
 
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="source"
                     render={({ field }) => (
                       <FormItem>
@@ -321,7 +317,7 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
             {entityType === 'initiative' && (
               <>
                 <FormField
-                  control={form.control}
+                  control={form.control as any}
                   name="status"
                   render={({ field }) => (
                     <FormItem>
@@ -346,7 +342,7 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
 
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="start_date"
                     render={({ field }) => (
                       <FormItem>
@@ -360,7 +356,7 @@ const EntityCreateForm: React.FC<EntityCreateFormProps> = ({
                   />
 
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="end_date"
                     render={({ field }) => (
                       <FormItem>
