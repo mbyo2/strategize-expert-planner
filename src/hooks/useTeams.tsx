@@ -1,229 +1,193 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Team, TeamMember } from '@/types/team';
+import { Team, TeamMember, CreateTeamData, CreateTeamMemberData } from '@/types/team';
 import { DatabaseService } from '@/services/databaseService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface TeamsContextType {
   teams: Team[];
-  loading: boolean;
+  isLoading: boolean;
   error: string | null;
-  addTeam: (team: Omit<Team, 'id' | 'members'>) => void;
-  updateTeam: (id: string, updates: Partial<Team>) => void;
-  deleteTeam: (id: string) => void;
-  addMember: (teamId: string, member: Omit<TeamMember, 'id'>) => Promise<void>;
-  updateMember: (teamId: string, memberId: string, updates: Partial<TeamMember>) => void;
-  removeMember: (teamId: string, memberId: string) => void;
+  createTeam: (teamData: CreateTeamData) => Promise<Team | null>;
+  updateTeam: (id: string, updates: Partial<Team>) => Promise<Team | null>;
+  deleteTeam: (id: string) => Promise<boolean>;
+  addTeamMember: (memberData: CreateTeamMemberData) => Promise<TeamMember | null>;
+  removeTeamMember: (teamId: string, userId: string) => Promise<boolean>;
+  refreshTeams: () => Promise<void>;
 }
 
 const TeamsContext = createContext<TeamsContextType | undefined>(undefined);
 
 export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+
+  const fetchTeams = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const result = await DatabaseService.fetchData<Team>('teams');
+      if (result.success && result.data) {
+        // Fetch members for each team
+        const teamsWithMembers = await Promise.all(
+          result.data.map(async (team) => {
+            const membersResult = await DatabaseService.fetchData<TeamMember>(
+              'team_members',
+              undefined,
+              { team_id: team.id }
+            );
+            return {
+              ...team,
+              members: membersResult.data || []
+            };
+          })
+        );
+        setTeams(teamsWithMembers);
+      } else {
+        setError(result.error || 'Failed to fetch teams');
+      }
+    } catch (err) {
+      console.error('Error fetching teams:', err);
+      setError('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const createTeam = async (teamData: CreateTeamData): Promise<Team | null> => {
+    try {
+      const result = await DatabaseService.createRecord<Team>('teams', teamData);
+      if (result.success && result.data) {
+        const newTeam = { ...result.data, members: [] };
+        setTeams(prev => [...prev, newTeam]);
+        toast.success('Team created successfully');
+        return newTeam;
+      } else {
+        toast.error(result.error || 'Failed to create team');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error creating team:', error);
+      toast.error('An unexpected error occurred');
+      return null;
+    }
+  };
+
+  const updateTeam = async (id: string, updates: Partial<Team>): Promise<Team | null> => {
+    try {
+      const result = await DatabaseService.updateRecord<Team>('teams', id, updates);
+      if (result.success && result.data) {
+        setTeams(prev => prev.map(team => 
+          team.id === id ? { ...team, ...result.data } : team
+        ));
+        toast.success('Team updated successfully');
+        return result.data;
+      } else {
+        toast.error(result.error || 'Failed to update team');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error updating team:', error);
+      toast.error('An unexpected error occurred');
+      return null;
+    }
+  };
+
+  const deleteTeam = async (id: string): Promise<boolean> => {
+    try {
+      const result = await DatabaseService.deleteRecord('teams', id);
+      if (result.success) {
+        setTeams(prev => prev.filter(team => team.id !== id));
+        toast.success('Team deleted successfully');
+        return true;
+      } else {
+        toast.error(result.error || 'Failed to delete team');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error deleting team:', error);
+      toast.error('An unexpected error occurred');
+      return false;
+    }
+  };
+
+  const addTeamMember = async (memberData: CreateTeamMemberData): Promise<TeamMember | null> => {
+    try {
+      const result = await DatabaseService.createRecord<TeamMember>('team_members', memberData);
+      if (result.success && result.data) {
+        setTeams(prev => prev.map(team => 
+          team.id === memberData.team_id 
+            ? { ...team, members: [...(team.members || []), result.data!] }
+            : team
+        ));
+        toast.success('Team member added successfully');
+        return result.data;
+      } else {
+        toast.error(result.error || 'Failed to add team member');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error adding team member:', error);
+      toast.error('An unexpected error occurred');
+      return null;
+    }
+  };
+
+  const removeTeamMember = async (teamId: string, userId: string): Promise<boolean> => {
+    try {
+      // Find the member record to delete
+      const team = teams.find(t => t.id === teamId);
+      const member = team?.members?.find(m => m.user_id === userId);
+      
+      if (!member) {
+        toast.error('Team member not found');
+        return false;
+      }
+
+      const result = await DatabaseService.deleteRecord('team_members', member.id);
+      if (result.success) {
+        setTeams(prev => prev.map(team => 
+          team.id === teamId 
+            ? { ...team, members: team.members?.filter(m => m.user_id !== userId) || [] }
+            : team
+        ));
+        toast.success('Team member removed successfully');
+        return true;
+      } else {
+        toast.error(result.error || 'Failed to remove team member');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error removing team member:', error);
+      toast.error('An unexpected error occurred');
+      return false;
+    }
+  };
+
+  const refreshTeams = async () => {
+    await fetchTeams();
+  };
 
   useEffect(() => {
     fetchTeams();
   }, []);
 
-  const fetchTeams = async () => {
-    try {
-      setLoading(true);
-      const result = await DatabaseService.fetchData<Team>('teams');
-      
-      // Fetch team members for each team
-      const teamsWithMembers = await Promise.all(
-        (result.data || []).map(async (team) => {
-          const membersResult = await DatabaseService.fetchData<TeamMember>(
-            'team_members',
-            {},
-            { team_id: team.id }
-          );
-          return {
-            ...team,
-            members: membersResult.data || []
-          };
-        })
-      );
-      
-      setTeams(teamsWithMembers);
-      setError(null);
-    } catch (err) {
-      setError('Failed to fetch teams');
-      console.error('Error fetching teams:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addTeam = async (teamData: Omit<Team, 'id' | 'members'>) => {
-    try {
-      const result = await DatabaseService.createRecord<Team>('teams', teamData);
-      if (result.data) {
-        setTeams(prev => [...prev, { ...result.data, members: [] }]);
-        toast({
-          title: "Team created",
-          description: `${teamData.name} has been created successfully.`
-        });
-      }
-    } catch (err) {
-      console.error('Error creating team:', err);
-      toast({
-        title: "Error",
-        description: "Failed to create team.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const updateTeam = async (id: string, updates: Partial<Team>) => {
-    try {
-      const result = await DatabaseService.updateRecord<Team>('teams', id, updates);
-      if (result.data) {
-        setTeams(prev => prev.map(team => 
-          team.id === id ? { ...team, ...updates } : team
-        ));
-        toast({
-          title: "Team updated",
-          description: "Team information has been updated successfully."
-        });
-      }
-    } catch (err) {
-      console.error('Error updating team:', err);
-      toast({
-        title: "Error",
-        description: "Failed to update team.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const deleteTeam = async (id: string) => {
-    try {
-      const result = await DatabaseService.deleteRecord('teams', id);
-      if (result.success) {
-        setTeams(prev => prev.filter(team => team.id !== id));
-        toast({
-          title: "Team deleted",
-          description: "Team has been deleted successfully."
-        });
-      }
-    } catch (err) {
-      console.error('Error deleting team:', err);
-      toast({
-        title: "Error",
-        description: "Failed to delete team.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const addMember = async (teamId: string, memberData: Omit<TeamMember, 'id'>) => {
-    try {
-      const result = await DatabaseService.createRecord<TeamMember>('team_members', {
-        ...memberData,
-        team_id: teamId
-      });
-      
-      if (result.data) {
-        const newMember: TeamMember = {
-          id: result.data.id,
-          name: memberData.name,
-          email: memberData.email,
-          role: memberData.role,
-          department: memberData.department,
-          position: memberData.position,
-          joinedDate: memberData.joinedDate
-        };
-        
-        setTeams(prev => prev.map(team => 
-          team.id === teamId 
-            ? { ...team, members: [...team.members, newMember] }
-            : team
-        ));
-        
-        toast({
-          title: "Member added",
-          description: `${memberData.name} has been added to the team.`
-        });
-      }
-    } catch (err) {
-      console.error('Error adding team member:', err);
-      toast({
-        title: "Error",
-        description: "Failed to add team member.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const updateMember = async (teamId: string, memberId: string, updates: Partial<TeamMember>) => {
-    try {
-      const result = await DatabaseService.updateRecord<TeamMember>('team_members', memberId, updates);
-      if (result.data) {
-        setTeams(prev => prev.map(team => 
-          team.id === teamId 
-            ? {
-                ...team,
-                members: team.members.map(member => 
-                  member.id === memberId ? { ...member, ...updates } : member
-                )
-              }
-            : team
-        ));
-        toast({
-          title: "Member updated",
-          description: "Team member information has been updated."
-        });
-      }
-    } catch (err) {
-      console.error('Error updating team member:', err);
-      toast({
-        title: "Error",
-        description: "Failed to update team member.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const removeMember = async (teamId: string, memberId: string) => {
-    try {
-      const result = await DatabaseService.deleteRecord('team_members', memberId);
-      if (result.success) {
-        setTeams(prev => prev.map(team => 
-          team.id === teamId 
-            ? { ...team, members: team.members.filter(member => member.id !== memberId) }
-            : team
-        ));
-        toast({
-          title: "Member removed",
-          description: "Team member has been removed from the team."
-        });
-      }
-    } catch (err) {
-      console.error('Error removing team member:', err);
-      toast({
-        title: "Error",
-        description: "Failed to remove team member.",
-        variant: "destructive"
-      });
-    }
+  const value: TeamsContextType = {
+    teams,
+    isLoading,
+    error,
+    createTeam,
+    updateTeam,
+    deleteTeam,
+    addTeamMember,
+    removeTeamMember,
+    refreshTeams
   };
 
   return (
-    <TeamsContext.Provider value={{
-      teams,
-      loading,
-      error,
-      addTeam,
-      updateTeam,
-      deleteTeam,
-      addMember,
-      updateMember,
-      removeMember
-    }}>
+    <TeamsContext.Provider value={value}>
       {children}
     </TeamsContext.Provider>
   );

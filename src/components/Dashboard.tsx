@@ -1,3 +1,4 @@
+
 import React from 'react';
 import PageLayout from './PageLayout';
 import CustomizableDashboard from './CustomizableDashboard';
@@ -15,6 +16,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { cacheDashboardData, getCachedDashboardData } from '@/services/offlineService';
+import ExportDialog from './export/ExportDialog';
+import ImportDialog from './import/ImportDialog';
 
 const Dashboard = () => {
   const isMobile = useIsMobile();
@@ -146,6 +149,8 @@ const Dashboard = () => {
               <span className={isMobile ? "sr-only" : ""}>View Analytics</span>
             </Link>
           </Button>
+          <ExportDialog />
+          <ImportDialog />
         </div>
         <ReportGenerator triggerClassName="ml-auto" />
       </div>
