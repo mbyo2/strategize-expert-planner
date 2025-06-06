@@ -2,10 +2,10 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 
 const Hero = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useSimpleAuth();
   
   return (
     <div className="relative overflow-hidden bg-gradient-to-b from-slate-900 to-slate-800 py-20 sm:py-32">
@@ -21,7 +21,7 @@ const Hero = () => {
             {!isAuthenticated ? (
               <>
                 <Button asChild size="lg" variant="default" className="bg-white text-slate-900 hover:bg-slate-100">
-                  <Link to="/signup">Get Started</Link>
+                  <Link to="/login">Get Started</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="text-white border-white hover:bg-white/10">
                   <Link to="/login">Sign In</Link>
@@ -29,7 +29,7 @@ const Hero = () => {
               </>
             ) : (
               <Button asChild size="lg" className="bg-white text-slate-900 hover:bg-slate-100">
-                <Link to="/dashboard">Go to Dashboard</Link>
+                <Link to="/">Go to Dashboard</Link>
               </Button>
             )}
           </div>

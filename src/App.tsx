@@ -25,10 +25,10 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SimpleAuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <BrowserRouter>
+      <BrowserRouter>
+        <SimpleAuthProvider>
+          <TooltipProvider>
+            <Toaster />
             <Routes>
               {/* Public routes */}
               <Route path="/login" element={<Login />} />
@@ -95,9 +95,9 @@ function App() {
               {/* Catch all route */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </SimpleAuthProvider>
+          </TooltipProvider>
+        </SimpleAuthProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }
