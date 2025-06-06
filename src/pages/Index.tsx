@@ -4,12 +4,18 @@ import Hero from '@/components/landing/Hero';
 import Features from '@/components/landing/Features';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import Dashboard from '@/components/Dashboard';
+import Header from '@/components/Header';
 
 const Index = () => {
   const { isAuthenticated } = useSimpleAuth();
   
   if (isAuthenticated) {
-    return <Dashboard />;
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <Dashboard />
+      </div>
+    );
   }
   
   return (
