@@ -13,10 +13,11 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Shield, User, Settings, LogOut, UserCog } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuthCompat';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 
 const UserMenu = () => {
-  const { user, logout } = useAuth();
+  const { session, signOut, hasRole } = useSimpleAuth();
+  const user = session.user;
 
   if (!user) {
     return (
@@ -26,14 +27,14 @@ const UserMenu = () => {
             Log in
           </Button>
         </Link>
-        <Link to="/signup">
+        <Link to="/login">
           <Button size="sm">Sign up</Button>
         </Link>
       </div>
     );
   }
 
-  // Get initials from name
+  // Get initials from name or email
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -45,7 +46,8 @@ const UserMenu = () => {
 
   // Role badge color
   const getRoleBadgeColor = () => {
-    switch (user.role) {
+    const role = user.role || 'viewer';
+    switch (role) {
       case 'admin':
         return 'bg-red-100 text-red-800 dark:bg-red-800/20 dark:text-red-400';
       case 'manager':
@@ -80,7 +82,7 @@ const UserMenu = () => {
             </p>
             <div className="mt-2">
               <span className={`text-xs px-2 py-1 rounded-full ${getRoleBadgeColor()}`}>
-                {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User'}
+                {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Viewer'}
               </span>
             </div>
           </div>
@@ -95,7 +97,7 @@ const UserMenu = () => {
             <Settings className="mr-2 h-4 w-4" />
             <Link to="/settings">Settings</Link>
           </DropdownMenuItem>
-          {user.role === 'admin' && (
+          {hasRole('admin') && (
             <DropdownMenuItem>
               <UserCog className="mr-2 h-4 w-4" />
               <Link to="/admin">Admin Dashboard</Link>
@@ -103,7 +105,7 @@ const UserMenu = () => {
           )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={logout}>
+        <DropdownMenuItem onClick={signOut}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>

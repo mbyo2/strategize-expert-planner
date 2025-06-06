@@ -2,11 +2,11 @@
 import React from 'react';
 import Hero from '@/components/landing/Hero';
 import Features from '@/components/landing/Features';
-import { useAuth } from '@/hooks/useAuthCompat';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import Dashboard from '@/components/Dashboard';
 
 const Index = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useSimpleAuth();
   
   if (isAuthenticated) {
     return <Dashboard />;

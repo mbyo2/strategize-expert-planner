@@ -19,7 +19,7 @@ export const useAuth = () => {
   };
 };
 
-// For backward compatibility
+// For backward compatibility - now properly typed
 export const withAuth = (requiredRoles: string[] = []) => {
   return (Component: React.ComponentType) => {
     return (props: any) => {

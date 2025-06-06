@@ -1,207 +1,128 @@
 
 import React from 'react';
-import PageLayout from './PageLayout';
-import CustomizableDashboard from './CustomizableDashboard';
-import InfoCard from './InfoCard';
-import ReportGenerator from './ReportGenerator';
-import { Target, Building, Users, Calendar, BarChart } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useOptimizedQuery } from '@/hooks/use-optimized-query';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import { fetchStrategicGoals } from '@/services/strategicGoalsService';
-import { fetchIndustryMetrics } from '@/services/industryMetricsService';
-import { fetchUpcomingStrategyReviews } from '@/services/strategyReviewsService';
-import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
-import { useState, useEffect } from 'react';
-import { cacheDashboardData, getCachedDashboardData } from '@/services/offlineService';
-import ExportDialog from './export/ExportDialog';
-import ImportDialog from './import/ImportDialog';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, Target, TrendingUp, Calendar } from 'lucide-react';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 
 const Dashboard = () => {
-  const isMobile = useIsMobile();
-  const [loading, setLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState({
-    goalsCount: 0,
-    completedGoals: 0,
-    industryPosition: '',
-    industryTrend: 'neutral',
-    industryValue: '',
-    teamAlignment: 87,
-    teamAlignmentTrend: 'neutral',
-    nextReviewDate: '',
-    nextReviewTitle: '',
-  });
-  
-  // Use optimized query with offline support
-  const { data: goals = [], isLoading: isGoalsLoading, isOfflineData: isGoalsOffline } = useOptimizedQuery(
-    ['strategic-goals'],
-    fetchStrategicGoals,
+  const { session } = useSimpleAuth();
+  const user = session.user;
+
+  const dashboardCards = [
     {
-      cacheKey: 'dashboard-goals',
-      mobilePriority: 'high',
-      offlineCapable: true,
-    }
-  );
-  
-  const { data: metrics = [], isLoading: isMetricsLoading, isOfflineData: isMetricsOffline } = useOptimizedQuery(
-    ['industry-metrics'],
-    fetchIndustryMetrics,
+      title: 'Active Goals',
+      value: '12',
+      icon: Target,
+      description: 'Strategic objectives in progress'
+    },
     {
-      cacheKey: 'dashboard-metrics',
-      mobilePriority: 'medium',
-      offlineCapable: true,
-    }
-  );
-  
-  const { data: reviews = [], isLoading: isReviewsLoading, isOfflineData: isReviewsOffline } = useOptimizedQuery(
-    ['strategy-reviews'],
-    () => fetchUpcomingStrategyReviews(1),
+      title: 'Team Members',
+      value: '8',
+      icon: Users,
+      description: 'Active team members'
+    },
     {
-      cacheKey: 'dashboard-reviews',
-      mobilePriority: 'low',
-      offlineCapable: true,
+      title: 'Performance',
+      value: '+15%',
+      icon: TrendingUp,
+      description: 'Overall progress this quarter'
+    },
+    {
+      title: 'Reviews',
+      value: '3',
+      icon: Calendar,
+      description: 'Upcoming strategy reviews'
     }
-  );
-  
-  useEffect(() => {
-    const processDashboardData = () => {
-      try {
-        setLoading(true);
-        
-        const completedGoals = goals.filter(g => g.status === 'completed').length;
-        const goalsCount = goals.length;
-        
-        const marketShareMetric = metrics.find(m => 
-          m.name.toLowerCase().includes('market share') || 
-          m.name.toLowerCase().includes('position')
-        );
-        
-        let industryPosition = 'Top 15%';
-        let industryTrend = 'neutral';
-        let industryValue = '';
-        
-        if (marketShareMetric) {
-          industryPosition = `${marketShareMetric.value}%`;
-          industryTrend = marketShareMetric.trend || 'neutral';
-          industryValue = `${marketShareMetric.change_percentage || 0}% YoY`;
-        }
-        
-        let nextReviewDate = 'Not Scheduled';
-        let nextReviewTitle = 'No upcoming reviews';
-        
-        if (reviews.length > 0) {
-          const nextReview = reviews[0];
-          nextReviewDate = format(new Date(nextReview.scheduled_date), 'MMM d');
-          nextReviewTitle = nextReview.title;
-        }
-        
-        const newDashboardData = {
-          goalsCount,
-          completedGoals,
-          industryPosition,
-          industryTrend,
-          industryValue,
-          teamAlignment: 87,
-          teamAlignmentTrend: 'neutral',
-          nextReviewDate,
-          nextReviewTitle,
-        };
-        
-        setDashboardData(newDashboardData);
-        
-        // Cache the processed dashboard data for offline use
-        cacheDashboardData(newDashboardData);
-      } catch (error) {
-        console.error('Error processing dashboard data:', error);
-        
-        // Try to get cached dashboard data as fallback
-        const cachedData = getCachedDashboardData();
-        if (cachedData) {
-          setDashboardData(cachedData);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    // Only process data when all queries are completed (or offline data is loaded)
-    if (!isGoalsLoading && !isMetricsLoading && !isReviewsLoading) {
-      processDashboardData();
-    }
-  }, [goals, metrics, reviews, isGoalsLoading, isMetricsLoading, isReviewsLoading]);
-  
-  // Show offline indicator if any data is from cache
-  const isAnyOfflineData = isGoalsOffline || isMetricsOffline || isReviewsOffline;
-  
+  ];
+
   return (
-    <PageLayout 
-      title="Dashboard" 
-      subtitle="Monitor your organization's strategic initiatives and industry performance"
-      loading={isGoalsLoading && isMetricsLoading && isReviewsLoading}
-    >
-      <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link to="/analytics">
-              <BarChart className="mr-2 h-4 w-4" />
-              <span className={isMobile ? "sr-only" : ""}>View Analytics</span>
-            </Link>
-          </Button>
-          <ExportDialog />
-          <ImportDialog />
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">
+          Welcome back, {user?.name || user?.email?.split('@')[0] || 'User'}!
+        </h1>
+        <div className="text-sm text-muted-foreground">
+          Role: {user?.role || 'viewer'}
         </div>
-        <ReportGenerator triggerClassName="ml-auto" />
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-        {loading ? (
-          <>
-            {[1, 2, 3, 4].map(i => (
-              <Skeleton key={i} className="h-[120px]" />
-            ))}
-          </>
-        ) : (
-          <>
-            <InfoCard
-              title="Strategic Goals"
-              value={dashboardData.goalsCount.toString()}
-              description={`${dashboardData.completedGoals} completed this quarter`}
-              icon={<Target />}
-              trend="up"
-              trendValue="+2 from last quarter"
-            />
-            <InfoCard
-              title="Industry Position"
-              value={dashboardData.industryPosition}
-              description="Market share growth"
-              icon={<Building />}
-              trend={dashboardData.industryTrend as any}
-              trendValue={dashboardData.industryValue}
-            />
-            <InfoCard
-              title="Team Alignment"
-              value={`${dashboardData.teamAlignment}%`}
-              description="Strategy awareness score"
-              icon={<Users />}
-              trend={dashboardData.teamAlignmentTrend as any}
-              trendValue="No change"
-            />
-            <InfoCard
-              title="Next Review"
-              value={dashboardData.nextReviewDate}
-              description={dashboardData.nextReviewTitle}
-              icon={<Calendar />}
-              trend="neutral"
-              trendValue="On schedule"
-            />
-          </>
-        )}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {dashboardCards.map((card, index) => {
+          const Icon = card.icon;
+          return (
+            <Card key={index}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {card.title}
+                </CardTitle>
+                <Icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{card.value}</div>
+                <p className="text-xs text-muted-foreground">
+                  {card.description}
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      <CustomizableDashboard />
-    </PageLayout>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">New strategic goal created</p>
+                  <p className="text-xs text-muted-foreground">2 hours ago</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Initiative milestone completed</p>
+                  <p className="text-xs text-muted-foreground">1 day ago</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Strategy review scheduled</p>
+                  <p className="text-xs text-muted-foreground">3 days ago</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <button className="w-full text-left p-2 rounded hover:bg-muted text-sm">
+                Create new strategic goal
+              </button>
+              <button className="w-full text-left p-2 rounded hover:bg-muted text-sm">
+                Schedule strategy review
+              </button>
+              <button className="w-full text-left p-2 rounded hover:bg-muted text-sm">
+                View team performance
+              </button>
+              <button className="w-full text-left p-2 rounded hover:bg-muted text-sm">
+                Generate progress report
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 

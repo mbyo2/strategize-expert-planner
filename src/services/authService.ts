@@ -71,7 +71,7 @@ export class AuthService {
 
       toast.success('Account created successfully');
       
-      const session = this.createSession(data.user, data.session);
+      const session = await this.createSession(data.user, data.session);
       this.currentSession = session;
       this.notifySessionChange();
       
@@ -101,7 +101,7 @@ export class AuthService {
 
       toast.success('Login successful');
       
-      const session = this.createSession(data.user, data.session);
+      const session = await this.createSession(data.user, data.session);
       this.currentSession = session;
       this.notifySessionChange();
       
@@ -169,7 +169,7 @@ export class AuthService {
       if (error) throw error;
       
       if (session?.user) {
-        const authSession = this.createSession(session.user, session);
+        const authSession = await this.createSession(session.user, session);
         this.currentSession = authSession;
         return authSession;
       }
@@ -181,13 +181,30 @@ export class AuthService {
     }
   }
 
-  private createSession(user: any, session: any): AuthSession {
+  private async createSession(user: any, session: any): Promise<AuthSession> {
+    // Fetch user role from database
+    let userRole = 'viewer'; // default role
+    
+    try {
+      const { data: roleData } = await customSupabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (roleData?.role) {
+        userRole = roleData.role;
+      }
+    } catch (error) {
+      console.log('Could not fetch user role, using default:', error);
+    }
+
     return {
       user: {
         id: user.id,
         email: user.email,
         name: user.user_metadata?.name || user.email?.split('@')[0],
-        role: 'viewer', // Default role, would be fetched from database in real app
+        role: userRole,
         mfaEnabled: false
       },
       accessToken: session?.access_token,
