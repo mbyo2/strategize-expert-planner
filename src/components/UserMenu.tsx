@@ -58,12 +58,15 @@ const UserMenu = () => {
     }
   };
 
+  // Generate a default avatar URL based on email
+  const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarImage src={avatarUrl} alt={user.name || user.email} />
             <AvatarFallback>{getInitials(user.name || user.email)}</AvatarFallback>
           </Avatar>
         </Button>
