@@ -63,54 +63,76 @@ const UserMenu = () => {
   // Generate a default avatar URL based on email
   const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`;
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={avatarUrl} alt={user.name || user.email} />
-            <AvatarFallback>{getInitials(user.name || user.email)}</AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name || user.email}</p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
-            </p>
-            <div className="mt-2">
-              <span className={`text-xs px-2 py-1 rounded-full ${getRoleBadgeColor()}`}>
-                {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Viewer'}
-              </span>
+    <div className="flex items-center gap-2">
+      {/* Quick logout button for easier access */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleLogout}
+        className="text-muted-foreground hover:text-foreground"
+        title="Sign out"
+      >
+        <LogOut className="h-4 w-4" />
+        <span className="sr-only">Sign out</span>
+      </Button>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={avatarUrl} alt={user.name || user.email} />
+              <AvatarFallback>{getInitials(user.name || user.email)}</AvatarFallback>
+            </Avatar>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56" align="end" forceMount>
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">{user.name || user.email}</p>
+              <p className="text-xs leading-none text-muted-foreground">
+                {user.email}
+              </p>
+              <div className="mt-2">
+                <span className={`text-xs px-2 py-1 rounded-full ${getRoleBadgeColor()}`}>
+                  {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Viewer'}
+                </span>
+              </div>
             </div>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <User className="mr-2 h-4 w-4" />
-            <Link to="/profile">Profile</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Settings className="mr-2 h-4 w-4" />
-            <Link to="/settings">Settings</Link>
-          </DropdownMenuItem>
-          {hasRole('admin') && (
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
             <DropdownMenuItem>
-              <UserCog className="mr-2 h-4 w-4" />
-              <Link to="/admin">Admin Dashboard</Link>
+              <User className="mr-2 h-4 w-4" />
+              <Link to="/profile">Profile</Link>
             </DropdownMenuItem>
-          )}
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={signOut}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+            <DropdownMenuItem>
+              <Settings className="mr-2 h-4 w-4" />
+              <Link to="/settings">Settings</Link>
+            </DropdownMenuItem>
+            {hasRole('admin') && (
+              <DropdownMenuItem>
+                <UserCog className="mr-2 h-4 w-4" />
+                <Link to="/admin">Admin Dashboard</Link>
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Log out</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 };
 
