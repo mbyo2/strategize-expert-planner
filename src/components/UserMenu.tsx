@@ -13,7 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Shield, User, Settings, LogOut, UserCog } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuthCompat';
 
 const UserMenu = () => {
   const { user, logout } = useAuth();
@@ -64,20 +64,20 @@ const UserMenu = () => {
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
             <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+            <AvatarFallback>{getInitials(user.name || user.email)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name}</p>
+            <p className="text-sm font-medium leading-none">{user.name || user.email}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
             </p>
             <div className="mt-2">
               <span className={`text-xs px-2 py-1 rounded-full ${getRoleBadgeColor()}`}>
-                {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User'}
               </span>
             </div>
           </div>

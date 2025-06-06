@@ -2,7 +2,7 @@
 import React from 'react';
 import Hero from '@/components/landing/Hero';
 import Features from '@/components/landing/Features';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuthCompat';
 import Dashboard from '@/components/Dashboard';
 
 const Index = () => {
