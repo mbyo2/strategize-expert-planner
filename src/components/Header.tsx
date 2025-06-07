@@ -5,27 +5,27 @@ import { cn } from '@/lib/utils';
 import { Shield, Sun, Moon, HomeIcon, LineChart, Target, LayoutDashboard, Briefcase, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UserMenu from './UserMenu';
-import { useAuth, UserRole } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import NotificationBell from './Notifications/NotificationBell';
 
 const Header: React.FC = () => {
-  const { isAuthenticated, hasPermission } = useAuth();
+  const { isAuthenticated, hasRole } = useSimpleAuth();
   const isMobile = useIsMobile();
   
   // Define nav items with required roles
   const navItems = [
-    { name: 'Dashboard', icon: <HomeIcon className="h-4 w-4 mr-2" />, path: '/', requiredRoles: [] as UserRole[] },
-    { name: 'Industry Analysis', icon: <LineChart className="h-4 w-4 mr-2" />, path: '/industry', requiredRoles: ['analyst', 'manager', 'admin'] as UserRole[] },
-    { name: 'Strategic Planning', icon: <LayoutDashboard className="h-4 w-4 mr-2" />, path: '/planning', requiredRoles: ['manager', 'admin'] as UserRole[] },
-    { name: 'Goals', icon: <Target className="h-4 w-4 mr-2" />, path: '/goals', requiredRoles: [] as UserRole[] },
-    { name: 'Resources', icon: <Briefcase className="h-4 w-4 mr-2" />, path: '/resources', requiredRoles: ['analyst', 'manager', 'admin'] as UserRole[] },
-    { name: 'Settings', icon: <Settings className="h-4 w-4 mr-2" />, path: '/settings', requiredRoles: [] as UserRole[] },
+    { name: 'Dashboard', icon: <HomeIcon className="h-4 w-4 mr-2" />, path: '/', requiredRoles: [] },
+    { name: 'Industry Analysis', icon: <LineChart className="h-4 w-4 mr-2" />, path: '/industry', requiredRoles: ['analyst', 'manager', 'admin'] },
+    { name: 'Strategic Planning', icon: <LayoutDashboard className="h-4 w-4 mr-2" />, path: '/planning', requiredRoles: ['manager', 'admin'] },
+    { name: 'Goals', icon: <Target className="h-4 w-4 mr-2" />, path: '/goals', requiredRoles: [] },
+    { name: 'Resources', icon: <Briefcase className="h-4 w-4 mr-2" />, path: '/resources', requiredRoles: ['analyst', 'manager', 'admin'] },
+    { name: 'Settings', icon: <Settings className="h-4 w-4 mr-2" />, path: '/settings', requiredRoles: [] },
   ];
 
   // Filter nav items based on user permissions
   const filteredNavItems = isAuthenticated 
-    ? navItems.filter(item => item.requiredRoles.length === 0 || hasPermission(item.requiredRoles))
+    ? navItems.filter(item => item.requiredRoles.length === 0 || item.requiredRoles.some(role => hasRole(role)))
     : [];
 
   return (

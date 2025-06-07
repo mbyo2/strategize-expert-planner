@@ -77,6 +77,7 @@ export class AuthService {
       
       return session;
     } catch (error: any) {
+      console.error('Signup error:', error);
       toast.error('Signup failed', { description: error.message });
       throw error;
     }
@@ -115,6 +116,7 @@ export class AuthService {
         metadata: { email: credentials.email }
       });
 
+      console.error('Login error:', error);
       toast.error('Login failed', { description: error.message });
       throw error;
     }
@@ -142,6 +144,7 @@ export class AuthService {
       
       toast.success('Logged out successfully');
     } catch (error: any) {
+      console.error('Logout error:', error);
       toast.error('Logout failed', { description: error.message });
       throw error;
     }
@@ -157,6 +160,7 @@ export class AuthService {
       
       toast.success('Password reset email sent');
     } catch (error: any) {
+      console.error('Password reset error:', error);
       toast.error('Password reset failed', { description: error.message });
       throw error;
     }

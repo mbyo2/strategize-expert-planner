@@ -13,7 +13,7 @@ export const useAuth = () => {
     signup: signUp,
     logout: signOut,
     hasPermission: (roles: string[]) => {
-      if (!session.user) return false;
+      if (!session.user || !roles.length) return false;
       return roles.some(role => hasRole(role));
     }
   };

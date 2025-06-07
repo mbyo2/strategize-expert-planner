@@ -21,15 +21,21 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     // Initialize session
     const initializeAuth = async () => {
       try {
         const currentSession = await authService.getCurrentSession();
-        setSession(currentSession);
+        if (isMounted) {
+          setSession(currentSession);
+        }
       } catch (error) {
         console.error('Failed to initialize auth:', error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -38,6 +44,8 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     // Listen for auth state changes
     const { data: { subscription } } = customSupabase.auth.onAuthStateChange(
       async (event, supabaseSession) => {
+        if (!isMounted) return;
+        
         if (supabaseSession?.user) {
           const currentSession = await authService.getCurrentSession();
           setSession(currentSession);
@@ -50,10 +58,13 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     // Listen for session changes from auth service
     const unsubscribeFromService = authService.onSessionChange((newSession) => {
-      setSession(newSession);
+      if (isMounted) {
+        setSession(newSession);
+      }
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
       unsubscribeFromService();
     };
@@ -97,8 +108,17 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     signUp,
     signOut,
     resetPassword,
-    isAuthenticated: authService.isAuthenticated(),
-    hasRole: authService.hasRole.bind(authService),
+    isAuthenticated: !!session.user,
+    hasRole: (role: string) => {
+      const userRole = session.user?.role;
+      if (!userRole) return false;
+      
+      const roleHierarchy = ['viewer', 'analyst', 'manager', 'admin'];
+      const userRoleIndex = roleHierarchy.indexOf(userRole);
+      const requiredRoleIndex = roleHierarchy.indexOf(role);
+      
+      return userRoleIndex >= requiredRoleIndex;
+    },
   };
 
   return (
