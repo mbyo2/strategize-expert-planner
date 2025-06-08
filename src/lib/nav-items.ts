@@ -1,48 +1,69 @@
 
+import { 
+  Home, 
+  Target, 
+  BarChart3, 
+  Users, 
+  Calendar, 
+  TrendingUp, 
+  Settings, 
+  Building, 
+  HelpCircle,
+  Activity,
+  Palette,
+  Shield,
+  Code
+} from "lucide-react";
+
 export const navItems = [
   {
     title: "Dashboard",
-    href: "/",
-    icon: "LayoutDashboard"
+    url: "/",
+    icon: Home,
   },
   {
-    title: "Goals",
-    href: "/goals",
-    icon: "Target"
-  },
-  {
-    title: "Planning", 
-    href: "/planning",
-    icon: "Calendar"
+    title: "Strategic Goals",
+    url: "/goals",
+    icon: Target,
   },
   {
     title: "Analytics",
-    href: "/analytics", 
-    icon: "BarChart3"
-  },
-  {
-    title: "Industry",
-    href: "/industry",
-    icon: "TrendingUp"
+    url: "/analytics", 
+    icon: BarChart3,
   },
   {
     title: "Teams",
-    href: "/teams",
-    icon: "Users"
+    url: "/teams",
+    icon: Users,
   },
   {
-    title: "Resources",
-    href: "/resources",
-    icon: "BookOpen"
+    title: "Planning",
+    url: "/planning",
+    icon: Calendar,
   },
   {
-    title: "Data Foundry",
-    href: "/data-foundry",
-    icon: "Database"
+    title: "Industry",
+    url: "/industry",
+    icon: TrendingUp,
   },
   {
-    title: "AI Operations",
-    href: "/ai-operations",
-    icon: "Brain"
-  }
+    title: "Organization",
+    url: "/organization",
+    icon: Building,
+  },
+  {
+    title: "Infrastructure",
+    url: "/infrastructure", 
+    icon: Activity,
+  },
+  {
+    title: "Settings",
+    url: "/settings",
+    icon: Settings,
+  },
+  {
+    title: "Resources", 
+    url: "/resources",
+    icon: HelpCircle,
+  },
 ];
