@@ -1,271 +1,378 @@
-import React, { useState, useEffect } from 'react';
-import PageLayout from '@/components/PageLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { File as FileIcon, FileText, FileSpreadsheet, FileImage } from 'lucide-react';
-import { toast } from 'sonner';
 
-// Define the schema for the form
-const formSchema = z.object({
-  title: z.string().min(2, {
-    message: "Title must be at least 2 characters.",
-  }),
-  description: z.string().optional(),
-  url: z.string().url({ message: "Please enter a valid URL." }),
-  type: z.string().optional(),
-})
+import React, { useState } from 'react';
+import { Search, BookOpen, FileText, Video, ExternalLink, Download, Filter, Star, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import PageLayout from '@/components/PageLayout';
+import Header from '@/components/Header';
 
 interface Resource {
   id: string;
   title: string;
-  description?: string;
-  url: string;
-  type?: string;
+  description: string;
+  type: 'document' | 'video' | 'template' | 'guide' | 'tool';
+  category: 'strategy' | 'planning' | 'analysis' | 'templates' | 'training';
+  url?: string;
+  downloadUrl?: string;
+  featured: boolean;
+  lastUpdated: string;
+  author: string;
+  tags: string[];
+  rating: number;
+  views: number;
 }
 
-const Resources: React.FC = () => {
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen] = React.useState(false)
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      url: "",
-      type: "",
-    },
-  })
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Here, you would typically handle the form submission,
-    // such as sending the data to an API.
-    console.log(values)
-    toast(`You submitted: ${values.title}`);
+const mockResources: Resource[] = [
+  {
+    id: '1',
+    title: 'Strategic Planning Framework Guide',
+    description: 'Comprehensive guide for developing and implementing strategic plans across organizations.',
+    type: 'document',
+    category: 'strategy',
+    downloadUrl: '#',
+    featured: true,
+    lastUpdated: '2024-01-15',
+    author: 'Strategy Team',
+    tags: ['planning', 'framework', 'strategy'],
+    rating: 4.8,
+    views: 1250
+  },
+  {
+    id: '2',
+    title: 'Market Analysis Template',
+    description: 'Excel template for conducting comprehensive market analysis and competitive research.',
+    type: 'template',
+    category: 'analysis',
+    downloadUrl: '#',
+    featured: true,
+    lastUpdated: '2024-01-10',
+    author: 'Analytics Team',
+    tags: ['template', 'market', 'analysis'],
+    rating: 4.6,
+    views: 890
+  },
+  {
+    id: '3',
+    title: 'Introduction to Strategic Planning',
+    description: 'Video series covering the fundamentals of strategic planning and implementation.',
+    type: 'video',
+    category: 'training',
+    url: '#',
+    featured: false,
+    lastUpdated: '2024-01-08',
+    author: 'Training Department',
+    tags: ['training', 'video', 'basics'],
+    rating: 4.7,
+    views: 2100
+  },
+  {
+    id: '4',
+    title: 'SWOT Analysis Tool',
+    description: 'Interactive tool for conducting comprehensive SWOT analyses.',
+    type: 'tool',
+    category: 'analysis',
+    url: '#',
+    featured: true,
+    lastUpdated: '2024-01-12',
+    author: 'Product Team',
+    tags: ['tool', 'swot', 'analysis'],
+    rating: 4.5,
+    views: 750
+  },
+  {
+    id: '5',
+    title: 'Goal Setting Best Practices',
+    description: 'Guide covering SMART goals, OKRs, and other goal-setting methodologies.',
+    type: 'guide',
+    category: 'planning',
+    downloadUrl: '#',
+    featured: false,
+    lastUpdated: '2024-01-05',
+    author: 'Leadership Team',
+    tags: ['goals', 'okr', 'smart'],
+    rating: 4.4,
+    views: 650
   }
+];
 
-  useEffect(() => {
-    // Simulate loading resources from an API
-    setTimeout(() => {
-      setResources([
-        {
-          id: '1',
-          title: 'Strategic Planning Guide',
-          description: 'A comprehensive guide to strategic planning.',
-          url: 'https://example.com/strategic-planning-guide.pdf',
-          type: 'pdf',
-        },
-        {
-          id: '2',
-          title: 'Market Analysis Report 2024',
-          description: 'Detailed analysis of the current market trends.',
-          url: 'https://example.com/market-analysis-2024.pdf',
-          type: 'pdf',
-        },
-        {
-          id: '3',
-          title: 'Team Alignment Workshop Slides',
-          description: 'Slides from the team alignment workshop.',
-          url: 'https://example.com/team-alignment-slides.ppt',
-          type: 'ppt',
-        },
-        {
-          id: '4',
-          title: 'Competitive Analysis Spreadsheet',
-          description: 'A spreadsheet comparing our company with competitors.',
-          url: 'https://example.com/competitive-analysis.xlsx',
-          type: 'xlsx',
-        },
-        {
-          id: '5',
-          title: 'New Product Launch Strategy',
-          description: 'A document outlining the strategy for launching our new product.',
-          url: 'https://example.com/new-product-launch-strategy.doc',
-          type: 'doc',
-        },
-      ]);
-      setLoading(false);
-    }, 500);
-  }, []);
+const getResourceIcon = (type: string) => {
+  switch (type) {
+    case 'document':
+    case 'guide':
+      return FileText;
+    case 'video':
+      return Video;
+    case 'template':
+      return Download;
+    case 'tool':
+      return ExternalLink;
+    default:
+      return BookOpen;
+  }
+};
 
-  // Function to determine the icon based on the file type
-  const getTypeIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'pdf':
-        return <FileText className="h-5 w-5" />;
-      case 'doc':
-      case 'docx':
-        return <FileText className="h-5 w-5" />;
-      case 'ppt':
-      case 'pptx':
-        return <FileText className="h-5 w-5" />;
-      case 'xls':
-      case 'xlsx':
-      case 'csv':
-        return <FileSpreadsheet className="h-5 w-5" />;
-      case 'img':
-      case 'png':
-      case 'jpg':
-      case 'jpeg':
-        return <FileImage className="h-5 w-5" />;
+const getTypeColor = (type: string) => {
+  switch (type) {
+    case 'document':
+    case 'guide':
+      return 'bg-blue-100 text-blue-800';
+    case 'video':
+      return 'bg-purple-100 text-purple-800';
+    case 'template':
+      return 'bg-green-100 text-green-800';
+    case 'tool':
+      return 'bg-orange-100 text-orange-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+const Resources = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
+  const [sortBy, setSortBy] = useState('recent');
+
+  const filteredResources = mockResources.filter(resource => {
+    const matchesSearch = resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         resource.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         resource.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCategory = selectedCategory === 'all' || resource.category === selectedCategory;
+    const matchesType = selectedType === 'all' || resource.type === selectedType;
+    
+    return matchesSearch && matchesCategory && matchesType;
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case 'recent':
+        return new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime();
+      case 'popular':
+        return b.views - a.views;
+      case 'rating':
+        return b.rating - a.rating;
+      case 'alphabetical':
+        return a.title.localeCompare(b.title);
       default:
-        return <FileIcon className="h-5 w-5" />;
+        return 0;
     }
-  };
+  });
+
+  const featuredResources = mockResources.filter(resource => resource.featured);
 
   return (
-    <PageLayout
-      title="Resources"
-      subtitle="Access valuable resources to support your strategic initiatives"
-    >
-      <div className="md:flex justify-between items-center mb-4">
-        <div />
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline">Add Resource</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add Resource</DialogTitle>
-              <DialogDescription>
-                Add a new resource to the list.
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Resource Title" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Resource Description"
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="url"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>URL</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Resource URL" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="flex justify-end">
-                  <Button type="submit">Add Resource</Button>
+    <div className="min-h-screen bg-background">
+      <Header />
+      <PageLayout 
+        title="Resource Library" 
+        subtitle="Access strategic planning tools, templates, and educational materials"
+      >
+        <div className="space-y-6">
+          {/* Search and Filters */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Search className="h-5 w-5 mr-2" />
+                Search Resources
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Search resources, templates, guides..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full"
+                  />
                 </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      </div>
+                <div className="flex gap-2">
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="w-[150px]">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      <SelectItem value="strategy">Strategy</SelectItem>
+                      <SelectItem value="planning">Planning</SelectItem>
+                      <SelectItem value="analysis">Analysis</SelectItem>
+                      <SelectItem value="templates">Templates</SelectItem>
+                      <SelectItem value="training">Training</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={selectedType} onValueChange={setSelectedType}>
+                    <SelectTrigger className="w-[150px]">
+                      <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="document">Documents</SelectItem>
+                      <SelectItem value="video">Videos</SelectItem>
+                      <SelectItem value="template">Templates</SelectItem>
+                      <SelectItem value="guide">Guides</SelectItem>
+                      <SelectItem value="tool">Tools</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-[150px]">
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recent">Most Recent</SelectItem>
+                      <SelectItem value="popular">Most Popular</SelectItem>
+                      <SelectItem value="rating">Highest Rated</SelectItem>
+                      <SelectItem value="alphabetical">Alphabetical</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Available Resources</CardTitle>
-          <CardDescription>
-            Browse the resources to find valuable information and tools.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>URL</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center">
-                    Loading resources...
-                  </TableCell>
-                </TableRow>
-              ) : resources.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center">
-                    No resources available.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                resources.map((resource) => (
-                  <TableRow key={resource.id}>
-                    <TableCell className="font-medium">{resource.title}</TableCell>
-                    <TableCell>{resource.description}</TableCell>
-                    <TableCell className="flex items-center">
-                      {getTypeIcon(resource.type || '')}
-                    </TableCell>
-                    <TableCell>
-                      <a
-                        href={resource.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline"
-                      >
-                        View
-                      </a>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </PageLayout>
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="all">All Resources</TabsTrigger>
+              <TabsTrigger value="featured">Featured</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredResources.map((resource) => {
+                  const IconComponent = getResourceIcon(resource.type);
+                  return (
+                    <Card key={resource.id} className="hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center">
+                            <IconComponent className="h-5 w-5 mr-2 text-primary" />
+                            <Badge className={getTypeColor(resource.type)}>
+                              {resource.type}
+                            </Badge>
+                          </div>
+                          {resource.featured && (
+                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                          )}
+                        </div>
+                        <CardTitle className="text-lg">{resource.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-muted-foreground mb-4 text-sm">
+                          {resource.description}
+                        </p>
+                        
+                        <div className="space-y-3">
+                          <div className="flex flex-wrap gap-1">
+                            {resource.tags.map((tag) => (
+                              <Badge key={tag} variant="outline" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                          
+                          <div className="flex items-center justify-between text-sm text-muted-foreground">
+                            <div className="flex items-center">
+                              <Star className="h-3 w-3 mr-1 text-yellow-500" />
+                              {resource.rating}
+                            </div>
+                            <div className="flex items-center">
+                              <Clock className="h-3 w-3 mr-1" />
+                              {new Date(resource.lastUpdated).toLocaleDateString()}
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            {resource.downloadUrl && (
+                              <Button size="sm" className="flex-1">
+                                <Download className="h-4 w-4 mr-2" />
+                                Download
+                              </Button>
+                            )}
+                            {resource.url && (
+                              <Button size="sm" variant="outline" className="flex-1">
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                Open
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="featured" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredResources.map((resource) => {
+                  const IconComponent = getResourceIcon(resource.type);
+                  return (
+                    <Card key={resource.id} className="hover:shadow-lg transition-shadow border-primary/20">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center">
+                            <IconComponent className="h-5 w-5 mr-2 text-primary" />
+                            <Badge className={getTypeColor(resource.type)}>
+                              {resource.type}
+                            </Badge>
+                          </div>
+                          <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                        </div>
+                        <CardTitle className="text-lg">{resource.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-muted-foreground mb-4 text-sm">
+                          {resource.description}
+                        </p>
+                        
+                        <div className="space-y-3">
+                          <div className="flex flex-wrap gap-1">
+                            {resource.tags.map((tag) => (
+                              <Badge key={tag} variant="outline" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                          
+                          <div className="flex items-center justify-between text-sm text-muted-foreground">
+                            <div className="flex items-center">
+                              <Star className="h-3 w-3 mr-1 text-yellow-500" />
+                              {resource.rating}
+                            </div>
+                            <div>
+                              {resource.views} views
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            {resource.downloadUrl && (
+                              <Button size="sm" className="flex-1">
+                                <Download className="h-4 w-4 mr-2" />
+                                Download
+                              </Button>
+                            )}
+                            {resource.url && (
+                              <Button size="sm" variant="outline" className="flex-1">
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                Open
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </PageLayout>
+    </div>
   );
 };
 

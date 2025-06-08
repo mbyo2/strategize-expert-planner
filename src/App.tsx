@@ -18,6 +18,7 @@ import Teams from "./pages/Teams";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
+import Resources from "./pages/Resources";
 import AccessDenied from "./pages/AccessDenied";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,12 @@ function App() {
               <Route path="/industry" element={
                 <SimpleAuthGuard>
                   <Industry />
+                </SimpleAuthGuard>
+              } />
+
+              <Route path="/resources" element={
+                <SimpleAuthGuard>
+                  <Resources />
                 </SimpleAuthGuard>
               } />
               
