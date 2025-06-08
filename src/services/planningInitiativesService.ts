@@ -1,104 +1,66 @@
 
-import { toast } from "sonner";
-import { customSupabase } from "@/integrations/supabase/customClient";
-import { PlanningInitiative } from "@/types/database";
+import { DatabaseService } from './databaseService';
+
+export interface PlanningInitiative {
+  id: string;
+  name: string;
+  description?: string;
+  status: 'planning' | 'in-progress' | 'completed' | 'cancelled';
+  progress: number;
+  start_date?: string;
+  end_date?: string;
+  owner_id?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export const fetchPlanningInitiatives = async (): Promise<PlanningInitiative[]> => {
   try {
-    const { data, error } = await customSupabase
-      .from('planning_initiatives')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching planning initiatives:', error);
-      throw error;
-    }
-
-    // Cast the data to the correct type
-    return (data || []).map(item => ({
-      ...item,
-      status: item.status as PlanningInitiative['status']
-    }));
+    const result = await DatabaseService.fetchData<PlanningInitiative>('planning_initiatives');
+    return result.data || [];
   } catch (error) {
-    console.error('Failed to fetch planning initiatives:', error);
-    toast.error('Failed to load planning initiatives');
+    console.error('Error fetching planning initiatives:', error);
     return [];
   }
 };
 
-export const createPlanningInitiative = async (initiative: Omit<PlanningInitiative, 'id' | 'created_at' | 'updated_at'>) => {
+export const createPlanningInitiative = async (
+  initiative: Omit<PlanningInitiative, 'id' | 'created_at' | 'updated_at'>
+): Promise<PlanningInitiative> => {
   try {
-    const { data, error } = await customSupabase
-      .from('planning_initiatives')
-      .insert([initiative])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating planning initiative:', error);
-      throw error;
+    const result = await DatabaseService.createRecord<PlanningInitiative>('planning_initiatives', initiative);
+    if (!result.data) {
+      throw new Error(result.error || 'Failed to create planning initiative');
     }
-
-    toast.success('Planning initiative created successfully');
-    
-    // Cast the data to the correct type
-    return {
-      ...data,
-      status: data.status as PlanningInitiative['status']
-    };
+    return result.data;
   } catch (error) {
-    console.error('Failed to create planning initiative:', error);
-    toast.error('Failed to create planning initiative');
+    console.error('Error creating planning initiative:', error);
     throw error;
   }
 };
 
-export const updatePlanningInitiative = async (id: string, updates: Partial<PlanningInitiative>) => {
+export const updatePlanningInitiative = async (
+  id: string,
+  updates: Partial<PlanningInitiative>
+): Promise<PlanningInitiative> => {
   try {
-    const { data, error } = await customSupabase
-      .from('planning_initiatives')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating planning initiative:', error);
-      throw error;
+    const result = await DatabaseService.updateRecord<PlanningInitiative>('planning_initiatives', id, updates);
+    if (!result.data) {
+      throw new Error(result.error || 'Failed to update planning initiative');
     }
-
-    toast.success('Planning initiative updated successfully');
-    
-    // Cast the data to the correct type
-    return {
-      ...data,
-      status: data.status as PlanningInitiative['status']
-    };
+    return result.data;
   } catch (error) {
-    console.error('Failed to update planning initiative:', error);
-    toast.error('Failed to update planning initiative');
+    console.error('Error updating planning initiative:', error);
     throw error;
   }
 };
 
-export const deletePlanningInitiative = async (id: string) => {
+export const deletePlanningInitiative = async (id: string): Promise<boolean> => {
   try {
-    const { error } = await customSupabase
-      .from('planning_initiatives')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting planning initiative:', error);
-      throw error;
-    }
-
-    toast.success('Planning initiative deleted successfully');
-    return true;
+    const result = await DatabaseService.deleteRecord('planning_initiatives', id);
+    return result.success;
   } catch (error) {
-    console.error('Failed to delete planning initiative:', error);
-    toast.error('Failed to delete planning initiative');
-    throw error;
+    console.error('Error deleting planning initiative:', error);
+    return false;
   }
 };

@@ -1,6 +1,5 @@
 
-import { toast } from "sonner";
-import { customSupabase } from "@/integrations/supabase/customClient";
+import { DatabaseService } from './databaseService';
 
 export interface CompanyStrategy {
   id: string;
@@ -12,65 +11,46 @@ export interface CompanyStrategy {
 
 export const fetchCompanyStrategy = async (): Promise<CompanyStrategy | null> => {
   try {
-    const { data, error } = await customSupabase
-      .from('company_strategy')
-      .select('*')
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error fetching company strategy:', error);
-      throw error;
-    }
-
-    return data;
+    const result = await DatabaseService.fetchData<CompanyStrategy>('company_strategy');
+    return result.data?.[0] || null;
   } catch (error) {
-    console.error('Failed to fetch company strategy:', error);
-    toast.error('Failed to load company strategy');
+    console.error('Error fetching company strategy:', error);
     return null;
   }
 };
 
-export const updateCompanyStrategy = async (updates: { vision?: string; mission?: string }, userId: string) => {
+export const updateCompanyStrategy = async (
+  strategy: Partial<CompanyStrategy>,
+  userId: string
+): Promise<CompanyStrategy> => {
   try {
-    const existingStrategy = await fetchCompanyStrategy();
+    // First try to get existing strategy
+    const existing = await fetchCompanyStrategy();
     
-    if (existingStrategy) {
-      // Update existing record
-      const { data, error } = await customSupabase
-        .from('company_strategy')
-        .update({ ...updates, updated_by: userId })
-        .eq('id', existingStrategy.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating company strategy:', error);
-        throw error;
+    if (existing) {
+      // Update existing strategy
+      const result = await DatabaseService.updateRecord<CompanyStrategy>(
+        'company_strategy',
+        existing.id,
+        { ...strategy, updated_by: userId }
+      );
+      if (!result.data) {
+        throw new Error(result.error || 'Failed to update company strategy');
       }
-
-      toast.success('Company strategy updated successfully');
-      return data;
+      return result.data;
     } else {
-      // Create new record
-      const { data, error } = await customSupabase
-        .from('company_strategy')
-        .insert([{ ...updates, updated_by: userId }])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating company strategy:', error);
-        throw error;
+      // Create new strategy
+      const result = await DatabaseService.createRecord<CompanyStrategy>(
+        'company_strategy',
+        { ...strategy, updated_by: userId }
+      );
+      if (!result.data) {
+        throw new Error(result.error || 'Failed to create company strategy');
       }
-
-      toast.success('Company strategy created successfully');
-      return data;
+      return result.data;
     }
   } catch (error) {
-    console.error('Failed to update company strategy:', error);
-    toast.error('Failed to update company strategy');
+    console.error('Error updating company strategy:', error);
     throw error;
   }
 };
