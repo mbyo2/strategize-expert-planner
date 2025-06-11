@@ -15,7 +15,14 @@ import {
   Code
 } from "lucide-react";
 
-export const navItems = [
+export interface NavItem {
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+  requiredRole?: string;
+}
+
+export const navItems: NavItem[] = [
   {
     title: "Dashboard",
     url: "/",
@@ -25,16 +32,6 @@ export const navItems = [
     title: "Strategic Goals",
     url: "/goals",
     icon: Target,
-  },
-  {
-    title: "Analytics",
-    url: "/analytics", 
-    icon: BarChart3,
-  },
-  {
-    title: "Teams",
-    url: "/teams",
-    icon: Users,
   },
   {
     title: "Planning",
@@ -47,23 +44,37 @@ export const navItems = [
     icon: TrendingUp,
   },
   {
+    title: "Resources", 
+    url: "/resources",
+    icon: HelpCircle,
+  },
+  {
+    title: "Analytics",
+    url: "/analytics", 
+    icon: BarChart3,
+    requiredRole: "analyst",
+  },
+  {
+    title: "Teams",
+    url: "/teams",
+    icon: Users,
+    requiredRole: "manager",
+  },
+  {
     title: "Organization",
     url: "/organization",
     icon: Building,
+    requiredRole: "manager",
   },
   {
     title: "Infrastructure",
     url: "/infrastructure", 
     icon: Activity,
+    requiredRole: "admin",
   },
   {
     title: "Settings",
     url: "/settings",
     icon: Settings,
-  },
-  {
-    title: "Resources", 
-    url: "/resources",
-    icon: HelpCircle,
   },
 ];

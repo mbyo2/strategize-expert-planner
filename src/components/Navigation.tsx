@@ -1,82 +1,34 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { 
-  Home, 
-  Target, 
-  Calendar, 
-  BarChart3, 
-  Users, 
-  Settings,
-  Building2,
-  TestTube
-} from 'lucide-react';
-
-interface NavItem {
-  title: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  requiredRole?: string;
-}
+import { navItems, NavItem } from '@/lib/nav-items';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 
 const Navigation = () => {
   const location = useLocation();
+  const { hasRole } = useSimpleAuth();
 
-  const navItems: NavItem[] = [
-    {
-      title: 'Dashboard',
-      href: '/',
-      icon: Home,
-    },
-    {
-      title: 'Strategic Goals',
-      href: '/goals',
-      icon: Target,
-    },
-    {
-      title: 'Planning',
-      href: '/planning',
-      icon: Calendar,
-    },
-    {
-      title: 'Industry Analysis',
-      href: '/industry',
-      icon: Building2,
-    },
-    {
-      title: 'Analytics',
-      href: '/analytics',
-      icon: BarChart3,
-      requiredRole: 'analyst'
-    },
-    {
-      title: 'Teams',
-      href: '/teams',
-      icon: Users,
-      requiredRole: 'manager'
-    },
-    {
-      title: 'Test Setup',
-      href: '/test-setup',
-      icon: TestTube,
-    },
-    {
-      title: 'Settings',
-      href: '/settings',
-      icon: Settings,
-    },
-  ];
+  // Filter navigation items based on user roles
+  const filteredNavItems = navItems.filter((item: NavItem) => {
+    // If no role is required, show the item
+    if (!item.requiredRole) {
+      return true;
+    }
+    // If a role is required, check if user has that role
+    return hasRole(item.requiredRole);
+  });
 
   return (
     <nav className="flex flex-col space-y-1">
-      {navItems.map((item) => {
+      {filteredNavItems.map((item) => {
         const Icon = item.icon;
-        const isActive = location.pathname === item.href;
+        const isActive = location.pathname === item.url;
         
         return (
           <Button
-            key={item.href}
+            key={item.url}
             variant={isActive ? 'secondary' : 'ghost'}
             className={cn(
               'justify-start gap-2',
@@ -84,7 +36,7 @@ const Navigation = () => {
             )}
             asChild
           >
-            <Link to={item.href}>
+            <Link to={item.url}>
               <Icon className="h-4 w-4" />
               {item.title}
               {item.requiredRole && (

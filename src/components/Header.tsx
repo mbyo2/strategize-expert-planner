@@ -2,30 +2,31 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Shield, Sun, Moon, HomeIcon, LineChart, Target, LayoutDashboard, Briefcase, Settings } from 'lucide-react';
+import { Shield, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UserMenu from './UserMenu';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import NotificationBell from './Notifications/NotificationBell';
+import { navItems, NavItem } from '@/lib/nav-items';
 
 const Header: React.FC = () => {
   const { isAuthenticated, hasRole } = useSimpleAuth();
   const isMobile = useIsMobile();
   
-  // Define nav items with required roles
-  const navItems = [
-    { name: 'Dashboard', icon: <HomeIcon className="h-4 w-4 mr-2" />, path: '/', requiredRoles: [] },
-    { name: 'Industry Analysis', icon: <LineChart className="h-4 w-4 mr-2" />, path: '/industry', requiredRoles: ['analyst', 'manager', 'admin'] },
-    { name: 'Strategic Planning', icon: <LayoutDashboard className="h-4 w-4 mr-2" />, path: '/planning', requiredRoles: ['manager', 'admin'] },
-    { name: 'Goals', icon: <Target className="h-4 w-4 mr-2" />, path: '/goals', requiredRoles: [] },
-    { name: 'Resources', icon: <Briefcase className="h-4 w-4 mr-2" />, path: '/resources', requiredRoles: ['analyst', 'manager', 'admin'] },
-    { name: 'Settings', icon: <Settings className="h-4 w-4 mr-2" />, path: '/settings', requiredRoles: [] },
-  ];
-
-  // Filter nav items based on user permissions
+  // Filter nav items based on user permissions and exclude settings
   const filteredNavItems = isAuthenticated 
-    ? navItems.filter(item => item.requiredRoles.length === 0 || item.requiredRoles.some(role => hasRole(role)))
+    ? navItems.filter((item: NavItem) => {
+        // Skip settings in header navigation
+        if (item.url === '/settings') return false;
+        
+        // If no role is required, show the item
+        if (!item.requiredRole) {
+          return true;
+        }
+        // If a role is required, check if user has that role
+        return hasRole(item.requiredRole);
+      })
     : [];
 
   return (
@@ -40,24 +41,27 @@ const Header: React.FC = () => {
         
         {isAuthenticated && !isMobile && (
           <div className="hidden md:flex items-center space-x-1 lg:space-x-2">
-            {filteredNavItems.map((item) => (
-              <NavLink 
-                key={item.name}
-                to={item.path}
-                className={({ isActive }) => cn(
-                  "flex items-center font-medium py-2 px-2 lg:px-3 rounded-md text-sm transition-colors",
-                  "hover:bg-primary/10 hover:text-primary",
-                  isActive 
-                    ? "bg-primary text-primary-foreground" 
-                    : "text-muted-foreground"
-                )}
-              >
-                <span className="flex items-center">
-                  {item.icon}
-                  <span className="hidden lg:inline">{item.name}</span>
-                </span>
-              </NavLink>
-            ))}
+            {filteredNavItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink 
+                  key={item.title}
+                  to={item.url}
+                  className={({ isActive }) => cn(
+                    "flex items-center font-medium py-2 px-2 lg:px-3 rounded-md text-sm transition-colors",
+                    "hover:bg-primary/10 hover:text-primary",
+                    isActive 
+                      ? "bg-primary text-primary-foreground" 
+                      : "text-muted-foreground"
+                  )}
+                >
+                  <span className="flex items-center">
+                    <Icon className="h-4 w-4 mr-2" />
+                    <span className="hidden lg:inline">{item.title}</span>
+                  </span>
+                </NavLink>
+              );
+            })}
           </div>
         )}
         

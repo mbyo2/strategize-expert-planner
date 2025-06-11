@@ -7,38 +7,28 @@ import {
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { useAuth, UserRole } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-
-interface NavItem {
-  name: string;
-  path: string;
-  icon: React.ReactNode;
-  roles: UserRole[];
-}
+import { navItems, NavItem } from '@/lib/nav-items';
 
 const MobileNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, hasPermission } = useAuth();
+  const { hasRole } = useSimpleAuth();
   const [isOpen, setIsOpen] = React.useState(false);
   const [isOffline, setIsOffline] = React.useState(!navigator.onLine);
   
-  // Navigation items with role permissions
-  const navItems: NavItem[] = [
-    { name: 'Dashboard', icon: <Home className="h-5 w-5" />, path: '/', roles: [] },
-    { name: 'Analytics', icon: <BarChart2 className="h-5 w-5" />, path: '/analytics', roles: [] },
-    { name: 'Goals', icon: <Target className="h-5 w-5" />, path: '/goals', roles: [] },
-    { name: 'Teams', icon: <Users className="h-5 w-5" />, path: '/teams', roles: ['manager', 'admin'] },
-    { name: 'Settings', icon: <Settings className="h-5 w-5" />, path: '/settings', roles: [] },
-  ];
-
-  // Filter items based on permissions
-  const filteredNavItems = navItems.filter(item => 
-    item.roles.length === 0 || hasPermission(item.roles)
-  );
+  // Filter navigation items based on user roles
+  const filteredNavItems = navItems.filter((item: NavItem) => {
+    // If no role is required, show the item
+    if (!item.requiredRole) {
+      return true;
+    }
+    // If a role is required, check if user has that role
+    return hasRole(item.requiredRole);
+  });
   
   // Check if current path matches nav item path
   const isActive = (path: string) => location.pathname === path;
@@ -100,21 +90,25 @@ const MobileNavigation = () => {
             </Button>
           )}
           
-          {filteredNavItems.slice(1, 4).map((item) => (
-            <Button
-              key={item.path}
-              variant="ghost"
-              size="icon"
-              onClick={() => handleNavigation(item.path)}
-              className={cn(
-                "flex-1",
-                isActive(item.path) && "text-primary"
-              )}
-            >
-              {item.icon}
-              <span className="sr-only">{item.name}</span>
-            </Button>
-          ))}
+          {/* Show first 3 filtered items for quick access */}
+          {filteredNavItems.slice(1, 4).map((item) => {
+            const Icon = item.icon;
+            return (
+              <Button
+                key={item.url}
+                variant="ghost"
+                size="icon"
+                onClick={() => handleNavigation(item.url)}
+                className={cn(
+                  "flex-1",
+                  isActive(item.url) && "text-primary"
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="sr-only">{item.title}</span>
+              </Button>
+            );
+          })}
           
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
@@ -133,17 +127,27 @@ const MobileNavigation = () => {
                 )}
               </SheetHeader>
               <div className="py-4 space-y-1">
-                {filteredNavItems.map((item) => (
-                  <Button
-                    key={item.path}
-                    variant={isActive(item.path) ? "default" : "ghost"}
-                    className="w-full justify-start mb-1"
-                    onClick={() => handleNavigation(item.path)}
-                  >
-                    <span className="mr-3">{item.icon}</span>
-                    {item.name}
-                  </Button>
-                ))}
+                {filteredNavItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Button
+                      key={item.url}
+                      variant={isActive(item.url) ? "default" : "ghost"}
+                      className="w-full justify-start mb-1"
+                      onClick={() => handleNavigation(item.url)}
+                    >
+                      <span className="mr-3">
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      {item.title}
+                      {item.requiredRole && (
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {item.requiredRole}+
+                        </span>
+                      )}
+                    </Button>
+                  );
+                })}
                 
                 <div className="pt-4 mt-4 border-t">
                   <Button 
