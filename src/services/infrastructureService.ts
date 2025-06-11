@@ -85,10 +85,7 @@ export const createPerformanceAlert = async (
   alertData: Omit<PerformanceAlert, 'id' | 'created_at'>
 ): Promise<PerformanceAlert> => {
   try {
-    const result = await DatabaseService.createRecord<PerformanceAlert>('performance_alerts', {
-      ...alertData,
-      created_at: new Date().toISOString()
-    });
+    const result = await DatabaseService.createRecord<PerformanceAlert>('performance_alerts', alertData);
     
     if (!result.data) {
       throw new Error(result.error || 'Failed to create performance alert');
@@ -189,8 +186,7 @@ export const recordCacheOperation = async (
         size_bytes: size,
         hit_count: 0,
         last_accessed: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 3600000).toISOString(), // 1 hour TTL
-        created_at: new Date().toISOString()
+        expires_at: new Date(Date.now() + 3600000).toISOString() // 1 hour TTL
       });
     }
     
