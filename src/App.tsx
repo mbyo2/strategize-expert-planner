@@ -9,6 +9,7 @@ import SimpleAuthGuard from "@/components/SimpleAuthGuard";
 // Import pages
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
 import TestSetup from "./pages/TestSetup";
 import Goals from "./pages/Goals";
 import Planning from "./pages/Planning";
@@ -35,6 +36,7 @@ function App() {
             <Routes>
               {/* Public routes */}
               <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/access-denied" element={<AccessDenied />} />
               
               {/* Test setup route - accessible without auth for initial setup */}
