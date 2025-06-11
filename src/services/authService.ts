@@ -14,6 +14,7 @@ export interface AuthUser {
   email: string;
   name?: string;
   role?: string;
+  avatar?: string;
   mfaEnabled?: boolean;
 }
 
@@ -188,6 +189,7 @@ export class AuthService {
   private async createSession(user: any, session: any): Promise<AuthSession> {
     // Fetch user role from database
     let userRole = 'viewer'; // default role
+    let userAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`;
     
     try {
       const { data: roleData } = await customSupabase
@@ -203,12 +205,28 @@ export class AuthService {
       console.log('Could not fetch user role, using default:', error);
     }
 
+    // Fetch user profile data including avatar
+    try {
+      const { data: profileData } = await customSupabase
+        .from('profiles')
+        .select('avatar')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileData?.avatar) {
+        userAvatar = profileData.avatar;
+      }
+    } catch (error) {
+      console.log('Could not fetch user profile, using default avatar:', error);
+    }
+
     return {
       user: {
         id: user.id,
         email: user.email,
         name: user.user_metadata?.name || user.email?.split('@')[0],
         role: userRole,
+        avatar: userAvatar,
         mfaEnabled: false
       },
       accessToken: session?.access_token,
