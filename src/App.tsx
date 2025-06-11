@@ -19,6 +19,8 @@ import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import Resources from "./pages/Resources";
+import Infrastructure from "./pages/Infrastructure";
+import Organization from "./pages/Organization";
 import AccessDenied from "./pages/AccessDenied";
 
 const queryClient = new QueryClient();
@@ -66,6 +68,18 @@ function App() {
               <Route path="/resources" element={
                 <SimpleAuthGuard>
                   <Resources />
+                </SimpleAuthGuard>
+              } />
+              
+              <Route path="/infrastructure" element={
+                <SimpleAuthGuard requiredRole="admin">
+                  <Infrastructure />
+                </SimpleAuthGuard>
+              } />
+              
+              <Route path="/organization" element={
+                <SimpleAuthGuard requiredRole="manager">
+                  <Organization />
                 </SimpleAuthGuard>
               } />
               
