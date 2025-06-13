@@ -1,15 +1,17 @@
 
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = "https://ublzhmimdynqzqsdicyn.supabase.co"
-const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVibHpobWltZHlucXpxc2RpY3luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3NzA0MjgsImV4cCI6MjA1OTM0NjQyOH0.2bWAvNa_LkoQb381aRRdEYqdV4GI5Cys0vaI7UFDE-w"
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Create a single instance to avoid multiple client warning
-export const customSupabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
+export const customSupabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+      persistSession: true,
+      autoRefreshToken: true,
+    }
   }
-})
+);

@@ -1,7 +1,18 @@
 
-import { customSupabase } from "@/integrations/supabase/customClient";
-import { toast } from "sonner";
-import { logAuditEvent } from "./auditService";
+import { customSupabase } from '@/integrations/supabase/customClient';
+import { toast } from 'sonner';
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  avatar?: string;
+}
+
+export interface AuthSession {
+  user: User | null;
+}
 
 export interface AuthCredentials {
   email: string;
@@ -9,144 +20,91 @@ export interface AuthCredentials {
   name?: string;
 }
 
-export interface AuthUser {
-  id: string;
-  email: string;
-  name?: string;
-  role?: string;
-  avatar?: string;
-  mfaEnabled?: boolean;
-}
+class AuthService {
+  private listeners: Array<(session: AuthSession) => void> = [];
 
-export interface AuthSession {
-  user: AuthUser | null;
-  accessToken?: string;
-  refreshToken?: string;
-  expiresAt?: number;
-}
-
-export class AuthService {
-  private static instance: AuthService;
-  private currentSession: AuthSession = { user: null };
-  private sessionListeners: Array<(session: AuthSession) => void> = [];
-
-  static getInstance(): AuthService {
-    if (!AuthService.instance) {
-      AuthService.instance = new AuthService();
-    }
-    return AuthService.instance;
-  }
-
-  // Subscribe to session changes
-  onSessionChange(callback: (session: AuthSession) => void): () => void {
-    this.sessionListeners.push(callback);
-    // Return unsubscribe function
-    return () => {
-      this.sessionListeners = this.sessionListeners.filter(cb => cb !== callback);
-    };
-  }
-
-  private notifySessionChange() {
-    this.sessionListeners.forEach(callback => callback(this.currentSession));
-  }
-
-  async signUp(credentials: AuthCredentials): Promise<AuthSession> {
+  async getCurrentSession(): Promise<AuthSession> {
     try {
-      const { data, error } = await customSupabase.auth.signUp({
-        email: credentials.email,
-        password: credentials.password,
-        options: {
-          data: { name: credentials.name }
-        }
-      });
-
+      const { data: { session }, error } = await customSupabase.auth.getSession();
       if (error) throw error;
 
-      await logAuditEvent({
-        action: 'signup',
-        resource: 'user',
-        description: 'New user account created',
-        userId: data.user?.id,
-        severity: 'low'
-      });
+      if (session?.user) {
+        const userData = await this.getUserData(session.user.id);
+        return {
+          user: {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: userData?.name || session.user.user_metadata?.name || 'User',
+            role: userData?.role || 'viewer',
+            avatar: userData?.avatar
+          }
+        };
+      }
 
-      toast.success('Account created successfully');
-      
-      const session = await this.createSession(data.user, data.session);
-      this.currentSession = session;
-      this.notifySessionChange();
-      
-      return session;
-    } catch (error: any) {
-      console.error('Signup error:', error);
-      toast.error('Signup failed', { description: error.message });
-      throw error;
+      return { user: null };
+    } catch (error) {
+      console.error('Error getting session:', error);
+      return { user: null };
     }
   }
 
-  async signIn(credentials: AuthCredentials): Promise<AuthSession> {
+  async signIn(credentials: AuthCredentials): Promise<void> {
     try {
       const { data, error } = await customSupabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
       });
 
-      if (error) throw error;
+      if (error) {
+        toast.error(error.message);
+        throw error;
+      }
 
-      await logAuditEvent({
-        action: 'login',
-        resource: 'user',
-        description: 'User successfully logged in',
-        userId: data.user?.id,
-        severity: 'low'
-      });
-
-      toast.success('Login successful');
-      
-      const session = await this.createSession(data.user, data.session);
-      this.currentSession = session;
-      this.notifySessionChange();
-      
-      return session;
+      toast.success('Successfully signed in!');
     } catch (error: any) {
-      await logAuditEvent({
-        action: 'login',
-        resource: 'user',
-        description: `Failed login attempt for email: ${credentials.email}`,
-        severity: 'medium',
-        metadata: { email: credentials.email }
+      console.error('Sign in error:', error);
+      throw error;
+    }
+  }
+
+  async signUp(credentials: AuthCredentials): Promise<void> {
+    try {
+      const { data, error } = await customSupabase.auth.signUp({
+        email: credentials.email,
+        password: credentials.password,
+        options: {
+          data: {
+            name: credentials.name,
+          },
+          emailRedirectTo: `${window.location.origin}/`
+        }
       });
 
-      console.error('Login error:', error);
-      toast.error('Login failed', { description: error.message });
+      if (error) {
+        toast.error(error.message);
+        throw error;
+      }
+
+      if (data.user && !data.session) {
+        toast.success('Please check your email to confirm your account!');
+      } else if (data.session) {
+        toast.success('Account created successfully!');
+      }
+    } catch (error: any) {
+      console.error('Sign up error:', error);
       throw error;
     }
   }
 
   async signOut(): Promise<void> {
     try {
-      const userId = this.currentSession.user?.id;
-      
       const { error } = await customSupabase.auth.signOut();
       if (error) throw error;
-
-      if (userId) {
-        await logAuditEvent({
-          action: 'logout',
-          resource: 'user',
-          description: 'User logged out',
-          userId,
-          severity: 'low'
-        });
-      }
-
-      this.currentSession = { user: null };
-      this.notifySessionChange();
       
-      toast.success('Logged out successfully');
+      toast.success('Successfully signed out!');
     } catch (error: any) {
-      console.error('Logout error:', error);
-      toast.error('Logout failed', { description: error.message });
+      console.error('Sign out error:', error);
+      toast.error('Error signing out');
       throw error;
     }
   }
@@ -154,107 +112,46 @@ export class AuthService {
   async resetPassword(email: string): Promise<void> {
     try {
       const { error } = await customSupabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${window.location.origin}/reset-password`
       });
 
-      if (error) throw error;
-      
-      toast.success('Password reset email sent');
+      if (error) {
+        toast.error(error.message);
+        throw error;
+      }
+
+      toast.success('Password reset email sent!');
     } catch (error: any) {
-      console.error('Password reset error:', error);
-      toast.error('Password reset failed', { description: error.message });
+      console.error('Reset password error:', error);
       throw error;
     }
   }
 
-  async getCurrentSession(): Promise<AuthSession> {
+  private async getUserData(userId: string) {
     try {
-      const { data: { session }, error } = await customSupabase.auth.getSession();
-      
-      if (error) throw error;
-      
-      if (session?.user) {
-        const authSession = await this.createSession(session.user, session);
-        this.currentSession = authSession;
-        return authSession;
-      }
-      
-      return { user: null };
+      // In a real app, you would fetch additional user data from a profiles table
+      // For now, we'll return mock data based on user ID patterns
+      return {
+        name: 'User',
+        role: 'viewer',
+        avatar: undefined
+      };
     } catch (error) {
-      console.error('Error getting current session:', error);
-      return { user: null };
+      console.error('Error fetching user data:', error);
+      return null;
     }
   }
 
-  private async createSession(user: any, session: any): Promise<AuthSession> {
-    // Fetch user role from database
-    let userRole = 'viewer'; // default role
-    let userAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`;
-    
-    try {
-      const { data: roleData } = await customSupabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (roleData?.role) {
-        userRole = roleData.role;
-      }
-    } catch (error) {
-      console.log('Could not fetch user role, using default:', error);
-    }
-
-    // Fetch user profile data including avatar
-    try {
-      const { data: profileData } = await customSupabase
-        .from('profiles')
-        .select('avatar')
-        .eq('id', user.id)
-        .single();
-      
-      if (profileData?.avatar) {
-        userAvatar = profileData.avatar;
-      }
-    } catch (error) {
-      console.log('Could not fetch user profile, using default avatar:', error);
-    }
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.user_metadata?.name || user.email?.split('@')[0],
-        role: userRole,
-        avatar: userAvatar,
-        mfaEnabled: false
-      },
-      accessToken: session?.access_token,
-      refreshToken: session?.refresh_token,
-      expiresAt: session?.expires_at
+  onSessionChange(callback: (session: AuthSession) => void): () => void {
+    this.listeners.push(callback);
+    return () => {
+      this.listeners = this.listeners.filter(listener => listener !== callback);
     };
   }
 
-  getSession(): AuthSession {
-    return this.currentSession;
-  }
-
-  isAuthenticated(): boolean {
-    return !!this.currentSession.user;
-  }
-
-  hasRole(requiredRole: string): boolean {
-    const userRole = this.currentSession.user?.role;
-    if (!userRole) return false;
-    
-    // Simple role hierarchy
-    const roleHierarchy = ['viewer', 'analyst', 'manager', 'admin'];
-    const userRoleIndex = roleHierarchy.indexOf(userRole);
-    const requiredRoleIndex = roleHierarchy.indexOf(requiredRole);
-    
-    return userRoleIndex >= requiredRoleIndex;
+  private notifyListeners(session: AuthSession) {
+    this.listeners.forEach(listener => listener(session));
   }
 }
 
-// Export singleton instance
-export const authService = AuthService.getInstance();
+export const authService = new AuthService();

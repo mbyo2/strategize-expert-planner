@@ -1,66 +1,91 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Target, TrendingUp, Calendar } from 'lucide-react';
-import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Target, TrendingUp, Users, Calendar, BarChart3, CheckCircle } from 'lucide-react';
 
 const Dashboard = () => {
-  const { session } = useSimpleAuth();
-  const user = session.user;
-
-  const dashboardCards = [
+  const metrics = [
     {
-      title: 'Active Goals',
-      value: '12',
+      title: "Active Goals",
+      value: "12",
+      change: "+2 this month",
       icon: Target,
-      description: 'Strategic objectives in progress'
+      trend: "up"
     },
     {
-      title: 'Team Members',
-      value: '8',
+      title: "Team Members",
+      value: "24",
+      change: "+3 this quarter",
       icon: Users,
-      description: 'Active team members'
+      trend: "up"
     },
     {
-      title: 'Performance',
-      value: '+15%',
+      title: "Completion Rate",
+      value: "78%",
+      change: "+5% this month",
       icon: TrendingUp,
-      description: 'Overall progress this quarter'
+      trend: "up"
     },
     {
-      title: 'Reviews',
-      value: '3',
+      title: "Upcoming Milestones",
+      value: "8",
+      change: "Next 30 days",
       icon: Calendar,
-      description: 'Upcoming strategy reviews'
+      trend: "neutral"
     }
   ];
 
+  const recentGoals = [
+    {
+      id: 1,
+      title: "Increase Market Share",
+      progress: 75,
+      status: "On Track",
+      dueDate: "2024-03-15"
+    },
+    {
+      id: 2,
+      title: "Launch New Product Line",
+      progress: 45,
+      status: "In Progress", 
+      dueDate: "2024-04-20"
+    },
+    {
+      id: 3,
+      title: "Improve Customer Satisfaction",
+      progress: 90,
+      status: "Near Completion",
+      dueDate: "2024-02-28"
+    }
+  ];
+
+  const upcomingTasks = [
+    { id: 1, title: "Review Q1 Strategy", due: "Today", priority: "high" },
+    { id: 2, title: "Team Performance Meeting", due: "Tomorrow", priority: "medium" },
+    { id: 3, title: "Budget Analysis Report", due: "This Week", priority: "high" },
+    { id: 4, title: "Market Research Update", due: "Next Week", priority: "low" }
+  ];
+
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">
-          Welcome back, {user?.name || user?.email?.split('@')[0] || 'User'}!
-        </h1>
-        <div className="text-sm text-muted-foreground">
-          Role: {user?.role || 'viewer'}
-        </div>
-      </div>
-      
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {dashboardCards.map((card, index) => {
-          const Icon = card.icon;
+    <div className="space-y-6">
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {metrics.map((metric) => {
+          const IconComponent = metric.icon;
           return (
-            <Card key={index}>
+            <Card key={metric.title}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  {card.title}
+                  {metric.title}
                 </CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
+                <IconComponent className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{card.value}</div>
+                <div className="text-2xl font-bold">{metric.value}</div>
                 <p className="text-xs text-muted-foreground">
-                  {card.description}
+                  {metric.change}
                 </p>
               </CardContent>
             </Card>
@@ -68,60 +93,99 @@ const Dashboard = () => {
         })}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Goals */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle className="flex items-center">
+              <Target className="h-5 w-5 mr-2" />
+              Strategic Goals Progress
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">New strategic goal created</p>
-                  <p className="text-xs text-muted-foreground">2 hours ago</p>
+              {recentGoals.map((goal) => (
+                <div key={goal.id} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium">{goal.title}</h4>
+                    <Badge 
+                      variant={
+                        goal.status === "On Track" ? "default" :
+                        goal.status === "Near Completion" ? "secondary" : 
+                        "outline"
+                      }
+                    >
+                      {goal.status}
+                    </Badge>
+                  </div>
+                  <Progress value={goal.progress} className="h-2" />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{goal.progress}% complete</span>
+                    <span>Due: {new Date(goal.dueDate).toLocaleDateString()}</span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Initiative milestone completed</p>
-                  <p className="text-xs text-muted-foreground">1 day ago</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Strategy review scheduled</p>
-                  <p className="text-xs text-muted-foreground">3 days ago</p>
-                </div>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
 
+        {/* Upcoming Tasks */}
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle className="flex items-center">
+              <CheckCircle className="h-5 w-5 mr-2" />
+              Upcoming Tasks
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <button className="w-full text-left p-2 rounded hover:bg-muted text-sm">
-                Create new strategic goal
-              </button>
-              <button className="w-full text-left p-2 rounded hover:bg-muted text-sm">
-                Schedule strategy review
-              </button>
-              <button className="w-full text-left p-2 rounded hover:bg-muted text-sm">
-                View team performance
-              </button>
-              <button className="w-full text-left p-2 rounded hover:bg-muted text-sm">
-                Generate progress report
-              </button>
+            <div className="space-y-3">
+              {upcomingTasks.map((task) => (
+                <div key={task.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium">{task.title}</h4>
+                    <p className="text-xs text-muted-foreground">{task.due}</p>
+                  </div>
+                  <Badge 
+                    variant={
+                      task.priority === "high" ? "destructive" :
+                      task.priority === "medium" ? "default" : 
+                      "secondary"
+                    }
+                  >
+                    {task.priority}
+                  </Badge>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Stats */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <BarChart3 className="h-5 w-5 mr-2" />
+            Quick Analytics
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center p-4 border rounded-lg">
+              <div className="text-2xl font-bold text-green-600">85%</div>
+              <p className="text-sm text-muted-foreground">Goals On Track</p>
+            </div>
+            <div className="text-center p-4 border rounded-lg">
+              <div className="text-2xl font-bold text-blue-600">12.5%</div>
+              <p className="text-sm text-muted-foreground">Revenue Growth</p>
+            </div>
+            <div className="text-center p-4 border rounded-lg">
+              <div className="text-2xl font-bold text-purple-600">4.2</div>
+              <p className="text-sm text-muted-foreground">Team Efficiency Score</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
