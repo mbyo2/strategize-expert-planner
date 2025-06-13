@@ -1,12 +1,49 @@
-
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Database, Users, Target, BarChart3, Calendar, Bell } from 'lucide-react';
-import TestUserCreator from '@/components/TestUserCreator';
+import { CheckCircle, XCircle, AlertCircle, Database, Users, Settings } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
+import TestUserCreator from '@/components/TestUserCreator';
+import TestUserLogin from '@/components/TestUserLogin';
 
 const TestSetup = () => {
+  const [connectionStatus, setConnectionStatus] = useState({
+    database: 'connected',
+    auth: 'connected',
+    storage: 'warning'
+  });
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'connected':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'warning':
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+      case 'error':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'connected':
+        return <Badge className="bg-green-100 text-green-800">Connected</Badge>;
+      case 'warning':
+        return <Badge className="bg-yellow-100 text-yellow-800">Warning</Badge>;
+      case 'error':
+        return <Badge className="bg-red-100 text-red-800">Error</Badge>;
+      default:
+        return <Badge>Unknown</Badge>;
+    }
+  };
+
   const sampleDataSummary = [
     {
       icon: <Users className="h-4 w-4" />,
@@ -41,7 +78,11 @@ const TestSetup = () => {
   ];
 
   return (
-    <PageLayout>
+    <PageLayout 
+      title="Test Environment Setup"
+      subtitle="Configure and manage your test environment"
+      icon={<Settings className="h-6 w-6" />}
+    >
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Test Setup</h1>
