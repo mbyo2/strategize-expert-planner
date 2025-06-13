@@ -1,229 +1,95 @@
 
-import React from 'react';
-import PageLayout from '@/components/PageLayout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings as SettingsIcon, User, Shield, Bell, Palette, Database } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Settings as SettingsIcon, Globe, Palette, Database, Shield, Users } from 'lucide-react';
+import PageLayout from '@/components/PageLayout';
 
 const Settings = () => {
+  const [appSettings, setAppSettings] = useState({
+    theme: 'system',
+    language: 'english',
+    timezone: 'UTC',
+    dateFormat: 'MM/DD/YYYY',
+    currency: 'USD'
+  });
+
+  const [organizationSettings, setOrganizationSettings] = useState({
+    companyName: 'Tech Corp',
+    industry: 'Technology',
+    employeeCount: '50-100',
+    fiscalYearStart: 'January',
+    workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+  });
+
+  const [integrationSettings, setIntegrationSettings] = useState({
+    emailIntegration: true,
+    calendarSync: false,
+    slackNotifications: true,
+    apiAccess: false
+  });
+
+  const [dataSettings, setDataSettings] = useState({
+    dataRetention: 90,
+    autoBackup: true,
+    exportFormat: 'CSV',
+    anonymizeData: false
+  });
+
+  const handleAppSettingChange = (key: string, value: string) => {
+    setAppSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleOrgSettingChange = (key: string, value: string) => {
+    setOrganizationSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleIntegrationChange = (key: string, value: boolean) => {
+    setIntegrationSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleDataSettingChange = (key: string, value: any) => {
+    setDataSettings(prev => ({ ...prev, [key]: value }));
+  };
+
   return (
     <PageLayout 
-      title="Settings" 
-      subtitle="Configure your preferences and application settings"
+      title="Settings"
+      subtitle="Configure application and organization settings"
       icon={<SettingsIcon className="h-6 w-6" />}
     >
-      <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
-          <TabsTrigger value="data">Data</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="profile">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <User className="h-5 w-5 mr-2" />
-                Profile Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" placeholder="Enter first name" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" placeholder="Enter last name" />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" placeholder="Enter email" />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="jobTitle">Job Title</Label>
-                <Input id="jobTitle" placeholder="Enter job title" />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="department">Department</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="strategy">Strategy</SelectItem>
-                    <SelectItem value="operations">Operations</SelectItem>
-                    <SelectItem value="analytics">Analytics</SelectItem>
-                    <SelectItem value="marketing">Marketing</SelectItem>
-                    <SelectItem value="finance">Finance</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <Button>Save Profile</Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="security">
-          <div className="space-y-6">
+      <div className="space-y-6">
+        <Tabs defaultValue="general" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="organization">Organization</TabsTrigger>
+            <TabsTrigger value="integrations">Integrations</TabsTrigger>
+            <TabsTrigger value="data">Data & Privacy</TabsTrigger>
+            <TabsTrigger value="advanced">Advanced</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="general" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Shield className="h-5 w-5 mr-2" />
-                  Security Settings
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  Appearance
                 </CardTitle>
+                <CardDescription>
+                  Customize the look and feel of your application
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <Input id="currentPassword" type="password" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword">New Password</Label>
-                    <Input id="newPassword" type="password" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                    <Input id="confirmPassword" type="password" />
-                  </div>
-                  <Button>Update Password</Button>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Two-Factor Authentication</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Enable 2FA</p>
-                    <p className="text-sm text-muted-foreground">
-                      Add an extra layer of security to your account
-                    </p>
-                  </div>
-                  <Switch />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Active Sessions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <p className="font-medium">Current Session</p>
-                      <p className="text-sm text-muted-foreground">Chrome on Windows • Active now</p>
-                    </div>
-                    <Button variant="outline" size="sm">Current</Button>
-                  </div>
-                  <Button variant="destructive" size="sm">Sign out all other sessions</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Bell className="h-5 w-5 mr-2" />
-                Notification Preferences
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Email Notifications</p>
-                    <p className="text-sm text-muted-foreground">
-                      Receive notifications via email
-                    </p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Goal Updates</p>
-                    <p className="text-sm text-muted-foreground">
-                      Notifications when goals are updated
-                    </p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Team Activities</p>
-                    <p className="text-sm text-muted-foreground">
-                      Updates from team members and collaborations
-                    </p>
-                  </div>
-                  <Switch />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">System Alerts</p>
-                    <p className="text-sm text-muted-foreground">
-                      Important system notifications and updates
-                    </p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Weekly Reports</p>
-                    <p className="text-sm text-muted-foreground">
-                      Automated weekly summary reports
-                    </p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="appearance">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Palette className="h-5 w-5 mr-2" />
-                Appearance Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-base font-medium">Theme</Label>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Choose your preferred theme
-                  </p>
-                  <Select defaultValue="system">
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue />
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="theme">Theme</Label>
+                  <Select value={appSettings.theme} onValueChange={(value) => handleAppSettingChange('theme', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select theme" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="light">Light</SelectItem>
@@ -232,114 +98,364 @@ const Settings = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
-                <div>
-                  <Label className="text-base font-medium">Language</Label>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Select your preferred language
-                  </p>
-                  <Select defaultValue="en">
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Spanish</SelectItem>
-                      <SelectItem value="fr">French</SelectItem>
-                      <SelectItem value="de">German</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label className="text-base font-medium">Timezone</Label>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Set your local timezone
-                  </p>
-                  <Select defaultValue="utc">
-                    <SelectTrigger className="w-[250px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="utc">UTC (GMT+0)</SelectItem>
-                      <SelectItem value="est">Eastern Time (GMT-5)</SelectItem>
-                      <SelectItem value="pst">Pacific Time (GMT-8)</SelectItem>
-                      <SelectItem value="cet">Central European Time (GMT+1)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="data">
-          <div className="space-y-6">
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Database className="h-5 w-5 mr-2" />
-                  Data Management
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Localization
                 </CardTitle>
+                <CardDescription>
+                  Configure language, timezone, and regional settings
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium mb-2">Export Data</h4>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Download your data in various formats
-                    </p>
-                    <div className="flex gap-2">
-                      <Button variant="outline">Export as CSV</Button>
-                      <Button variant="outline">Export as JSON</Button>
-                      <Button variant="outline">Export as PDF</Button>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-medium mb-2">Data Retention</h4>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Configure how long data is stored
-                    </p>
-                    <Select defaultValue="12months">
-                      <SelectTrigger className="w-[200px]">
-                        <SelectValue />
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="language">Language</Label>
+                    <Select value={appSettings.language} onValueChange={(value) => handleAppSettingChange('language', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select language" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="3months">3 Months</SelectItem>
-                        <SelectItem value="6months">6 Months</SelectItem>
-                        <SelectItem value="12months">12 Months</SelectItem>
-                        <SelectItem value="24months">24 Months</SelectItem>
-                        <SelectItem value="forever">Forever</SelectItem>
+                        <SelectItem value="english">English</SelectItem>
+                        <SelectItem value="spanish">Spanish</SelectItem>
+                        <SelectItem value="french">French</SelectItem>
+                        <SelectItem value="german">German</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="timezone">Timezone</Label>
+                    <Select value={appSettings.timezone} onValueChange={(value) => handleAppSettingChange('timezone', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select timezone" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="UTC">UTC</SelectItem>
+                        <SelectItem value="America/New_York">Eastern Time</SelectItem>
+                        <SelectItem value="America/Chicago">Central Time</SelectItem>
+                        <SelectItem value="America/Denver">Mountain Time</SelectItem>
+                        <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="dateFormat">Date Format</Label>
+                    <Select value={appSettings.dateFormat} onValueChange={(value) => handleAppSettingChange('dateFormat', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select date format" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
+                        <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
+                        <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="currency">Currency</Label>
+                    <Select value={appSettings.currency} onValueChange={(value) => handleAppSettingChange('currency', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD ($)</SelectItem>
+                        <SelectItem value="EUR">EUR (€)</SelectItem>
+                        <SelectItem value="GBP">GBP (£)</SelectItem>
+                        <SelectItem value="JPY">JPY (¥)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
               </CardContent>
             </Card>
-            
+          </TabsContent>
+
+          <TabsContent value="organization" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Account Actions</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Organization Details
+                </CardTitle>
+                <CardDescription>
+                  Basic information about your organization
+                </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="companyName">Company Name</Label>
+                    <Input
+                      id="companyName"
+                      value={organizationSettings.companyName}
+                      onChange={(e) => handleOrgSettingChange('companyName', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="industry">Industry</Label>
+                    <Select value={organizationSettings.industry} onValueChange={(value) => handleOrgSettingChange('industry', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select industry" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Technology">Technology</SelectItem>
+                        <SelectItem value="Healthcare">Healthcare</SelectItem>
+                        <SelectItem value="Finance">Finance</SelectItem>
+                        <SelectItem value="Education">Education</SelectItem>
+                        <SelectItem value="Manufacturing">Manufacturing</SelectItem>
+                        <SelectItem value="Retail">Retail</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="employeeCount">Employee Count</Label>
+                    <Select value={organizationSettings.employeeCount} onValueChange={(value) => handleOrgSettingChange('employeeCount', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select employee count" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1-10">1-10</SelectItem>
+                        <SelectItem value="11-50">11-50</SelectItem>
+                        <SelectItem value="51-100">51-100</SelectItem>
+                        <SelectItem value="101-500">101-500</SelectItem>
+                        <SelectItem value="500+">500+</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="fiscalYear">Fiscal Year Start</Label>
+                    <Select value={organizationSettings.fiscalYearStart} onValueChange={(value) => handleOrgSettingChange('fiscalYearStart', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select month" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="January">January</SelectItem>
+                        <SelectItem value="April">April</SelectItem>
+                        <SelectItem value="July">July</SelectItem>
+                        <SelectItem value="October">October</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="integrations" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>External Integrations</CardTitle>
+                <CardDescription>
+                  Connect with external services and tools
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-destructive mb-2">Danger Zone</h4>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      These actions cannot be undone
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Email Integration</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Send notifications and reports via email
+                      </p>
+                    </div>
+                    <Switch
+                      checked={integrationSettings.emailIntegration}
+                      onCheckedChange={(checked) => handleIntegrationChange('emailIntegration', checked)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Calendar Sync</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Sync strategy reviews with your calendar
+                      </p>
+                    </div>
+                    <Switch
+                      checked={integrationSettings.calendarSync}
+                      onCheckedChange={(checked) => handleIntegrationChange('calendarSync', checked)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Slack Notifications</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Send updates to Slack channels
+                      </p>
+                    </div>
+                    <Switch
+                      checked={integrationSettings.slackNotifications}
+                      onCheckedChange={(checked) => handleIntegrationChange('slackNotifications', checked)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>API Access</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Allow third-party API access to your data
+                      </p>
+                    </div>
+                    <Switch
+                      checked={integrationSettings.apiAccess}
+                      onCheckedChange={(checked) => handleIntegrationChange('apiAccess', checked)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="data" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="h-5 w-5" />
+                  Data Management
+                </CardTitle>
+                <CardDescription>
+                  Configure data retention, backup, and privacy settings
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="dataRetention">Data Retention (days)</Label>
+                    <Input
+                      id="dataRetention"
+                      type="number"
+                      value={dataSettings.dataRetention}
+                      onChange={(e) => handleDataSettingChange('dataRetention', parseInt(e.target.value))}
+                      min="30"
+                      max="365"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      How long to keep historical data before automatic cleanup
                     </p>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Automatic Backup</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Automatically backup your data daily
+                      </p>
+                    </div>
+                    <Switch
+                      checked={dataSettings.autoBackup}
+                      onCheckedChange={(checked) => handleDataSettingChange('autoBackup', checked)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="exportFormat">Default Export Format</Label>
+                    <Select value={dataSettings.exportFormat} onValueChange={(value) => handleDataSettingChange('exportFormat', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select format" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CSV">CSV</SelectItem>
+                        <SelectItem value="Excel">Excel</SelectItem>
+                        <SelectItem value="JSON">JSON</SelectItem>
+                        <SelectItem value="PDF">PDF</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Anonymize Data</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Remove personal identifiers from exported data
+                      </p>
+                    </div>
+                    <Switch
+                      checked={dataSettings.anonymizeData}
+                      onCheckedChange={(checked) => handleDataSettingChange('anonymizeData', checked)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="advanced" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Advanced Settings
+                </CardTitle>
+                <CardDescription>
+                  Advanced configuration options for power users
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Button variant="outline" className="h-auto p-4">
+                    <div className="text-left">
+                      <div className="font-medium">API Keys</div>
+                      <div className="text-sm text-muted-foreground">Manage API access keys</div>
+                    </div>
+                  </Button>
+                  
+                  <Button variant="outline" className="h-auto p-4">
+                    <div className="text-left">
+                      <div className="font-medium">Audit Logs</div>
+                      <div className="text-sm text-muted-foreground">View system audit logs</div>
+                    </div>
+                  </Button>
+                  
+                  <Button variant="outline" className="h-auto p-4">
+                    <div className="text-left">
+                      <div className="font-medium">Import/Export</div>
+                      <div className="text-sm text-muted-foreground">Bulk data operations</div>
+                    </div>
+                  </Button>
+                  
+                  <Button variant="outline" className="h-auto p-4">
+                    <div className="text-left">
+                      <div className="font-medium">System Health</div>
+                      <div className="text-sm text-muted-foreground">Monitor system status</div>
+                    </div>
+                  </Button>
+                </div>
+                
+                <div className="pt-4 border-t">
+                  <div className="space-y-2">
+                    <Label className="text-red-600">Danger Zone</Label>
                     <div className="space-y-2">
-                      <Button variant="destructive" size="sm">Clear All Data</Button>
-                      <Button variant="destructive" size="sm">Delete Account</Button>
+                      <Button variant="outline" className="w-full text-red-600 border-red-600">
+                        Export All Data
+                      </Button>
+                      <Button variant="outline" className="w-full text-red-600 border-red-600">
+                        Delete Organization
+                      </Button>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+
+        {/* Save Actions */}
+        <div className="flex justify-end gap-2">
+          <Button variant="outline">Cancel</Button>
+          <Button>Save All Changes</Button>
+        </div>
+      </div>
     </PageLayout>
   );
 };

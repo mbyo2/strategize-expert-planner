@@ -1,21 +1,22 @@
 
 import React, { useState } from 'react';
 import { Navigate, Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, UserPlus, ArrowLeft } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Eye, EyeOff, UserPlus, CheckCircle } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
-import { toast } from 'sonner';
 
 const Signup = () => {
   const { signUp, isAuthenticated, isLoading } = useSimpleAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState('');
 
-  const [formData, setFormData] = useState({
+  const [signupData, setSignupData] = useState({
     name: '',
     email: '',
     password: '',
@@ -27,44 +28,59 @@ const Signup = () => {
     return <Navigate to="/" replace />;
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const validateForm = () => {
+    if (!signupData.name.trim()) {
+      setError('Please enter your full name');
+      return false;
+    }
+
+    if (!signupData.email.trim()) {
+      setError('Please enter your email address');
+      return false;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signupData.email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+
+    if (signupData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return false;
+    }
+
+    if (signupData.password !== signupData.confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.name || !formData.email || !formData.password) {
-      toast.error('Please fill in all fields');
-      return;
-    }
+    setError('');
 
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    if (!validateForm()) {
       return;
     }
 
     setIsSubmitting(true);
+
     try {
       await signUp({
-        name: formData.name,
-        email: formData.email,
-        password: formData.password
+        name: signupData.name,
+        email: signupData.email,
+        password: signupData.password
       });
-      toast.success('Account created successfully!');
+      
+      setIsSuccess(true);
     } catch (error: any) {
       console.error('Signup error:', error);
+      setError(error.message || 'Failed to create account. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
   };
 
   if (isLoading) {
@@ -75,13 +91,38 @@ const Signup = () => {
     );
   }
 
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4">
+        <div className="w-full max-w-md space-y-6">
+          <Card>
+            <CardHeader className="text-center">
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
+              <CardTitle>Account Created Successfully!</CardTitle>
+              <CardDescription>
+                Welcome to Strategic Dashboard. You can now start managing your strategic initiatives.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link to="/">Get Started</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl font-bold">Strategic Dashboard</h1>
+          <h1 className="text-3xl font-bold">Create Account</h1>
           <p className="text-muted-foreground mt-2">
-            Create your account to get started
+            Join Strategic Dashboard to manage your business goals
           </p>
         </div>
 
@@ -89,33 +130,40 @@ const Signup = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserPlus className="h-5 w-5" />
-              Create Account
+              Sign Up
             </CardTitle>
+            <CardDescription>
+              Create your account to get started
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSignup} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input
                   id="name"
-                  name="name"
                   type="text"
                   placeholder="Enter your full name"
-                  value={formData.name}
-                  onChange={handleInputChange}
+                  value={signupData.name}
+                  onChange={(e) => setSignupData({...signupData, name: e.target.value})}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email Address</Label>
                 <Input
                   id="email"
-                  name="email"
                   type="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={handleInputChange}
+                  placeholder="Enter your email address"
+                  value={signupData.email}
+                  onChange={(e) => setSignupData({...signupData, email: e.target.value})}
                   required
                 />
               </div>
@@ -125,12 +173,12 @@ const Signup = () => {
                 <div className="relative">
                   <Input
                     id="password"
-                    name="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Create a password (min 6 characters)"
-                    value={formData.password}
-                    onChange={handleInputChange}
+                    placeholder="Create a strong password"
+                    value={signupData.password}
+                    onChange={(e) => setSignupData({...signupData, password: e.target.value})}
                     required
+                    minLength={6}
                   />
                   <button
                     type="button"
@@ -140,54 +188,49 @@ const Signup = () => {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Must be at least 6 characters long
+                </p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    placeholder="Confirm your password"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
+                <Input
+                  id="confirmPassword"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Confirm your password"
+                  value={signupData.confirmPassword}
+                  onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
+                  required
+                />
               </div>
 
               <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? 'Creating account...' : 'Create Account'}
+                {isSubmitting ? 'Creating Account...' : 'Create Account'}
               </Button>
             </form>
-            
-            <div className="mt-4 text-center">
-              <p className="text-sm text-muted-foreground">
+
+            <div className="mt-6 text-center space-y-2">
+              <div className="text-sm text-muted-foreground">
                 Already have an account?{' '}
                 <Link to="/login" className="text-primary hover:underline">
                   Sign in
                 </Link>
-              </p>
+              </div>
+              
+              <div className="text-xs text-muted-foreground">
+                By creating an account, you agree to our{' '}
+                <Link to="/terms" className="text-primary hover:underline">
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link to="/privacy" className="text-primary hover:underline">
+                  Privacy Policy
+                </Link>
+              </div>
             </div>
           </CardContent>
         </Card>
-
-        <div className="text-center">
-          <Button variant="ghost" asChild>
-            <Link to="/login" className="flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Login
-            </Link>
-          </Button>
-        </div>
       </div>
     </div>
   );
