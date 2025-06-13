@@ -1,7 +1,8 @@
+
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider"
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import Dashboard from '@/pages/Dashboard';
 import Goals from '@/pages/Goals';
@@ -25,10 +26,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { AnalyticsProvider } from '@/contexts/AnalyticsContext';
 import Integrations from "@/pages/Integrations";
 
+const queryClient = new QueryClient();
+
 function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-      <QueryClient>
+      <QueryClientProvider client={queryClient}>
         <AnalyticsProvider>
           <BrowserRouter>
             <AuthGuard>
@@ -50,16 +53,16 @@ function App() {
                     <Route path="/signup" element={<Signup />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/integrations" element={<Integrations />} />
                     <Route path="/404" element={<NotFound />} />
                     <Route path="*" element={<Navigate to="/404" replace />} />
-                    <Route path="/integrations" element={<Integrations />} />
                   </Routes>
                 </ErrorBoundary>
               </div>
             </AuthGuard>
           </BrowserRouter>
         </AnalyticsProvider>
-      </QueryClient>
+      </QueryClientProvider>
     </ThemeProvider>
   );
 }

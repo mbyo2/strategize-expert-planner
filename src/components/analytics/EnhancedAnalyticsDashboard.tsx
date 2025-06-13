@@ -9,7 +9,6 @@ import StrategicAnalytics from './StrategicAnalytics';
 import { useQuery } from '@tanstack/react-query';
 import { fetchStrategicGoals } from '@/services/strategicGoalsService';
 import { fetchPlanningInitiatives } from '@/services/planningInitiativesService';
-import { exportService } from '@/services/exportService';
 import { toast } from 'sonner';
 
 const EnhancedAnalyticsDashboard = () => {
@@ -59,11 +58,14 @@ const EnhancedAnalyticsDashboard = () => {
           filename = `analytics-report-${new Date().toISOString().split('T')[0]}.json`;
           break;
         case 'excel':
-          blob = await exportService.exportToExcel(analyticsData);
-          filename = `analytics-report-${new Date().toISOString().split('T')[0]}.xlsx`;
+          // Simple CSV export for Excel compatibility
+          const csvData = goals.map(goal => `${goal.name},${goal.status},${goal.progress}`).join('\n');
+          blob = new Blob(['Name,Status,Progress\n' + csvData], { type: 'text/csv' });
+          filename = `analytics-report-${new Date().toISOString().split('T')[0]}.csv`;
           break;
         case 'csv':
-          blob = await exportService.exportToCsv(goals, ['name', 'status', 'progress', 'created_at']);
+          const csvGoals = goals.map(goal => `${goal.name},${goal.status},${goal.progress}`).join('\n');
+          blob = new Blob(['Name,Status,Progress\n' + csvGoals], { type: 'text/csv' });
           filename = `analytics-report-${new Date().toISOString().split('T')[0]}.csv`;
           break;
         default:

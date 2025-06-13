@@ -12,7 +12,14 @@ import {
   Shield
 } from "lucide-react";
 
-export const navItems = [
+export interface NavItem {
+  title: string;
+  url: string;
+  icon: any;
+  requiresRole?: string;
+}
+
+export const navItems: NavItem[] = [
   {
     title: "Dashboard",
     url: "/",
