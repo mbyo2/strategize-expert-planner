@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, AlertCircle, Database, Users, Settings } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, Database, Users, Settings, Target, BarChart3, Calendar, Bell } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
 import TestUserCreator from '@/components/TestUserCreator';
 import TestUserLogin from '@/components/TestUserLogin';
