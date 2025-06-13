@@ -18,11 +18,11 @@ import Signup from '@/pages/Signup';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import NotFound from '@/pages/NotFound';
-import AuthGuard from '@/components/AuthGuard';
+import SimpleAuthGuard from '@/components/SimpleAuthGuard';
 import SEO from '@/components/SEO';
 import SecurityHeaders from '@/components/SecurityHeaders';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { useAuth } from '@/hooks/useAuth';
+import { SimpleAuthProvider } from '@/hooks/useSimpleAuth';
 import { AnalyticsProvider } from '@/contexts/AnalyticsContext';
 import Integrations from "@/pages/Integrations";
 
@@ -32,36 +32,76 @@ function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <QueryClientProvider client={queryClient}>
-        <AnalyticsProvider>
-          <BrowserRouter>
-            <AuthGuard>
+        <SimpleAuthProvider>
+          <AnalyticsProvider>
+            <BrowserRouter>
               <div className="min-h-screen bg-background">
                 <SEO />
                 <SecurityHeaders />
                 <ErrorBoundary>
                   <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/goals" element={<Goals />} />
-                    <Route path="/planning" element={<Planning />} />
-                    <Route path="/analytics" element={<Analytics />} />
-                    <Route path="/industry" element={<Industry />} />
-                    <Route path="/teams" element={<Teams />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/admin" element={<Admin />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/integrations" element={<Integrations />} />
+                    <Route path="/" element={
+                      <SimpleAuthGuard>
+                        <Dashboard />
+                      </SimpleAuthGuard>
+                    } />
+                    <Route path="/goals" element={
+                      <SimpleAuthGuard>
+                        <Goals />
+                      </SimpleAuthGuard>
+                    } />
+                    <Route path="/planning" element={
+                      <SimpleAuthGuard>
+                        <Planning />
+                      </SimpleAuthGuard>
+                    } />
+                    <Route path="/analytics" element={
+                      <SimpleAuthGuard>
+                        <Analytics />
+                      </SimpleAuthGuard>
+                    } />
+                    <Route path="/industry" element={
+                      <SimpleAuthGuard>
+                        <Industry />
+                      </SimpleAuthGuard>
+                    } />
+                    <Route path="/teams" element={
+                      <SimpleAuthGuard>
+                        <Teams />
+                      </SimpleAuthGuard>
+                    } />
+                    <Route path="/profile" element={
+                      <SimpleAuthGuard>
+                        <Profile />
+                      </SimpleAuthGuard>
+                    } />
+                    <Route path="/settings" element={
+                      <SimpleAuthGuard>
+                        <Settings />
+                      </SimpleAuthGuard>
+                    } />
+                    <Route path="/admin" element={
+                      <SimpleAuthGuard requiredRole="admin">
+                        <Admin />
+                      </SimpleAuthGuard>
+                    } />
+                    <Route path="/integrations" element={
+                      <SimpleAuthGuard>
+                        <Integrations />
+                      </SimpleAuthGuard>
+                    } />
                     <Route path="/404" element={<NotFound />} />
                     <Route path="*" element={<Navigate to="/404" replace />} />
                   </Routes>
                 </ErrorBoundary>
               </div>
-            </AuthGuard>
-          </BrowserRouter>
-        </AnalyticsProvider>
+            </BrowserRouter>
+          </AnalyticsProvider>
+        </SimpleAuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );
