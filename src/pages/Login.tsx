@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, EyeOff, LogIn, UserPlus, TestTube } from 'lucide-react';
+import { Eye, EyeOff, LogIn, UserPlus, TestTube, Globe } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { toast } from 'sonner';
 import TestUserLogin from '@/components/TestUserLogin';
@@ -27,7 +27,7 @@ const getTimezones = () => TIMEZONE_LIST;
 
 const Login = () => {
   const { signIn, signUp, isAuthenticated, isLoading } = useSimpleAuth();
-  const { t, currentLanguage, rtl } = useLanguage();
+  const { t, currentLanguage, rtl, changeLanguage, languageNames } = useLanguage();
   const { formatDate, formatNumber, formatCurrency, locale } = useIntl();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,6 +54,24 @@ const Login = () => {
     password: '',
     confirmPassword: ''
   });
+
+  // Ref for timezone select for a11y focus
+  const timezoneRef = useRef<HTMLSelectElement | null>(null);
+
+  // Focus outline when dropdown is used
+  useEffect(() => {
+    const tzEl = timezoneRef.current;
+    if (tzEl) {
+      const handleFocus = () => tzEl.classList.add('ring-2', 'ring-primary');
+      const handleBlur = () => tzEl.classList.remove('ring-2', 'ring-primary');
+      tzEl.addEventListener('focus', handleFocus);
+      tzEl.addEventListener('blur', handleBlur);
+      return () => {
+        tzEl.removeEventListener('focus', handleFocus);
+        tzEl.removeEventListener('blur', handleBlur);
+      };
+    }
+  }, []);
 
   // Redirect if already authenticated
   if (isAuthenticated) {
@@ -165,20 +183,41 @@ const Login = () => {
   return (
     <div className={rtl ? 'min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4' : 'min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4'}>
       <div className="w-full max-w-md space-y-6">
+        {/* Language Switcher */}
+        <div className="flex flex-row items-center justify-end gap-2 mt-2" aria-label={t('settings.language')}>
+          <Globe className="h-4 w-4 text-muted-foreground" />
+          <label htmlFor="language-select" className="sr-only">{t('settings.language')}</label>
+          <select
+            id="language-select"
+            className="px-2 py-1 border rounded text-xs bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary"
+            style={{ minWidth: 80, zIndex: 50 }} // background and z-index for dropdown fix
+            value={currentLanguage}
+            onChange={e => changeLanguage(e.target.value as typeof currentLanguage)}
+            aria-label={t('settings.language')}
+          >
+            {Object.entries(languageNames).map(([lang, label]) => (
+              <option key={lang} value={lang}>{label}</option>
+            ))}
+          </select>
+        </div>
+
         <div className="text-center">
           <h1 className="text-3xl font-bold" aria-label="App Title">{t('app.title')}</h1>
           <p className="text-muted-foreground mt-2">{t('login.description')}</p>
         </div>
 
         <div className="w-full text-xs text-center mt-2 flex flex-col items-center space-y-1">
-          <label htmlFor="timezone-select" className="sr-only">Select your timezone</label>
+          <label htmlFor="timezone-select" className="sr-only">{t('timezone.timezone')}</label>
           <div className="flex items-center gap-2">
             <select
+              ref={timezoneRef}
               id="timezone-select"
-              className="border rounded px-2 py-1 text-xs"
+              className="border rounded px-2 py-1 text-xs focus:ring-2 focus:ring-primary focus:outline-none bg-white dark:bg-gray-800"
+              style={{ zIndex: 30, minWidth: 160 }} // z-index + background for dropdown
               value={selectedTimezone}
               onChange={e => setSelectedTimezone(e.target.value)}
-              aria-label="User timezone"
+              aria-label={t('timezone.timezone')}
+              tabIndex={0}
             >
               {timezones.map(tz => (
                 <option key={tz} value={tz}>{tz}</option>
@@ -209,18 +248,22 @@ const Login = () => {
             type="checkbox"
             checked={consentChecked}
             onChange={e => setConsentChecked(e.target.checked)}
-            className="border rounded"
-            aria-label="Acknowledge consent and legal terms"
+            className="border rounded focus:ring-2 focus:ring-primary"
+            aria-label={t('legal.acknowledge') ||
+              "I acknowledge and agree to the Privacy Policy and Terms of Service."}
+            aria-checked={consentChecked}
+            tabIndex={0}
           />
           <label htmlFor="consent-checkbox" className="text-xs">
             {t('legal.acknowledge') ||
-            "I acknowledge and agree to the Privacy Policy and Terms of Service."}{" "}
+              "I acknowledge and agree to the Privacy Policy and Terms of Service."}{' '}
             <a
               href="https://www.intantiko.com/privacy"
               className="underline"
               target="_blank"
               rel="noopener noreferrer"
               tabIndex={0}
+              aria-label={t('legal.privacyPolicy')}
             >
               {t('legal.privacyPolicy')}
             </a>{" "}
@@ -231,6 +274,7 @@ const Login = () => {
               target="_blank"
               rel="noopener noreferrer"
               tabIndex={0}
+              aria-label={t('legal.termsOfService')}
             >
               {t('legal.termsOfService')}
             </a>

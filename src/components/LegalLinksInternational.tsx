@@ -21,15 +21,19 @@ const LegalLinksInternational: React.FC = () => {
   const links = locales[currentLanguage as keyof typeof locales] || fallbackLocale;
 
   return (
-    <div className="mt-6 flex flex-col md:flex-row items-center justify-center gap-2 text-xs text-muted-foreground" dir={rtl ? 'rtl' : 'ltr'}>
-      <a href={links.privacy} className="hover:underline" target="_blank" rel="noopener noreferrer" tabIndex={0}>
+    <nav
+      className="mt-6 flex flex-col md:flex-row items-center justify-center gap-2 text-xs text-muted-foreground"
+      dir={rtl ? 'rtl' : 'ltr'}
+      aria-label={t('legal.privacyPolicy') + ' & ' + t('legal.termsOfService')}
+    >
+      <a href={links.privacy} className="hover:underline focus:ring-2 focus:ring-primary focus:outline-none" target="_blank" rel="noopener noreferrer" tabIndex={0} aria-label={t('legal.privacyPolicy')}>
         {t('legal.privacyPolicy')}
       </a>
-      <span className="mx-2 hidden md:inline">|</span>
-      <a href={links.terms} className="hover:underline" target="_blank" rel="noopener noreferrer" tabIndex={0}>
+      <span className="mx-2 hidden md:inline" aria-hidden="true">|</span>
+      <a href={links.terms} className="hover:underline focus:ring-2 focus:ring-primary focus:outline-none" target="_blank" rel="noopener noreferrer" tabIndex={0} aria-label={t('legal.termsOfService')}>
         {t('legal.termsOfService')}
       </a>
-    </div>
+    </nav>
   );
 };
 export default LegalLinksInternational;
