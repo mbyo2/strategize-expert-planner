@@ -65,12 +65,19 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
     loadTranslations();
   }, [currentLanguage, rtl]);
   
-  // Translation function
+  // Translation function with fallback message for missing translations
   const t = (key: string, params?: Record<string, string>): string => {
     if (isLoading) return key; // Return key if translations are still loading
     
-    let translatedText = translations[key] || key;
-    
+    let translatedText = translations[key];
+    if (!translatedText) {
+      // Fallback: show clear warning in dev, show key in production
+      if (process.env.NODE_ENV === "development") {
+        return `[MISSING I18N: ${key}]`;
+      }
+      return key;
+    }
+
     // Replace parameters in the translated text if provided
     if (params) {
       Object.entries(params).forEach(([paramKey, paramValue]) => {
@@ -190,7 +197,7 @@ function getMockTranslations(language: Language): Record<string, string> {
       'login.needTestUsers': '¿Necesitas crear usuarios de prueba? Ve a Test Setup →',
       'legal.privacyPolicy': 'Política de Privacidad',
       'legal.termsOfService': 'Términos del Servicio',
-      'compliance.notice': 'Al continuar, reconoces que tus datos pueden almacenarse y procesarse conforme a leyes internacionales de privacidad como GDPR y CCPA.',
+      'compliance.notice': 'Al continuar, reconoces que tus datos pueden almacenarse y procesarse conforme a leyes internacionales de privacidad como el GDPR y la CCPA.',
       'timezone.current': 'Hora actual',
       'timezone.timezone': 'Tu zona horaria',
       'timezone.gmtOffset': 'Desfase GMT',
