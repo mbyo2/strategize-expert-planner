@@ -1,29 +1,26 @@
 
 import { 
-  Home, 
-  Target, 
-  Calendar, 
   BarChart3, 
-  Building, 
+  Target, 
   Users, 
-  Settings, 
-  User,
-  Zap,
-  Shield
+  Building2, 
+  Calendar, 
+  Lightbulb,
+  Map,
+  Settings,
+  TrendingUp
 } from "lucide-react";
 
-export interface NavItem {
-  title: string;
-  url: string;
-  icon: any;
-  requiresRole?: string;
-}
-
-export const navItems: NavItem[] = [
+export const navItems = [
   {
     title: "Dashboard",
     url: "/",
-    icon: Home,
+    icon: BarChart3,
+  },
+  {
+    title: "Tactical Map",
+    url: "/tactical-map",
+    icon: Map,
   },
   {
     title: "Strategic Goals",
@@ -32,18 +29,8 @@ export const navItems: NavItem[] = [
   },
   {
     title: "Planning",
-    url: "/planning", 
+    url: "/planning",
     icon: Calendar,
-  },
-  {
-    title: "Analytics",
-    url: "/analytics",
-    icon: BarChart3,
-  },
-  {
-    title: "Industry Analysis",
-    url: "/industry",
-    icon: Building,
   },
   {
     title: "Teams",
@@ -51,24 +38,23 @@ export const navItems: NavItem[] = [
     icon: Users,
   },
   {
-    title: "Integrations",
-    url: "/integrations",
-    icon: Zap,
+    title: "Analytics",
+    url: "/analytics",
+    icon: TrendingUp,
   },
   {
-    title: "Profile",
-    url: "/profile",
-    icon: User,
+    title: "Industry",
+    url: "/industry",
+    icon: Lightbulb,
+  },
+  {
+    title: "Organization",
+    url: "/organization",
+    icon: Building2,
   },
   {
     title: "Settings",
     url: "/settings",
     icon: Settings,
   },
-  {
-    title: "Admin",
-    url: "/admin",
-    icon: Shield,
-    requiresRole: "admin"
-  }
 ];

@@ -9,6 +9,51 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_recommendations: {
+        Row: {
+          affected_units: string[] | null
+          confidence_score: number | null
+          coordinates: Json | null
+          created_at: string
+          description: string
+          expires_at: string | null
+          id: string
+          priority: string
+          recommendation_type: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          affected_units?: string[] | null
+          confidence_score?: number | null
+          coordinates?: Json | null
+          created_at?: string
+          description: string
+          expires_at?: string | null
+          id?: string
+          priority?: string
+          recommendation_type: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          affected_units?: string[] | null
+          confidence_score?: number | null
+          coordinates?: Json | null
+          created_at?: string
+          description?: string
+          expires_at?: string | null
+          id?: string
+          priority?: string
+          recommendation_type?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
@@ -150,6 +195,60 @@ export type Database = {
         }
         Relationships: []
       }
+      drones: {
+        Row: {
+          altitude: number
+          battery_level: number
+          camera_feed_url: string | null
+          created_at: string
+          drone_id: string
+          id: string
+          last_telemetry: string
+          latitude: number
+          longitude: number
+          mission_type: string | null
+          model: string
+          operator_id: string | null
+          status: string
+          target_coordinates: Json | null
+          updated_at: string
+        }
+        Insert: {
+          altitude: number
+          battery_level?: number
+          camera_feed_url?: string | null
+          created_at?: string
+          drone_id: string
+          id?: string
+          last_telemetry?: string
+          latitude: number
+          longitude: number
+          mission_type?: string | null
+          model: string
+          operator_id?: string | null
+          status?: string
+          target_coordinates?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          altitude?: number
+          battery_level?: number
+          camera_feed_url?: string | null
+          created_at?: string
+          drone_id?: string
+          id?: string
+          last_telemetry?: string
+          latitude?: number
+          longitude?: number
+          mission_type?: string | null
+          model?: string
+          operator_id?: string | null
+          status?: string
+          target_coordinates?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       industry_metrics: {
         Row: {
           category: string
@@ -213,6 +312,57 @@ export type Database = {
           impact_level?: string
           source?: string | null
           title?: string
+        }
+        Relationships: []
+      }
+      mission_objectives: {
+        Row: {
+          assigned_units: string[] | null
+          created_at: string
+          deadline: string | null
+          description: string | null
+          id: string
+          latitude: number
+          longitude: number
+          objective_id: string
+          objective_type: string
+          priority: string
+          radius: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_units?: string[] | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          objective_id: string
+          objective_type: string
+          priority?: string
+          radius?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_units?: string[] | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          objective_id?: string
+          objective_type?: string
+          priority?: string
+          radius?: number
+          status?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -537,6 +687,54 @@ export type Database = {
         }
         Relationships: []
       }
+      tactical_units: {
+        Row: {
+          altitude: number | null
+          callsign: string
+          created_at: string
+          heading: number | null
+          id: string
+          last_contact: string
+          latitude: number
+          longitude: number
+          metadata: Json | null
+          status: string
+          unit_id: string
+          unit_type: string
+          updated_at: string
+        }
+        Insert: {
+          altitude?: number | null
+          callsign: string
+          created_at?: string
+          heading?: number | null
+          id?: string
+          last_contact?: string
+          latitude: number
+          longitude: number
+          metadata?: Json | null
+          status?: string
+          unit_id: string
+          unit_type: string
+          updated_at?: string
+        }
+        Update: {
+          altitude?: number | null
+          callsign?: string
+          created_at?: string
+          heading?: number | null
+          id?: string
+          last_contact?: string
+          latitude?: number
+          longitude?: number
+          metadata?: Json | null
+          status?: string
+          unit_id?: string
+          unit_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       team_members: {
         Row: {
           department: string | null
@@ -605,6 +803,54 @@ export type Database = {
           parent_team_id?: string | null
           team_type?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      threat_intelligence: {
+        Row: {
+          created_at: string
+          description: string
+          expires_at: string | null
+          id: string
+          latitude: number
+          longitude: number
+          radius: number
+          reported_by: string | null
+          severity: string
+          source: string
+          threat_type: string
+          updated_at: string
+          verified: boolean
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          expires_at?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          radius?: number
+          reported_by?: string | null
+          severity?: string
+          source: string
+          threat_type: string
+          updated_at?: string
+          verified?: boolean
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          expires_at?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          radius?: number
+          reported_by?: string | null
+          severity?: string
+          source?: string
+          threat_type?: string
+          updated_at?: string
+          verified?: boolean
         }
         Relationships: []
       }
