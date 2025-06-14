@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -10,11 +11,6 @@ import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 const MobileNavigation = () => {
   const location = useLocation();
   const { hasRole } = useSimpleAuth();
-
-  const filteredNavItems = navItems.filter(item => {
-    // Show item if no role required or user has the required role
-    return !item.requiresRole || hasRole(item.requiresRole);
-  });
 
   return (
     <Sheet>
@@ -37,7 +33,7 @@ const MobileNavigation = () => {
             <Package2 className="h-6 w-6" />
             <span className="sr-only">Strategic Dashboard</span>
           </Link>
-          {filteredNavItems.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.url;
             
