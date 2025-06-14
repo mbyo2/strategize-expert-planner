@@ -8,10 +8,10 @@ import {
   Map, 
   Crosshair, 
   AlertTriangle, 
-  Drone, 
+  Radio, 
   Users, 
   Target,
-  Radio,
+  Radio as RadioIcon,
   Eye,
   Shield,
   Navigation
@@ -63,7 +63,7 @@ const TacticalMap = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Drones Active</CardTitle>
-              <Drone className="h-4 w-4 text-green-600" />
+              <Radio className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{status.activeDrones}</div>
@@ -113,7 +113,7 @@ const TacticalMap = () => {
                   </CardTitle>
                   <div className="flex gap-2">
                     <Badge variant="outline" className="bg-green-50">
-                      <Radio className="h-3 w-3 mr-1" />
+                      <RadioIcon className="h-3 w-3 mr-1" />
                       LIVE
                     </Badge>
                     <Button variant="outline" size="sm">
@@ -142,7 +142,7 @@ const TacticalMap = () => {
                   Threats
                 </TabsTrigger>
                 <TabsTrigger value="drones" className="text-xs">
-                  <Drone className="h-3 w-3 mr-1" />
+                  <Radio className="h-3 w-3 mr-1" />
                   Drones
                 </TabsTrigger>
               </TabsList>

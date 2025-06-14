@@ -1,11 +1,12 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
-import { QueryClient } from './QueryClient';
-import { SEO } from './components/SEO';
-import { SecurityHeaders } from './components/SecurityHeaders';
+import QueryClient from './QueryClient';
+import SEO from './components/SEO';
+import SecurityHeaders from './components/SecurityHeaders';
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
 import ForgotPassword from '@/pages/ForgotPassword';

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Drone, Battery, Eye, Navigation } from 'lucide-react';
+import { Radio, Battery, Eye, Navigation } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface DronePanelProps {
@@ -67,7 +67,7 @@ const DronePanel: React.FC<DronePanelProps> = ({ onStatusUpdate }) => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Drone className="h-4 w-4" />
+            <Radio className="h-4 w-4" />
             Drone Fleet
           </CardTitle>
         </CardHeader>
@@ -85,7 +85,7 @@ const DronePanel: React.FC<DronePanelProps> = ({ onStatusUpdate }) => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Drone className="h-4 w-4" />
+          <Radio className="h-4 w-4" />
           Drone Fleet
         </CardTitle>
         <CardDescription>
