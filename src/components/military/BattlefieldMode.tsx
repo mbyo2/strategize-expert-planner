@@ -1,12 +1,12 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Zap, Eye, Volume, Wifi, Lock } from 'lucide-react';
+import { Shield, Zap, Eye, Volume, Wifi, Lock, Users, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import BattlefieldCommandCenter from './BattlefieldCommandCenter';
 
 const BattlefieldMode: React.FC = () => {
   const [tacticalMode, setTacticalMode] = useState(false);
@@ -32,14 +32,17 @@ const BattlefieldMode: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Enhanced Battlefield Command Center */}
+      <BattlefieldCommandCenter />
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Battlefield Mode Configuration
+            Advanced Battlefield Configuration
           </CardTitle>
           <CardDescription>
-            Optimize the interface for high-stress tactical environments
+            Configure tactical systems for military and civilian crowd control operations
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -121,6 +124,29 @@ const BattlefieldMode: React.FC = () => {
                 checked={offlineMode}
                 onCheckedChange={setOfflineMode}
               />
+            </div>
+
+            {/* New Crowd Control Features */}
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <div>
+                  <Label htmlFor="crowd-analysis">Crowd Analysis</Label>
+                  <p className="text-xs text-muted-foreground">AI-powered crowd behavior</p>
+                </div>
+              </div>
+              <Switch id="crowd-analysis" />
+            </div>
+
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                <div>
+                  <Label htmlFor="threat-prediction">Threat Prediction</Label>
+                  <p className="text-xs text-muted-foreground">Predictive threat modeling</p>
+                </div>
+              </div>
+              <Switch id="threat-prediction" />
             </div>
           </div>
 
