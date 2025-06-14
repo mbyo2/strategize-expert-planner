@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart3, TrendingUp, PieChart, Activity, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/PageLayout';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Cell, Pie } from 'recharts';
 
 const Analytics = () => {
   const goalProgressData = [
@@ -175,11 +174,18 @@ const Analytics = () => {
                   <ResponsiveContainer width="100%" height={250}>
                     <RechartsPieChart>
                       <Tooltip />
-                      <RechartsPieChart dataKey="value" data={categoryData} cx="50%" cy="50%" outerRadius={80} fill="#8884d8">
+                      <Pie
+                        data={categoryData}
+                        dataKey="value"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        fill="#8884d8"
+                      >
                         {categoryData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
-                      </RechartsPieChart>
+                      </Pie>
                     </RechartsPieChart>
                   </ResponsiveContainer>
                 </CardContent>
