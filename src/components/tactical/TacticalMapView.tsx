@@ -1,9 +1,8 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertTriangle, Drone, Users, Target, Navigation } from 'lucide-react';
+import { AlertTriangle, Radio, Users, Target, Navigation } from 'lucide-react';
 
 interface TacticalMapViewProps {
   center: { lat: number; lng: number };
@@ -164,7 +163,7 @@ const TacticalMapView: React.FC<TacticalMapViewProps> = ({ center, onUnitSelect,
           }}
         >
           <div className="p-2 rounded-full bg-green-600 text-white shadow-lg animate-pulse">
-            <Drone className="h-4 w-4" />
+            <Radio className="h-4 w-4" />
           </div>
           <div className="text-xs text-white text-center mt-1 bg-black bg-opacity-50 px-1 rounded">
             {drone.drone_id}
