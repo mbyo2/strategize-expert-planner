@@ -11,12 +11,34 @@ import { toast } from 'sonner';
 import TestUserLogin from '@/components/TestUserLogin';
 import { useLanguage } from '@/i18n/LanguageProvider';
 import LegalLinksInternational from '@/components/LegalLinksInternational';
+import { useIntl } from '@/i18n/IntlProvider';
+
+// Helper to detect all IANA timezones
+const getTimezones = () => {
+  return Intl.supportedValuesOf && typeof Intl.supportedValuesOf === "function"
+    ? Intl.supportedValuesOf("timeZone")
+    : [
+      'UTC', 'America/New_York', 'Europe/London', 'Europe/Paris',
+      'Asia/Tokyo', 'Asia/Dubai', 'Asia/Hong_Kong', 'Europe/Berlin',
+      'America/Chicago', 'America/Los_Angeles', 'Africa/Lagos', 'Pacific/Auckland'
+    ];
+};
 
 const Login = () => {
   const { signIn, signUp, isAuthenticated, isLoading } = useSimpleAuth();
   const { t, currentLanguage, rtl } = useLanguage();
+  const { formatDate, formatNumber, formatCurrency, locale } = useIntl();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Accessibility: Consent required for login/signup
+  const [consentChecked, setConsentChecked] = useState(false);
+
+  // Explicit selectable timezone
+  const [selectedTimezone, setSelectedTimezone] = useState(
+    Intl.DateTimeFormat().resolvedOptions().timeZone
+  );
+  const timezones = getTimezones();
 
   // Login form state
   const [loginData, setLoginData] = useState({
@@ -39,6 +61,10 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!consentChecked) {
+      toast.error('You must agree to the legal terms before continuing.');
+      return;
+    }
     if (!loginData.email || !loginData.password) {
       toast.error('Please fill in all fields');
       return;
@@ -59,6 +85,10 @@ const Login = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!consentChecked) {
+      toast.error('You must agree to the legal terms before continuing.');
+      return;
+    }
     if (!signupData.name || !signupData.email || !signupData.password) {
       toast.error('Please fill in all fields');
       return;
@@ -89,21 +119,36 @@ const Login = () => {
     }
   };
 
-  // --- TimeZone/Locale utilities ---
-  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const locale = currentLanguage || navigator.language;
+  // --- Locale-aware display updates ---
+  // Use locale-aware date and number formatting
   const dateNow = new Date();
-  const formattedDate = new Intl.DateTimeFormat(locale, { dateStyle: 'full', timeStyle: 'short' }).format(dateNow);
-  const gmtOffset = (() => {
-    const offset = dateNow.getTimezoneOffset();
-    const hours = Math.floor(Math.abs(offset) / 60);
-    const mins = Math.abs(offset) % 60;
-    const sign = offset > 0 ? '-' : '+';
-    return `GMT${sign}${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-  })();
+  const formattedDate = formatDate(dateNow, {
+    dateStyle: "full",
+    timeStyle: "short",
+    timeZone: selectedTimezone,
+  });
+  const formattedNumber = formatNumber(1234567.89);
+  const formattedCurrency = formatCurrency(123.45, "USD");
+
+  // --- GMT offset for selected timezone ---
+  const getGmtOffset = (tz: string) => {
+    try {
+      // Get date in the timezone
+      const dateStr = dateNow.toLocaleString('en-US', { timeZone: tz });
+      const dateInTZ = new Date(dateStr);
+      const diff = (dateInTZ.getTime() - dateNow.getTime()) / (1000 * 60);
+      const hours = Math.floor(diff / 60);
+      const mins = Math.abs(Math.round(diff % 60));
+      const sign = hours >= 0 ? "+" : "-";
+      return `GMT${sign}${String(Math.abs(hours)).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+    } catch {
+      return "GMT";
+    }
+  };
+  const gmtOffset = getGmtOffset(selectedTimezone);
 
   // --- RTL layout adaptation ---
-  React.useEffect(() => {
+  useEffect(() => {
     document.body.dir = rtl ? 'rtl' : 'ltr';
     return () => { document.body.dir = 'ltr'; };
   }, [rtl]);
@@ -120,22 +165,75 @@ const Login = () => {
     <div className={rtl ? 'min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4' : 'min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4'}>
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl font-bold">{t('app.title')}</h1>
-          <p className="text-muted-foreground mt-2">
-            {t('login.description')}
-          </p>
+          <h1 className="text-3xl font-bold" aria-label="App Title">{t('app.title')}</h1>
+          <p className="text-muted-foreground mt-2">{t('login.description')}</p>
         </div>
 
         <div className="w-full text-xs text-center mt-2 flex flex-col items-center space-y-1">
-          <span>{t('timezone.current')}: <b>{formattedDate}</b></span>
-          <span>{t('timezone.timezone')}: <b>{userTimeZone}</b></span>
+          <label htmlFor="timezone-select" className="sr-only">Select your timezone</label>
+          <div className="flex items-center gap-2">
+            <select
+              id="timezone-select"
+              className="border rounded px-2 py-1 text-xs"
+              value={selectedTimezone}
+              onChange={e => setSelectedTimezone(e.target.value)}
+              aria-label="User timezone"
+            >
+              {timezones.map(tz => (
+                <option key={tz} value={tz}>{tz}</option>
+              ))}
+            </select>
+            <span className="ml-2">{t('timezone.current')}: <b>{formattedDate}</b></span>
+          </div>
+          <span>{t('timezone.timezone')}: <b>{selectedTimezone}</b></span>
           <span>{t('timezone.gmtOffset')}: <b>{gmtOffset}</b></span>
+          {/* Locale-aware display examples */}
+          <span>
+            {t('login.exampleNumber') || "Example Number"}: <b>{formattedNumber}</b>
+            {" | "}
+            {t('login.exampleCurrency') || "Example Currency"}: <b>{formattedCurrency}</b>
+          </span>
         </div>
 
         <div className="w-full my-2">
           <div className="text-muted-foreground text-xs text-center bg-accent rounded px-2 py-1" role="alert">
             {t('compliance.notice')}
           </div>
+        </div>
+
+        {/* Consent/Legal acknowledgement */}
+        <div className="flex items-center gap-2 px-2 py-2">
+          <input
+            id="consent-checkbox"
+            type="checkbox"
+            checked={consentChecked}
+            onChange={e => setConsentChecked(e.target.checked)}
+            className="border rounded"
+            aria-label="Acknowledge consent and legal terms"
+          />
+          <label htmlFor="consent-checkbox" className="text-xs">
+            {t('legal.acknowledge') ||
+            "I acknowledge and agree to the Privacy Policy and Terms of Service."}{" "}
+            <a
+              href="https://www.intantiko.com/privacy"
+              className="underline"
+              target="_blank"
+              rel="noopener noreferrer"
+              tabIndex={0}
+            >
+              {t('legal.privacyPolicy')}
+            </a>{" "}
+            &bull;{" "}
+            <a
+              href="https://www.intantiko.com/terms"
+              className="underline"
+              target="_blank"
+              rel="noopener noreferrer"
+              tabIndex={0}
+            >
+              {t('legal.termsOfService')}
+            </a>
+          </label>
         </div>
 
         <Tabs defaultValue="login" className="w-full">
@@ -154,7 +252,7 @@ const Login = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleLogin} className="space-y-4" dir={rtl ? 'rtl' : 'ltr'}>
+                <form onSubmit={handleLogin} className="space-y-4" dir={rtl ? 'rtl' : 'ltr'} aria-label="Sign In form">
                   <div className="space-y-2">
                     <Label htmlFor="email">{t('login.email')}</Label>
                     <Input
@@ -164,9 +262,9 @@ const Login = () => {
                       value={loginData.email}
                       onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                       required
+                      aria-required="true"
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="password">{t('login.password')}</Label>
                     <div className="relative">
@@ -177,18 +275,20 @@ const Login = () => {
                         value={loginData.password}
                         onChange={(e) => setLoginData({...loginData, password: e.target.value})}
                         required
+                        aria-required="true"
+                        aria-label={t('login.password')}
                       />
                       <button
                         type="button"
                         aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                        tabIndex={0}
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
-
                   <div className={rtl ? 'text-left' : 'text-right'}>
                     <Link 
                       to="/forgot-password" 
@@ -197,8 +297,7 @@ const Login = () => {
                       {t('login.forgot')}
                     </Link>
                   </div>
-
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full" disabled={isSubmitting || !consentChecked} aria-disabled={!consentChecked}>
                     {isSubmitting ? t('login.signingIn') : t('login.signIn')}
                   </Button>
                 </form>
@@ -215,7 +314,7 @@ const Login = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSignup} className="space-y-4" dir={rtl ? 'rtl' : 'ltr'}>
+                <form onSubmit={handleSignup} className="space-y-4" dir={rtl ? 'rtl' : 'ltr'} aria-label="Sign Up form">
                   <div className="space-y-2">
                     <Label htmlFor="name">{t('login.fullName')}</Label>
                     <Input
@@ -225,9 +324,9 @@ const Login = () => {
                       value={signupData.name}
                       onChange={(e) => setSignupData({...signupData, name: e.target.value})}
                       required
+                      aria-required="true"
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">{t('login.email')}</Label>
                     <Input
@@ -237,9 +336,9 @@ const Login = () => {
                       value={signupData.email}
                       onChange={(e) => setSignupData({...signupData, email: e.target.value})}
                       required
+                      aria-required="true"
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">{t('login.password')}</Label>
                     <Input
@@ -249,9 +348,9 @@ const Login = () => {
                       value={signupData.password}
                       onChange={(e) => setSignupData({...signupData, password: e.target.value})}
                       required
+                      aria-required="true"
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">{t('login.confirmPassword')}</Label>
                     <Input
@@ -261,10 +360,10 @@ const Login = () => {
                       value={signupData.confirmPassword}
                       onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
                       required
+                      aria-required="true"
                     />
                   </div>
-
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full" disabled={isSubmitting || !consentChecked} aria-disabled={!consentChecked}>
                     {isSubmitting ? t('login.creatingAccount') : t('login.createAccount')}
                   </Button>
                 </form>
