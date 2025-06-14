@@ -13,16 +13,17 @@ import { useLanguage } from '@/i18n/LanguageProvider';
 import LegalLinksInternational from '@/components/LegalLinksInternational';
 import { useIntl } from '@/i18n/IntlProvider';
 
-// Helper to detect all IANA timezones
-const getTimezones = () => {
-  return Intl.supportedValuesOf && typeof Intl.supportedValuesOf === "function"
-    ? Intl.supportedValuesOf("timeZone")
-    : [
-      'UTC', 'America/New_York', 'Europe/London', 'Europe/Paris',
-      'Asia/Tokyo', 'Asia/Dubai', 'Asia/Hong_Kong', 'Europe/Berlin',
-      'America/Chicago', 'America/Los_Angeles', 'Africa/Lagos', 'Pacific/Auckland'
-    ];
-};
+// Polyfill: List of common IANA timezones (extend as needed)
+// See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+const TIMEZONE_LIST = [
+  'UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'America/Toronto',
+  'America/Sao_Paulo', 'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Europe/Madrid',
+  'Europe/Rome', 'Europe/Moscow', 'Asia/Tokyo', 'Asia/Shanghai', 'Asia/Hong_Kong', 'Asia/Singapore',
+  'Asia/Dubai', 'Asia/Kolkata', 'Australia/Sydney', 'Australia/Melbourne', 'Africa/Johannesburg',
+  'Africa/Lagos', 'Pacific/Auckland', 'Pacific/Honolulu'
+];
+
+const getTimezones = () => TIMEZONE_LIST;
 
 const Login = () => {
   const { signIn, signUp, isAuthenticated, isLoading } = useSimpleAuth();
