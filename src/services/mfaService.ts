@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -30,7 +29,10 @@ export const mfaService = {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(method => ({
+        ...method,
+        method_type: method.method_type as 'totp' | 'sms' | 'email'
+      }));
     } catch (error) {
       console.error('Error fetching MFA methods:', error);
       return [];

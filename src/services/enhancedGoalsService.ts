@@ -56,6 +56,20 @@ export interface GoalAttachment {
   user_name?: string;
 }
 
+// Helper function to safely parse JSON with type checking
+function safeParseArray<T>(value: any, fallback: T[] = []): T[] {
+  if (Array.isArray(value)) return value as T[];
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+}
+
 export const enhancedGoalsService = {
   // Get enhanced strategic goals with all data
   async getEnhancedGoals(): Promise<EnhancedStrategicGoal[]> {
@@ -76,8 +90,8 @@ export const enhancedGoalsService = {
         status: goal.status as 'planned' | 'active' | 'completed' | 'paused',
         priority: goal.priority as 'low' | 'medium' | 'high' | 'critical',
         risk_level: goal.risk_level as 'low' | 'medium' | 'high',
-        milestones: Array.isArray(goal.milestones) ? goal.milestones : [],
-        dependencies: Array.isArray(goal.dependencies) ? goal.dependencies : [],
+        milestones: safeParseArray<GoalMilestone>(goal.milestones),
+        dependencies: safeParseArray<string>(goal.dependencies),
         goal_comments: goal.goal_comments || [],
         goal_attachments: goal.goal_attachments || []
       }));
@@ -123,8 +137,8 @@ export const enhancedGoalsService = {
         status: data.status as 'planned' | 'active' | 'completed' | 'paused',
         priority: data.priority as 'low' | 'medium' | 'high' | 'critical',
         risk_level: data.risk_level as 'low' | 'medium' | 'high',
-        milestones: Array.isArray(data.milestones) ? data.milestones : [],
-        dependencies: Array.isArray(data.dependencies) ? data.dependencies : []
+        milestones: safeParseArray<GoalMilestone>(data.milestones),
+        dependencies: safeParseArray<string>(data.dependencies)
       };
     } catch (error) {
       console.error('Error creating enhanced goal:', error);
@@ -169,8 +183,8 @@ export const enhancedGoalsService = {
         status: data.status as 'planned' | 'active' | 'completed' | 'paused',
         priority: data.priority as 'low' | 'medium' | 'high' | 'critical',
         risk_level: data.risk_level as 'low' | 'medium' | 'high',
-        milestones: Array.isArray(data.milestones) ? data.milestones : [],
-        dependencies: Array.isArray(data.dependencies) ? data.dependencies : []
+        milestones: safeParseArray<GoalMilestone>(data.milestones),
+        dependencies: safeParseArray<string>(data.dependencies)
       };
     } catch (error) {
       console.error('Error updating enhanced goal:', error);
@@ -206,7 +220,6 @@ export const enhancedGoalsService = {
     }
   },
 
-  // Get goal comments
   async getGoalComments(goalId: string): Promise<GoalComment[]> {
     try {
       const { data, error } = await supabase
@@ -218,7 +231,7 @@ export const enhancedGoalsService = {
       if (error) throw error;
       return data?.map(comment => ({
         ...comment,
-        user_name: 'User' // Placeholder since profiles relation doesn't exist
+        user_name: 'User'
       })) || [];
     } catch (error) {
       console.error('Error fetching goal comments:', error);
@@ -226,14 +239,11 @@ export const enhancedGoalsService = {
     }
   },
 
-  // Add attachment to goal
   async addGoalAttachment(goalId: string, file: File): Promise<GoalAttachment | null> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // In a real implementation, you would upload the file to Supabase Storage
-      // For now, we'll simulate this
       const fileUrl = `https://example.com/files/${file.name}`;
 
       const { data, error } = await supabase
@@ -260,7 +270,6 @@ export const enhancedGoalsService = {
     }
   },
 
-  // Get goal attachments
   async getGoalAttachments(goalId: string): Promise<GoalAttachment[]> {
     try {
       const { data, error } = await supabase
@@ -272,7 +281,7 @@ export const enhancedGoalsService = {
       if (error) throw error;
       return data?.map(attachment => ({
         ...attachment,
-        user_name: 'User' // Placeholder since profiles relation doesn't exist
+        user_name: 'User'
       })) || [];
     } catch (error) {
       console.error('Error fetching goal attachments:', error);
@@ -280,7 +289,6 @@ export const enhancedGoalsService = {
     }
   },
 
-  // Delete goal attachment
   async deleteGoalAttachment(attachmentId: string): Promise<boolean> {
     try {
       const { error } = await supabase
@@ -299,7 +307,6 @@ export const enhancedGoalsService = {
     }
   },
 
-  // Get goal analytics
   async getGoalAnalytics(): Promise<any> {
     try {
       const { data, error } = await supabase

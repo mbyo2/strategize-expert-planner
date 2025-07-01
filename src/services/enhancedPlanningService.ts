@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -72,6 +71,20 @@ export interface InitiativeMilestone {
   updated_at: string;
 }
 
+// Helper function to safely parse JSON with type checking
+function safeParseArray<T>(value: any, fallback: T[] = []): T[] {
+  if (Array.isArray(value)) return value as T[];
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+}
+
 export const enhancedPlanningService = {
   // Get enhanced planning initiatives
   async getEnhancedInitiatives(): Promise<EnhancedPlanningInitiative[]> {
@@ -90,10 +103,10 @@ export const enhancedPlanningService = {
         ...initiative,
         status: initiative.status as 'planning' | 'in-progress' | 'completed' | 'cancelled',
         priority: initiative.priority as 'low' | 'medium' | 'high' | 'critical',
-        resources_required: Array.isArray(initiative.resources_required) ? initiative.resources_required : [],
-        stakeholders: Array.isArray(initiative.stakeholders) ? initiative.stakeholders : [],
-        risks: Array.isArray(initiative.risks) ? initiative.risks : [],
-        success_metrics: Array.isArray(initiative.success_metrics) ? initiative.success_metrics : []
+        resources_required: safeParseArray<ResourceRequirement>(initiative.resources_required),
+        stakeholders: safeParseArray<Stakeholder>(initiative.stakeholders),
+        risks: safeParseArray<Risk>(initiative.risks),
+        success_metrics: safeParseArray<SuccessMetric>(initiative.success_metrics)
       }));
     } catch (error) {
       console.error('Error fetching enhanced initiatives:', error);
@@ -134,10 +147,10 @@ export const enhancedPlanningService = {
         ...data,
         status: data.status as 'planning' | 'in-progress' | 'completed' | 'cancelled',
         priority: data.priority as 'low' | 'medium' | 'high' | 'critical',
-        resources_required: Array.isArray(data.resources_required) ? data.resources_required : [],
-        stakeholders: Array.isArray(data.stakeholders) ? data.stakeholders : [],
-        risks: Array.isArray(data.risks) ? data.risks : [],
-        success_metrics: Array.isArray(data.success_metrics) ? data.success_metrics : []
+        resources_required: safeParseArray<ResourceRequirement>(data.resources_required),
+        stakeholders: safeParseArray<Stakeholder>(data.stakeholders),
+        risks: safeParseArray<Risk>(data.risks),
+        success_metrics: safeParseArray<SuccessMetric>(data.success_metrics)
       };
     } catch (error) {
       console.error('Error creating enhanced initiative:', error);
@@ -185,10 +198,10 @@ export const enhancedPlanningService = {
         ...data,
         status: data.status as 'planning' | 'in-progress' | 'completed' | 'cancelled',
         priority: data.priority as 'low' | 'medium' | 'high' | 'critical',
-        resources_required: Array.isArray(data.resources_required) ? data.resources_required : [],
-        stakeholders: Array.isArray(data.stakeholders) ? data.stakeholders : [],
-        risks: Array.isArray(data.risks) ? data.risks : [],
-        success_metrics: Array.isArray(data.success_metrics) ? data.success_metrics : []
+        resources_required: safeParseArray<ResourceRequirement>(data.resources_required),
+        stakeholders: safeParseArray<Stakeholder>(data.stakeholders),
+        risks: safeParseArray<Risk>(data.risks),
+        success_metrics: safeParseArray<SuccessMetric>(data.success_metrics)
       };
     } catch (error) {
       console.error('Error updating enhanced initiative:', error);

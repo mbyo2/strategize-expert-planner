@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -25,7 +24,10 @@ export const sessionService = {
         .order('last_activity', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(session => ({
+        ...session,
+        ip_address: session.ip_address ? String(session.ip_address) : undefined
+      }));
     } catch (error) {
       console.error('Error fetching user sessions:', error);
       return [];

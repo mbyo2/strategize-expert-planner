@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -22,7 +21,11 @@ export const oauthService = {
         .order('connected_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(connection => ({
+        ...connection,
+        provider: connection.provider as 'google' | 'github' | 'microsoft' | 'linkedin_oidc',
+        provider_data: connection.provider_data as Record<string, any>
+      }));
     } catch (error) {
       console.error('Error fetching OAuth connections:', error);
       return [];
@@ -30,7 +33,7 @@ export const oauthService = {
   },
 
   // Connect OAuth provider
-  async connectProvider(provider: 'google' | 'github' | 'microsoft' | 'linkedin_oidc'): Promise<boolean> {
+  async connectProvider(provider: 'google' | 'github' | 'linkedin_oidc'): Promise<boolean> {
     try {
       const redirectTo = `${window.location.origin}/auth/callback`;
       
@@ -87,7 +90,7 @@ export const oauthService = {
       const providerEmail = session.user.email;
       const providerData = session.user.user_metadata || {};
 
-      if (provider && ['google', 'github', 'microsoft', 'linkedin_oidc'].includes(provider)) {
+      if (provider && ['google', 'github', 'linkedin_oidc'].includes(provider)) {
         // Store OAuth connection
         const { error: insertError } = await supabase
           .from('oauth_connections')
