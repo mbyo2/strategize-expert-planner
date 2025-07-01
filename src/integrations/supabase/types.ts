@@ -249,6 +249,82 @@ export type Database = {
         }
         Relationships: []
       }
+      goal_attachments: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          goal_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          goal_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          goal_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_attachments_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goal_comments: {
+        Row: {
+          content: string
+          created_at: string | null
+          goal_id: string
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          goal_id: string
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          goal_id?: string
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_comments_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       industry_metrics: {
         Row: {
           category: string
@@ -284,6 +360,53 @@ export type Database = {
           value?: number
         }
         Relationships: []
+      }
+      initiative_milestones: {
+        Row: {
+          assigned_to: string | null
+          completion_percentage: number | null
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          initiative_id: string
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          completion_percentage?: number | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          initiative_id: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          completion_percentage?: number | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          initiative_id?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "initiative_milestones_initiative_id_fkey"
+            columns: ["initiative_id"]
+            isOneToOne: false
+            referencedRelation: "planning_initiatives"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       market_changes: {
         Row: {
@@ -402,6 +525,36 @@ export type Database = {
         }
         Relationships: []
       }
+      oauth_connections: {
+        Row: {
+          connected_at: string | null
+          id: string
+          provider: string
+          provider_data: Json | null
+          provider_email: string | null
+          provider_user_id: string
+          user_id: string
+        }
+        Insert: {
+          connected_at?: string | null
+          id?: string
+          provider: string
+          provider_data?: Json | null
+          provider_email?: string | null
+          provider_user_id: string
+          user_id: string
+        }
+        Update: {
+          connected_at?: string | null
+          id?: string
+          provider?: string
+          provider_data?: Json | null
+          provider_email?: string | null
+          provider_user_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           amount: number | null
@@ -482,39 +635,60 @@ export type Database = {
       }
       planning_initiatives: {
         Row: {
+          budget: number | null
           created_at: string
+          currency: string | null
           description: string | null
           end_date: string | null
           id: string
           name: string
           owner_id: string | null
+          priority: string | null
           progress: number
+          resources_required: Json | null
+          risks: Json | null
+          stakeholders: Json | null
           start_date: string | null
           status: string
+          success_metrics: Json | null
           updated_at: string
         }
         Insert: {
+          budget?: number | null
           created_at?: string
+          currency?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
           name: string
           owner_id?: string | null
+          priority?: string | null
           progress?: number
+          resources_required?: Json | null
+          risks?: Json | null
+          stakeholders?: Json | null
           start_date?: string | null
           status?: string
+          success_metrics?: Json | null
           updated_at?: string
         }
         Update: {
+          budget?: number | null
           created_at?: string
+          currency?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
           name?: string
           owner_id?: string | null
+          priority?: string | null
           progress?: number
+          resources_required?: Json | null
+          risks?: Json | null
+          stakeholders?: Json | null
           start_date?: string | null
           status?: string
+          success_metrics?: Json | null
           updated_at?: string
         }
         Relationships: []
@@ -629,13 +803,19 @@ export type Database = {
       }
       strategic_goals: {
         Row: {
+          category: string | null
           created_at: string
           current_value: number | null
+          dependencies: Json | null
           description: string | null
           due_date: string | null
           id: string
+          milestones: Json | null
           name: string
+          owner_id: string | null
+          priority: string | null
           progress: number
+          risk_level: string | null
           start_date: string | null
           status: string
           target_value: number | null
@@ -643,13 +823,19 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           current_value?: number | null
+          dependencies?: Json | null
           description?: string | null
           due_date?: string | null
           id?: string
+          milestones?: Json | null
           name: string
+          owner_id?: string | null
+          priority?: string | null
           progress?: number
+          risk_level?: string | null
           start_date?: string | null
           status?: string
           target_value?: number | null
@@ -657,13 +843,19 @@ export type Database = {
           user_id: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           current_value?: number | null
+          dependencies?: Json | null
           description?: string | null
           due_date?: string | null
           id?: string
+          milestones?: Json | null
           name?: string
+          owner_id?: string | null
+          priority?: string | null
           progress?: number
+          risk_level?: string | null
           start_date?: string | null
           status?: string
           target_value?: number | null
@@ -893,6 +1085,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_mfa_methods: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_primary: boolean | null
+          is_verified: boolean | null
+          method_type: string
+          phone_number: string | null
+          secret: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          is_verified?: boolean | null
+          method_type: string
+          phone_number?: string | null
+          secret?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          is_verified?: boolean | null
+          method_type?: string
+          phone_number?: string | null
+          secret?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -917,12 +1145,55 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          id: string
+          ip_address: unknown | null
+          is_active: boolean | null
+          last_activity: string | null
+          session_token: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean | null
+          last_activity?: string | null
+          session_token: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean | null
+          last_activity?: string | null
+          session_token?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { user_uuid: string }
+        Returns: string
+      }
+      has_role_level: {
+        Args: { user_uuid: string; required_role: string }
+        Returns: boolean
+      }
     }
     Enums: {
       user_role: "admin" | "manager" | "analyst" | "viewer"
