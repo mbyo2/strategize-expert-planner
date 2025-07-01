@@ -85,7 +85,16 @@ export const enhancedPlanningService = {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      return (data || []).map(initiative => ({
+        ...initiative,
+        status: initiative.status as 'planning' | 'in-progress' | 'completed' | 'cancelled',
+        priority: initiative.priority as 'low' | 'medium' | 'high' | 'critical',
+        resources_required: Array.isArray(initiative.resources_required) ? initiative.resources_required : [],
+        stakeholders: Array.isArray(initiative.stakeholders) ? initiative.stakeholders : [],
+        risks: Array.isArray(initiative.risks) ? initiative.risks : [],
+        success_metrics: Array.isArray(initiative.success_metrics) ? initiative.success_metrics : []
+      }));
     } catch (error) {
       console.error('Error fetching enhanced initiatives:', error);
       return [];
@@ -101,12 +110,19 @@ export const enhancedPlanningService = {
       const { data, error } = await supabase
         .from('planning_initiatives')
         .insert({
-          ...initiative,
-          owner_id: initiative.owner_id || user.id,
-          resources_required: initiative.resources_required || [],
-          stakeholders: initiative.stakeholders || [],
-          risks: initiative.risks || [],
-          success_metrics: initiative.success_metrics || []
+          name: initiative.name,
+          description: initiative.description,
+          status: initiative.status,
+          progress: initiative.progress,
+          start_date: initiative.start_date,
+          end_date: initiative.end_date,
+          priority: initiative.priority,
+          budget: initiative.budget,
+          currency: initiative.currency,
+          resources_required: JSON.stringify(initiative.resources_required || []),
+          stakeholders: JSON.stringify(initiative.stakeholders || []),
+          risks: JSON.stringify(initiative.risks || []),
+          success_metrics: JSON.stringify(initiative.success_metrics || [])
         })
         .select()
         .single();
@@ -114,7 +130,15 @@ export const enhancedPlanningService = {
       if (error) throw error;
       
       toast.success('Planning initiative created successfully');
-      return data;
+      return {
+        ...data,
+        status: data.status as 'planning' | 'in-progress' | 'completed' | 'cancelled',
+        priority: data.priority as 'low' | 'medium' | 'high' | 'critical',
+        resources_required: Array.isArray(data.resources_required) ? data.resources_required : [],
+        stakeholders: Array.isArray(data.stakeholders) ? data.stakeholders : [],
+        risks: Array.isArray(data.risks) ? data.risks : [],
+        success_metrics: Array.isArray(data.success_metrics) ? data.success_metrics : []
+      };
     } catch (error) {
       console.error('Error creating enhanced initiative:', error);
       toast.error('Failed to create planning initiative');
@@ -125,12 +149,31 @@ export const enhancedPlanningService = {
   // Update planning initiative
   async updateEnhancedInitiative(id: string, updates: Partial<EnhancedPlanningInitiative>): Promise<EnhancedPlanningInitiative | null> {
     try {
+      const updateData: any = {
+        ...updates,
+        updated_at: new Date().toISOString()
+      };
+
+      // Handle JSON serialization for complex fields
+      if (updates.resources_required) {
+        updateData.resources_required = JSON.stringify(updates.resources_required);
+      }
+      if (updates.stakeholders) {
+        updateData.stakeholders = JSON.stringify(updates.stakeholders);
+      }
+      if (updates.risks) {
+        updateData.risks = JSON.stringify(updates.risks);
+      }
+      if (updates.success_metrics) {
+        updateData.success_metrics = JSON.stringify(updates.success_metrics);
+      }
+
+      // Remove read-only fields
+      delete updateData.created_at;
+
       const { data, error } = await supabase
         .from('planning_initiatives')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -138,7 +181,15 @@ export const enhancedPlanningService = {
       if (error) throw error;
       
       toast.success('Planning initiative updated successfully');
-      return data;
+      return {
+        ...data,
+        status: data.status as 'planning' | 'in-progress' | 'completed' | 'cancelled',
+        priority: data.priority as 'low' | 'medium' | 'high' | 'critical',
+        resources_required: Array.isArray(data.resources_required) ? data.resources_required : [],
+        stakeholders: Array.isArray(data.stakeholders) ? data.stakeholders : [],
+        risks: Array.isArray(data.risks) ? data.risks : [],
+        success_metrics: Array.isArray(data.success_metrics) ? data.success_metrics : []
+      };
     } catch (error) {
       console.error('Error updating enhanced initiative:', error);
       toast.error('Failed to update planning initiative');
@@ -158,7 +209,10 @@ export const enhancedPlanningService = {
       if (error) throw error;
       
       toast.success('Milestone created successfully');
-      return data;
+      return {
+        ...data,
+        status: data.status as 'pending' | 'in-progress' | 'completed' | 'blocked'
+      };
     } catch (error) {
       console.error('Error creating milestone:', error);
       toast.error('Failed to create milestone');
@@ -182,7 +236,10 @@ export const enhancedPlanningService = {
       if (error) throw error;
       
       toast.success('Milestone updated successfully');
-      return data;
+      return {
+        ...data,
+        status: data.status as 'pending' | 'in-progress' | 'completed' | 'blocked'
+      };
     } catch (error) {
       console.error('Error updating milestone:', error);
       toast.error('Failed to update milestone');
@@ -200,7 +257,10 @@ export const enhancedPlanningService = {
         .order('due_date', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(milestone => ({
+        ...milestone,
+        status: milestone.status as 'pending' | 'in-progress' | 'completed' | 'blocked'
+      }));
     } catch (error) {
       console.error('Error fetching initiative milestones:', error);
       return [];

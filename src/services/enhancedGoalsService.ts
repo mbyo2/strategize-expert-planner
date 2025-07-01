@@ -21,6 +21,8 @@ export interface EnhancedStrategicGoal {
   risk_level: 'low' | 'medium' | 'high';
   created_at: string;
   updated_at: string;
+  goal_comments?: GoalComment[];
+  goal_attachments?: GoalAttachment[];
 }
 
 export interface GoalMilestone {
@@ -62,27 +64,23 @@ export const enhancedGoalsService = {
         .from('strategic_goals')
         .select(`
           *,
-          goal_comments(
-            id,
-            content,
-            created_at,
-            updated_at,
-            user_id
-          ),
-          goal_attachments(
-            id,
-            file_name,
-            file_url,
-            file_size,
-            file_type,
-            created_at,
-            user_id
-          )
+          goal_comments(*),
+          goal_attachments(*)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      return (data || []).map(goal => ({
+        ...goal,
+        status: goal.status as 'planned' | 'active' | 'completed' | 'paused',
+        priority: goal.priority as 'low' | 'medium' | 'high' | 'critical',
+        risk_level: goal.risk_level as 'low' | 'medium' | 'high',
+        milestones: Array.isArray(goal.milestones) ? goal.milestones : [],
+        dependencies: Array.isArray(goal.dependencies) ? goal.dependencies : [],
+        goal_comments: goal.goal_comments || [],
+        goal_attachments: goal.goal_attachments || []
+      }));
     } catch (error) {
       console.error('Error fetching enhanced goals:', error);
       return [];
@@ -90,7 +88,7 @@ export const enhancedGoalsService = {
   },
 
   // Create enhanced strategic goal
-  async createEnhancedGoal(goal: Omit<EnhancedStrategicGoal, 'id' | 'created_at' | 'updated_at'>): Promise<EnhancedStrategicGoal | null> {
+  async createEnhancedGoal(goal: Omit<EnhancedStrategicGoal, 'id' | 'created_at' | 'updated_at' | 'goal_comments' | 'goal_attachments'>): Promise<EnhancedStrategicGoal | null> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
@@ -98,11 +96,21 @@ export const enhancedGoalsService = {
       const { data, error } = await supabase
         .from('strategic_goals')
         .insert({
-          ...goal,
+          name: goal.name,
+          description: goal.description,
+          status: goal.status,
+          progress: goal.progress,
+          target_value: goal.target_value,
+          current_value: goal.current_value,
+          start_date: goal.start_date,
+          due_date: goal.due_date,
           user_id: user.id,
           owner_id: goal.owner_id || user.id,
-          milestones: goal.milestones || [],
-          dependencies: goal.dependencies || []
+          priority: goal.priority,
+          category: goal.category,
+          milestones: JSON.stringify(goal.milestones || []),
+          dependencies: JSON.stringify(goal.dependencies || []),
+          risk_level: goal.risk_level
         })
         .select()
         .single();
@@ -110,7 +118,14 @@ export const enhancedGoalsService = {
       if (error) throw error;
       
       toast.success('Strategic goal created successfully');
-      return data;
+      return {
+        ...data,
+        status: data.status as 'planned' | 'active' | 'completed' | 'paused',
+        priority: data.priority as 'low' | 'medium' | 'high' | 'critical',
+        risk_level: data.risk_level as 'low' | 'medium' | 'high',
+        milestones: Array.isArray(data.milestones) ? data.milestones : [],
+        dependencies: Array.isArray(data.dependencies) ? data.dependencies : []
+      };
     } catch (error) {
       console.error('Error creating enhanced goal:', error);
       toast.error('Failed to create strategic goal');
@@ -121,12 +136,27 @@ export const enhancedGoalsService = {
   // Update strategic goal
   async updateEnhancedGoal(id: string, updates: Partial<EnhancedStrategicGoal>): Promise<EnhancedStrategicGoal | null> {
     try {
+      const updateData: any = {
+        ...updates,
+        updated_at: new Date().toISOString()
+      };
+
+      // Handle JSON serialization for complex fields
+      if (updates.milestones) {
+        updateData.milestones = JSON.stringify(updates.milestones);
+      }
+      if (updates.dependencies) {
+        updateData.dependencies = JSON.stringify(updates.dependencies);
+      }
+
+      // Remove read-only fields
+      delete updateData.goal_comments;
+      delete updateData.goal_attachments;
+      delete updateData.created_at;
+
       const { data, error } = await supabase
         .from('strategic_goals')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -134,7 +164,14 @@ export const enhancedGoalsService = {
       if (error) throw error;
       
       toast.success('Strategic goal updated successfully');
-      return data;
+      return {
+        ...data,
+        status: data.status as 'planned' | 'active' | 'completed' | 'paused',
+        priority: data.priority as 'low' | 'medium' | 'high' | 'critical',
+        risk_level: data.risk_level as 'low' | 'medium' | 'high',
+        milestones: Array.isArray(data.milestones) ? data.milestones : [],
+        dependencies: Array.isArray(data.dependencies) ? data.dependencies : []
+      };
     } catch (error) {
       console.error('Error updating enhanced goal:', error);
       toast.error('Failed to update strategic goal');
@@ -174,17 +211,14 @@ export const enhancedGoalsService = {
     try {
       const { data, error } = await supabase
         .from('goal_comments')
-        .select(`
-          *,
-          profiles(name)
-        `)
+        .select('*')
         .eq('goal_id', goalId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
       return data?.map(comment => ({
         ...comment,
-        user_name: comment.profiles?.name
+        user_name: 'User' // Placeholder since profiles relation doesn't exist
       })) || [];
     } catch (error) {
       console.error('Error fetching goal comments:', error);
@@ -231,17 +265,14 @@ export const enhancedGoalsService = {
     try {
       const { data, error } = await supabase
         .from('goal_attachments')
-        .select(`
-          *,
-          profiles(name)
-        `)
+        .select('*')
         .eq('goal_id', goalId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data?.map(attachment => ({
         ...attachment,
-        user_name: attachment.profiles?.name
+        user_name: 'User' // Placeholder since profiles relation doesn't exist
       })) || [];
     } catch (error) {
       console.error('Error fetching goal attachments:', error);
