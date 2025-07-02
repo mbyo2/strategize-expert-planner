@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,16 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, EyeOff, LogIn, UserPlus, TestTube, Globe } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Eye, EyeOff, LogIn, UserPlus, TestTube, Globe, AlertCircle } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { toast } from 'sonner';
 import TestUserLogin from '@/components/TestUserLogin';
+import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
 import { useLanguage } from '@/i18n/LanguageProvider';
 import LegalLinksInternational from '@/components/LegalLinksInternational';
 import { useIntl } from '@/i18n/IntlProvider';
 
-// Polyfill: List of common IANA timezones (extend as needed)
-// See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+// Polyfill: List of common IANA timezones
 const TIMEZONE_LIST = [
   'UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'America/Toronto',
   'America/Sao_Paulo', 'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Europe/Madrid',
@@ -31,6 +33,8 @@ const Login = () => {
   const { formatDate, formatNumber, formatCurrency, locale } = useIntl();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState('login');
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Accessibility: Consent required for login/signup
   const [consentChecked, setConsentChecked] = useState(false);
@@ -78,14 +82,69 @@ const Login = () => {
     return <Navigate to="/" replace />;
   }
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password: string): boolean => {
+    return password.length >= 6;
+  };
+
+  const validateSignupForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (!signupData.name.trim()) {
+      errors.name = 'Name is required';
+    }
+
+    if (!signupData.email) {
+      errors.email = 'Email is required';
+    } else if (!validateEmail(signupData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    if (!signupData.password) {
+      errors.password = 'Password is required';
+    } else if (!validatePassword(signupData.password)) {
+      errors.password = 'Password must be at least 6 characters long';
+    }
+
+    if (signupData.password !== signupData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateLoginForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (!loginData.email) {
+      errors.email = 'Email is required';
+    } else if (!validateEmail(loginData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    if (!loginData.password) {
+      errors.password = 'Password is required';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormErrors({});
+
     if (!consentChecked) {
       toast.error('You must agree to the legal terms before continuing.');
       return;
     }
-    if (!loginData.email || !loginData.password) {
-      toast.error('Please fill in all fields');
+
+    if (!validateLoginForm()) {
       return;
     }
 
@@ -97,6 +156,7 @@ const Login = () => {
       });
     } catch (error: any) {
       console.error('Login error:', error);
+      setFormErrors({ general: error.message || 'Login failed. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -104,22 +164,14 @@ const Login = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormErrors({});
+
     if (!consentChecked) {
       toast.error('You must agree to the legal terms before continuing.');
       return;
     }
-    if (!signupData.name || !signupData.email || !signupData.password) {
-      toast.error('Please fill in all fields');
-      return;
-    }
 
-    if (signupData.password !== signupData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    if (signupData.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    if (!validateSignupForm()) {
       return;
     }
 
@@ -130,16 +182,16 @@ const Login = () => {
         email: signupData.email,
         password: signupData.password
       });
-      toast.success('Account created successfully!');
+      toast.success('Account created successfully! Please check your email for verification.');
     } catch (error: any) {
       console.error('Signup error:', error);
+      setFormErrors({ general: error.message || 'Signup failed. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   // --- Locale-aware display updates ---
-  // Use locale-aware date and number formatting
   const dateNow = new Date();
   const formattedDate = formatDate(dateNow, {
     dateStyle: "full",
@@ -152,7 +204,6 @@ const Login = () => {
   // --- GMT offset for selected timezone ---
   const getGmtOffset = (tz: string) => {
     try {
-      // Get date in the timezone
       const dateStr = dateNow.toLocaleString('en-US', { timeZone: tz });
       const dateInTZ = new Date(dateStr);
       const diff = (dateInTZ.getTime() - dateNow.getTime()) / (1000 * 60);
@@ -190,7 +241,7 @@ const Login = () => {
           <select
             id="language-select"
             className="px-2 py-1 border rounded text-xs bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary"
-            style={{ minWidth: 80, zIndex: 50 }} // background and z-index for dropdown fix
+            style={{ minWidth: 80, zIndex: 50 }}
             value={currentLanguage}
             onChange={e => changeLanguage(e.target.value as typeof currentLanguage)}
             aria-label={t('settings.language')}
@@ -213,7 +264,7 @@ const Login = () => {
               ref={timezoneRef}
               id="timezone-select"
               className="border rounded px-2 py-1 text-xs focus:ring-2 focus:ring-primary focus:outline-none bg-white dark:bg-gray-800"
-              style={{ zIndex: 30, minWidth: 160 }} // z-index + background for dropdown
+              style={{ zIndex: 30, minWidth: 160 }}
               value={selectedTimezone}
               onChange={e => setSelectedTimezone(e.target.value)}
               aria-label={t('timezone.timezone')}
@@ -227,7 +278,6 @@ const Login = () => {
           </div>
           <span>{t('timezone.timezone')}: <b>{selectedTimezone}</b></span>
           <span>{t('timezone.gmtOffset')}: <b>{gmtOffset}</b></span>
-          {/* Locale-aware display examples */}
           <span>
             {t('login.exampleNumber') || "Example Number"}: <b>{formattedNumber}</b>
             {" | "}
@@ -281,7 +331,15 @@ const Login = () => {
           </label>
         </div>
 
-        <Tabs defaultValue="login" className="w-full">
+        {/* General error display */}
+        {formErrors.general && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{formErrors.general}</AlertDescription>
+          </Alert>
+        )}
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="login">{t('login.signIn')}</TabsTrigger>
             <TabsTrigger value="signup">{t('login.signup')}</TabsTrigger>
@@ -308,7 +366,11 @@ const Login = () => {
                       onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                       required
                       aria-required="true"
+                      className={formErrors.email ? 'border-red-500' : ''}
                     />
+                    {formErrors.email && (
+                      <p className="text-sm text-red-600">{formErrors.email}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="password">{t('login.password')}</Label>
@@ -322,17 +384,21 @@ const Login = () => {
                         required
                         aria-required="true"
                         aria-label={t('login.password')}
+                        className={formErrors.password ? 'border-red-500 pr-10' : 'pr-10'}
                       />
                       <button
                         type="button"
                         aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         tabIndex={0}
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
+                    {formErrors.password && (
+                      <p className="text-sm text-red-600">{formErrors.password}</p>
+                    )}
                   </div>
                   <div className={rtl ? 'text-left' : 'text-right'}>
                     <Link 
@@ -342,7 +408,12 @@ const Login = () => {
                       {t('login.forgot')}
                     </Link>
                   </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting || !consentChecked} aria-disabled={!consentChecked}>
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isSubmitting || !consentChecked} 
+                    aria-disabled={!consentChecked}
+                  >
                     {isSubmitting ? t('login.signingIn') : t('login.signIn')}
                   </Button>
                 </form>
@@ -370,7 +441,11 @@ const Login = () => {
                       onChange={(e) => setSignupData({...signupData, name: e.target.value})}
                       required
                       aria-required="true"
+                      className={formErrors.name ? 'border-red-500' : ''}
                     />
+                    {formErrors.name && (
+                      <p className="text-sm text-red-600">{formErrors.name}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">{t('login.email')}</Label>
@@ -382,7 +457,11 @@ const Login = () => {
                       onChange={(e) => setSignupData({...signupData, email: e.target.value})}
                       required
                       aria-required="true"
+                      className={formErrors.email ? 'border-red-500' : ''}
                     />
+                    {formErrors.email && (
+                      <p className="text-sm text-red-600">{formErrors.email}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">{t('login.password')}</Label>
@@ -394,7 +473,12 @@ const Login = () => {
                       onChange={(e) => setSignupData({...signupData, password: e.target.value})}
                       required
                       aria-required="true"
+                      className={formErrors.password ? 'border-red-500' : ''}
                     />
+                    {formErrors.password && (
+                      <p className="text-sm text-red-600">{formErrors.password}</p>
+                    )}
+                    <PasswordStrengthIndicator password={signupData.password} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">{t('login.confirmPassword')}</Label>
@@ -406,9 +490,18 @@ const Login = () => {
                       onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
                       required
                       aria-required="true"
+                      className={formErrors.confirmPassword ? 'border-red-500' : ''}
                     />
+                    {formErrors.confirmPassword && (
+                      <p className="text-sm text-red-600">{formErrors.confirmPassword}</p>
+                    )}
                   </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting || !consentChecked} aria-disabled={!consentChecked}>
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isSubmitting || !consentChecked} 
+                    aria-disabled={!consentChecked}
+                  >
                     {isSubmitting ? t('login.creatingAccount') : t('login.createAccount')}
                   </Button>
                 </form>
@@ -438,6 +531,7 @@ const Login = () => {
             </Card>
           </TabsContent>
         </Tabs>
+        
         {/* International Privacy Policy and Terms */}
         <LegalLinksInternational />
       </div>
