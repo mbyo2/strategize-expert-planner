@@ -81,7 +81,7 @@ const SecuritySettings = () => {
     }
   };
 
-  const handleConnectOAuth = async (provider: 'google' | 'github' | 'microsoft' | 'linkedin_oidc') => {
+  const handleConnectOAuth = async (provider: 'google' | 'github' | 'linkedin_oidc') => {
     await oauthService.connectProvider(provider);
   };
 
@@ -265,15 +265,6 @@ const SecuritySettings = () => {
                 >
                   <Globe className="h-4 w-4 mr-2" />
                   {oauthConnections.some(c => c.provider === 'github') ? 'Connected' : 'Connect GitHub'}
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={() => handleConnectOAuth('microsoft')}
-                  disabled={oauthConnections.some(c => c.provider === 'microsoft')}
-                >
-                  <Globe className="h-4 w-4 mr-2" />
-                  {oauthConnections.some(c => c.provider === 'microsoft') ? 'Connected' : 'Connect Microsoft'}
                 </Button>
                 
                 <Button
