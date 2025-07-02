@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
@@ -45,19 +46,15 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsLoading(true);
       
       try {
-        // In a real app, this would actually fetch from a translations file
-        // For this demo, we'll just use a mock implementation
         const mockTranslations = getMockTranslations(currentLanguage);
         setTranslations(mockTranslations);
       } catch (error) {
         console.error('Failed to load translations', error);
-        // Fallback to English if loading fails
         setTranslations(getMockTranslations('en'));
       } finally {
         setIsLoading(false);
       }
       
-      // Set document language and direction attributes
       document.documentElement.lang = currentLanguage;
       document.documentElement.dir = rtl ? 'rtl' : 'ltr';
     };
@@ -67,18 +64,16 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   
   // Translation function with fallback message for missing translations
   const t = (key: string, params?: Record<string, string>): string => {
-    if (isLoading) return key; // Return key if translations are still loading
+    if (isLoading) return key;
     
     let translatedText = translations[key];
     if (!translatedText) {
-      // Fallback: show clear warning in dev, show key in production
       if (process.env.NODE_ENV === "development") {
         return `[MISSING I18N: ${key}]`;
       }
       return key;
     }
 
-    // Replace parameters in the translated text if provided
     if (params) {
       Object.entries(params).forEach(([paramKey, paramValue]) => {
         translatedText = translatedText.replace(`{{${paramKey}}}`, paramValue);
@@ -88,7 +83,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
     return translatedText;
   };
   
-  // Change language function
   const changeLanguage = (language: Language) => {
     setCurrentLanguage(language);
   };
@@ -108,7 +102,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-// Custom hook for using the language context
 export const useLanguage = (): LanguageContextType => {
   const context = useContext(LanguageContext);
   if (context === undefined) {
@@ -165,12 +158,24 @@ function getMockTranslations(language: Language): Record<string, string> {
       'login.testUsers': 'Test Users',
       'login.testUsersDesc': 'Quick login with pre-configured test users',
       'login.needTestUsers': 'Need to create test users? Go to Test Setup →',
+      'login.exampleNumber': 'Example Number',
+      'login.exampleCurrency': 'Example Currency',
       'legal.privacyPolicy': 'Privacy Policy',
       'legal.termsOfService': 'Terms of Service',
+      'legal.acknowledge': 'I acknowledge and agree to the Privacy Policy and Terms of Service.',
       'compliance.notice': 'By continuing, you acknowledge your data may be stored and processed in accordance with applicable international privacy laws including GDPR and CCPA.',
       'timezone.current': 'Current time',
       'timezone.timezone': 'Your timezone',
       'timezone.gmtOffset': 'GMT offset',
+      'password.weak': 'Weak',
+      'password.medium': 'Medium',
+      'password.strong': 'Strong',
+      'password.strength': 'Password strength:',
+      'password.requirement.length': 'At least 8 characters',
+      'password.requirement.uppercase': 'Contains uppercase letter',
+      'password.requirement.lowercase': 'Contains lowercase letter',
+      'password.requirement.number': 'Contains number',
+      'password.requirement.special': 'Contains special character',
     },
     es: {
       'app.title': 'Intantiko',
@@ -195,12 +200,24 @@ function getMockTranslations(language: Language): Record<string, string> {
       'login.testUsers': 'Usuarios de Prueba',
       'login.testUsersDesc': 'Acceso rápido con usuarios de prueba',
       'login.needTestUsers': '¿Necesitas crear usuarios de prueba? Ve a Test Setup →',
+      'login.exampleNumber': 'Número de Ejemplo',
+      'login.exampleCurrency': 'Moneda de Ejemplo',
       'legal.privacyPolicy': 'Política de Privacidad',
       'legal.termsOfService': 'Términos del Servicio',
+      'legal.acknowledge': 'Reconozco y acepto la Política de Privacidad y los Términos del Servicio.',
       'compliance.notice': 'Al continuar, reconoces que tus datos pueden almacenarse y procesarse conforme a leyes internacionales de privacidad como el GDPR y la CCPA.',
       'timezone.current': 'Hora actual',
       'timezone.timezone': 'Tu zona horaria',
       'timezone.gmtOffset': 'Desfase GMT',
+      'password.weak': 'Débil',
+      'password.medium': 'Medio',
+      'password.strong': 'Fuerte',
+      'password.strength': 'Fuerza de la contraseña:',
+      'password.requirement.length': 'Al menos 8 caracteres',
+      'password.requirement.uppercase': 'Contiene letra mayúscula',
+      'password.requirement.lowercase': 'Contiene letra minúscula',
+      'password.requirement.number': 'Contiene número',
+      'password.requirement.special': 'Contiene carácter especial',
     },
     ar: {
       'app.title': 'إنتانيتيكو',
@@ -225,12 +242,24 @@ function getMockTranslations(language: Language): Record<string, string> {
       'login.testUsers': 'مستخدمون للاختبار',
       'login.testUsersDesc': 'تسجيل دخول سريع بمستخدمين جاهزين',
       'login.needTestUsers': 'تريد إنشاء مستخدمين للاختبار؟ انتقل لإعداد الاختبار →',
+      'login.exampleNumber': 'رقم للمثال',
+      'login.exampleCurrency': 'عملة للمثال',
       'legal.privacyPolicy': 'سياسة الخصوصية',
       'legal.termsOfService': 'شروط الخدمة',
+      'legal.acknowledge': 'أقر وأوافق على سياسة الخصوصية وشروط الخدمة.',
       'compliance.notice': 'بالمتابعة، فإنك تقر بأن بياناتك قد يتم تخزينها ومعالجتها وفقًا لقوانين الخصوصية الدولية مثل GDPR وCCPA.',
       'timezone.current': 'الوقت الحالي',
       'timezone.timezone': 'منطقتك الزمنية',
       'timezone.gmtOffset': 'فرق توقيت غرينتش',
+      'password.weak': 'ضعيفة',
+      'password.medium': 'متوسطة',
+      'password.strong': 'قوية',
+      'password.strength': 'قوة كلمة المرور:',
+      'password.requirement.length': 'على الأقل 8 أحرف',
+      'password.requirement.uppercase': 'يحتوي على حرف كبير',
+      'password.requirement.lowercase': 'يحتوي على حرف صغير',
+      'password.requirement.number': 'يحتوي على رقم',
+      'password.requirement.special': 'يحتوي على حرف خاص',
     },
     fr: {
       'app.title': 'Intantiko',
@@ -238,14 +267,32 @@ function getMockTranslations(language: Language): Record<string, string> {
       'login.description': 'Connectez-vous pour accéder à vos outils de planification stratégique',
       'login.email': 'Adresse e-mail',
       'login.password': 'Mot de passe',
-      'legal.privacyPolicy': 'Politique de Confidentialité',
-      'legal.termsOfService': 'Conditions d\'Utilisation',
-      'compliance.notice': 'En continuant, vous reconnaissez que vos données peuvent être stockées et traitées conformément aux lois internationales de confidentialité comme le RGPD et la CCPA.',
+      'login.showPassword': 'Afficher le mot de passe',
+      'login.hidePassword': 'Masquer le mot de passe',
+      'login.forgot': 'Mot de passe oublié?',
       'login.signIn': 'Se connecter',
       'login.signup': 'Inscription',
       'login.createAccount': 'Créer un compte',
       'login.fullName': 'Nom complet',
       'login.confirmPassword': 'Confirmez le mot de passe',
+      'login.exampleNumber': 'Nombre d\'Exemple',
+      'login.exampleCurrency': 'Devise d\'Exemple',
+      'legal.privacyPolicy': 'Politique de Confidentialité',
+      'legal.termsOfService': 'Conditions d\'Utilisation',
+      'legal.acknowledge': 'Je reconnais et accepte la Politique de Confidentialité et les Conditions d\'Utilisation.',
+      'compliance.notice': 'En continuant, vous reconnaissez que vos données peuvent être stockées et traitées conformément aux lois internationales de confidentialité comme le RGPD et la CCPA.',
+      'timezone.current': 'Heure actuelle',
+      'timezone.timezone': 'Votre fuseau horaire',
+      'timezone.gmtOffset': 'Décalage GMT',
+      'password.weak': 'Faible',
+      'password.medium': 'Moyen',
+      'password.strong': 'Fort',
+      'password.strength': 'Force du mot de passe:',
+      'password.requirement.length': 'Au moins 8 caractères',
+      'password.requirement.uppercase': 'Contient une lettre majuscule',
+      'password.requirement.lowercase': 'Contient une lettre minuscule',
+      'password.requirement.number': 'Contient un chiffre',
+      'password.requirement.special': 'Contient un caractère spécial',
     },
     de: {},
     zh: { 'app.title': 'Intantiko', 'welcome.message': '欢迎使用 Intantiko' },

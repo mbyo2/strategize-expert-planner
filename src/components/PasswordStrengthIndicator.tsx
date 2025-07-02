@@ -2,33 +2,30 @@
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Check, X } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageProvider';
 
 interface PasswordStrengthIndicatorProps {
   password: string;
 }
 
 const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({ password }) => {
+  const { t } = useLanguage();
+  
   const requirements = [
-    { label: 'At least 8 characters', test: (pwd: string) => pwd.length >= 8 },
-    { label: 'Contains uppercase letter', test: (pwd: string) => /[A-Z]/.test(pwd) },
-    { label: 'Contains lowercase letter', test: (pwd: string) => /[a-z]/.test(pwd) },
-    { label: 'Contains number', test: (pwd: string) => /\d/.test(pwd) },
-    { label: 'Contains special character', test: (pwd: string) => /[!@#$%^&*(),.?":{}|<>]/.test(pwd) }
+    { label: t('password.requirement.length'), test: (pwd: string) => pwd.length >= 8 },
+    { label: t('password.requirement.uppercase'), test: (pwd: string) => /[A-Z]/.test(pwd) },
+    { label: t('password.requirement.lowercase'), test: (pwd: string) => /[a-z]/.test(pwd) },
+    { label: t('password.requirement.number'), test: (pwd: string) => /\d/.test(pwd) },
+    { label: t('password.requirement.special'), test: (pwd: string) => /[!@#$%^&*(),.?":{}|<>]/.test(pwd) }
   ];
 
   const passedRequirements = requirements.filter(req => req.test(password));
   const strength = (passedRequirements.length / requirements.length) * 100;
 
   const getStrengthLabel = () => {
-    if (strength < 40) return 'Weak';
-    if (strength < 80) return 'Medium';
-    return 'Strong';
-  };
-
-  const getStrengthColor = () => {
-    if (strength < 40) return 'bg-red-500';
-    if (strength < 80) return 'bg-yellow-500';
-    return 'bg-green-500';
+    if (strength < 40) return t('password.weak');
+    if (strength < 80) return t('password.medium');
+    return t('password.strong');
   };
 
   if (!password) return null;
@@ -36,7 +33,7 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({ p
   return (
     <div className="space-y-2 mt-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">Password strength:</span>
+        <span className="text-sm text-muted-foreground">{t('password.strength')}</span>
         <span className={`text-sm font-medium ${
           strength < 40 ? 'text-red-600' : strength < 80 ? 'text-yellow-600' : 'text-green-600'
         }`}>
