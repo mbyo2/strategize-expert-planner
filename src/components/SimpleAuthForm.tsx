@@ -10,6 +10,7 @@ import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { SimpleSecurity } from '@/utils/simpleSecurity';
 import { toast } from 'sonner';
 import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 
 const SimpleAuthForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -246,6 +247,7 @@ const SimpleAuthForm: React.FC = () => {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  <PasswordStrengthIndicator password={formData.password} />
                 </div>
                 
                 <div className="space-y-2">

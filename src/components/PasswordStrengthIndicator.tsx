@@ -28,6 +28,12 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({ p
     return t('password.strong');
   };
 
+  const getStrengthColor = () => {
+    if (strength < 40) return 'bg-red-500';
+    if (strength < 80) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
   if (!password) return null;
 
   return (
@@ -40,7 +46,7 @@ const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps> = ({ p
           {getStrengthLabel()}
         </span>
       </div>
-      <Progress value={strength} className="h-2" />
+      <Progress value={strength} className={`h-2 ${getStrengthColor()}`} />
       <div className="space-y-1">
         {requirements.map((req, index) => (
           <div key={index} className="flex items-center gap-2 text-xs">

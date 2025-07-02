@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,8 +7,8 @@ import { enhancedGoalsService, type EnhancedStrategicGoal } from '@/services/enh
 import { enhancedPlanningService, type EnhancedPlanningInitiative } from '@/services/enhancedPlanningService';
 import DashboardAnalytics from '@/components/dashboard/DashboardAnalytics';
 import GoalsTab from '@/components/dashboard/GoalsTab';
-import InitiativesTab from './dashboard/InitiativesTab';
-import AnalyticsTab from './dashboard/AnalyticsTab';
+import InitiativesTab from '@/components/dashboard/InitiativesTab';
+import AnalyticsTab from '@/components/dashboard/AnalyticsTab';
 
 const EnhancedGoalsDashboard = () => {
   const [goals, setGoals] = useState<EnhancedStrategicGoal[]>([]);
