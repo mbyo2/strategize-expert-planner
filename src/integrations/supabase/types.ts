@@ -9,6 +9,66 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          description: string
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          organization_id: string | null
+          resource_id: string | null
+          resource_type: string
+          team_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          description: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          organization_id?: string | null
+          resource_id?: string | null
+          resource_type: string
+          team_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          organization_id?: string | null
+          resource_id?: string | null
+          resource_type?: string
+          team_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_recommendations: {
         Row: {
           affected_units: string[] | null
@@ -594,6 +654,88 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          organization_id: string
+          role: string
+          token: string
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          organization_id: string
+          role?: string
+          token?: string
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          organization_id?: string
+          role?: string
+          token?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_members: {
+        Row: {
+          id: string
+          invited_by: string | null
+          joined_at: string | null
+          organization_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          invited_by?: string | null
+          joined_at?: string | null
+          organization_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          invited_by?: string | null
+          joined_at?: string | null
+          organization_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string
@@ -708,12 +850,16 @@ export type Database = {
           ip_restrictions: string[] | null
           job_title: string | null
           language: string | null
+          last_login_at: string | null
           mfa_enabled: boolean | null
           name: string | null
+          onboarding_completed: boolean | null
           organization_id: string | null
           primary_team_id: string | null
           require_mfa_for_admin: boolean | null
+          role: string | null
           session_timeout_minutes: number | null
+          status: string | null
           theme: string | null
           timezone: string | null
           updated_at: string
@@ -733,12 +879,16 @@ export type Database = {
           ip_restrictions?: string[] | null
           job_title?: string | null
           language?: string | null
+          last_login_at?: string | null
           mfa_enabled?: boolean | null
           name?: string | null
+          onboarding_completed?: boolean | null
           organization_id?: string | null
           primary_team_id?: string | null
           require_mfa_for_admin?: boolean | null
+          role?: string | null
           session_timeout_minutes?: number | null
+          status?: string | null
           theme?: string | null
           timezone?: string | null
           updated_at?: string
@@ -758,12 +908,16 @@ export type Database = {
           ip_restrictions?: string[] | null
           job_title?: string | null
           language?: string | null
+          last_login_at?: string | null
           mfa_enabled?: boolean | null
           name?: string | null
+          onboarding_completed?: boolean | null
           organization_id?: string | null
           primary_team_id?: string | null
           require_mfa_for_admin?: boolean | null
+          role?: string | null
           session_timeout_minutes?: number | null
+          status?: string | null
           theme?: string | null
           timezone?: string | null
           updated_at?: string
@@ -966,31 +1120,84 @@ export type Database = {
         }
         Relationships: []
       }
+      team_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          role: string
+          team_id: string
+          token: string
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          role?: string
+          team_id: string
+          token?: string
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          role?: string
+          team_id?: string
+          token?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invitations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_members: {
         Row: {
           department: string | null
           id: string
+          invited_by: string | null
           joined_date: string
           position: string | null
           role: string
+          status: string | null
           team_id: string
           user_id: string
         }
         Insert: {
           department?: string | null
           id?: string
+          invited_by?: string | null
           joined_date?: string
           position?: string | null
           role: string
+          status?: string | null
           team_id: string
           user_id: string
         }
         Update: {
           department?: string | null
           id?: string
+          invited_by?: string | null
           joined_date?: string
           position?: string | null
           role?: string
+          status?: string | null
           team_id?: string
           user_id?: string
         }

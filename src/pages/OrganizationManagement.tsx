@@ -1,681 +1,535 @@
-
 import React, { useState, useEffect } from 'react';
-import PageLayout from '@/components/PageLayout';
-import { withAuth } from '@/hooks/useAuth';
-import { useOrganizations } from '@/hooks/useOrganizations';
-import { Organization, OrganizationSettings, TeamMember } from '@/types/database';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import {
-  Building2,
-  Users,
-  Settings,
-  Shield,
-  GanttChart,
-  Plus,
-  Trash2,
-  Edit,
-  Mail,
-  Globe,
-  FileText,
-  Briefcase,
-  AlertTriangle,
-  Clock,
-  Server,
-  Activity
-} from 'lucide-react';
+import { Building2, Plus, Search, Users, Mail, Shield } from 'lucide-react';
+import { UserManagementService, OrganizationMember } from '@/services/userManagementService';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import { toast } from 'sonner';
+import PageLayout from '@/components/PageLayout';
 
 const OrganizationManagement = () => {
-  const {
-    currentOrganization,
-    updateOrganization,
-    updateOrganizationSettings,
-    getOrganizationMembers,
-    inviteUserToOrganization
-  } = useOrganizations();
-  const [activeTab, setActiveTab] = useState('general');
-  const [members, setMembers] = useState<TeamMember[]>([]);
+  const { hasRole } = useSimpleAuth();
+  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [selectedOrganization, setSelectedOrganization] = useState<any>(null);
+  const [members, setMembers] = useState<OrganizationMember[]>([]);
+  const [invitations, setInvitations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState('viewer');
-  const [generalInfo, setGeneralInfo] = useState({
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [newOrganization, setNewOrganization] = useState({
     name: '',
     description: '',
-    website: '',
     industry: '',
-    size: ''
+    size: '',
+    website: ''
   });
-  const [settings, setSettings] = useState<Partial<OrganizationSettings>>({});
+  const [inviteData, setInviteData] = useState({
+    email: '',
+    role: 'viewer'
+  });
 
   useEffect(() => {
-    if (currentOrganization) {
-      setGeneralInfo({
-        name: currentOrganization.name || '',
-        description: currentOrganization.description || '',
-        website: currentOrganization.website || '',
-        industry: currentOrganization.industry || '',
-        size: currentOrganization.size || ''
-      });
-      setSettings(currentOrganization.settings);
-      
-      fetchMembers();
-    }
-  }, [currentOrganization]);
+    loadOrganizations();
+  }, []);
 
-  const fetchMembers = async () => {
-    if (!currentOrganization) return;
-    
-    setLoading(true);
+  useEffect(() => {
+    if (selectedOrganization) {
+      loadOrganizationMembers(selectedOrganization.id);
+      loadOrganizationInvitations(selectedOrganization.id);
+    }
+  }, [selectedOrganization]);
+
+  const loadOrganizations = async () => {
     try {
-      const orgMembers = await getOrganizationMembers(currentOrganization.id);
-      setMembers(orgMembers);
+      setLoading(true);
+      const result = await UserManagementService.getOrganizations(1, 50);
+      setOrganizations(result.organizations);
     } catch (error) {
-      console.error('Error fetching members:', error);
+      toast.error('Failed to load organizations');
+      console.error('Error loading organizations:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGeneralInfoChange = (field: string, value: string) => {
-    setGeneralInfo((prev) => ({ ...prev, [field]: value }));
+  const loadOrganizationMembers = async (organizationId: string) => {
+    try {
+      const data = await UserManagementService.getOrganizationMembers(organizationId);
+      setMembers(data);
+    } catch (error) {
+      console.error('Error loading organization members:', error);
+    }
   };
 
-  const handleSettingsChange = (field: string, value: any) => {
-    setSettings((prev) => ({ ...prev, [field]: value }));
+  const loadOrganizationInvitations = async (organizationId: string) => {
+    try {
+      const data = await UserManagementService.getOrganizationInvitations(organizationId);
+      setInvitations(data);
+    } catch (error) {
+      console.error('Error loading organization invitations:', error);
+    }
   };
 
-  const saveGeneralInfo = async () => {
-    if (!currentOrganization) return;
-    
-    await updateOrganization(currentOrganization.id, generalInfo);
-  };
+  const handleCreateOrganization = async () => {
+    if (!newOrganization.name.trim()) {
+      toast.error('Organization name is required');
+      return;
+    }
 
-  const saveSettings = async () => {
-    if (!currentOrganization) return;
-    
-    await updateOrganizationSettings(currentOrganization.id, settings);
+    try {
+      await UserManagementService.createOrganization(newOrganization);
+      await loadOrganizations();
+      setIsCreateDialogOpen(false);
+      setNewOrganization({
+        name: '',
+        description: '',
+        industry: '',
+        size: '',
+        website: ''
+      });
+      toast.success('Organization created successfully');
+    } catch (error) {
+      toast.error('Failed to create organization');
+      console.error('Error creating organization:', error);
+    }
   };
 
   const handleInviteUser = async () => {
-    if (!currentOrganization || !inviteEmail) return;
-    
-    await inviteUserToOrganization(currentOrganization.id, inviteEmail, inviteRole as any);
-    setInviteEmail('');
-    setInviteRole('viewer');
-    setInviteDialogOpen(false);
-    fetchMembers();
+    if (!selectedOrganization || !inviteData.email.trim()) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    try {
+      await UserManagementService.inviteToOrganization(
+        selectedOrganization.id,
+        inviteData.email,
+        inviteData.role
+      );
+      await loadOrganizationInvitations(selectedOrganization.id);
+      setIsInviteDialogOpen(false);
+      setInviteData({ email: '', role: 'viewer' });
+      toast.success('Invitation sent successfully');
+    } catch (error) {
+      toast.error('Failed to send invitation');
+      console.error('Error sending invitation:', error);
+    }
   };
 
-  if (!currentOrganization) {
+  const handleUpdateMemberRole = async (userId: string, role: string) => {
+    if (!selectedOrganization) return;
+
+    try {
+      await UserManagementService.updateOrganizationMemberRole(
+        selectedOrganization.id,
+        userId,
+        role
+      );
+      await loadOrganizationMembers(selectedOrganization.id);
+      toast.success('Member role updated successfully');
+    } catch (error) {
+      toast.error('Failed to update member role');
+      console.error('Error updating member role:', error);
+    }
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    if (!selectedOrganization) return;
+
+    try {
+      await UserManagementService.removeOrganizationMember(selectedOrganization.id, userId);
+      await loadOrganizationMembers(selectedOrganization.id);
+      toast.success('Member removed successfully');
+    } catch (error) {
+      toast.error('Failed to remove member');
+      console.error('Error removing member:', error);
+    }
+  };
+
+  const filteredOrganizations = organizations.filter(org =>
+    org.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    org.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (!hasRole('manager')) {
     return (
-      <PageLayout title="Organization Management">
-        <div className="flex flex-col items-center justify-center h-64">
-          <h2 className="text-xl font-semibold mb-4">No Organization Found</h2>
-          <p className="text-muted-foreground mb-6">You need to create or join an organization to manage it.</p>
-          <Button>Create Organization</Button>
+      <PageLayout title="Access Denied" icon={<Shield className="h-6 w-6" />}>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
+            <p className="text-muted-foreground">You don't have permission to access organization management.</p>
+          </div>
         </div>
       </PageLayout>
     );
   }
 
   return (
-    <PageLayout title={`Organization: ${currentOrganization.name}`}>
-      <div className="container mx-auto py-6 space-y-8">
-        <Tabs
-          defaultValue="general"
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-6"
-        >
-          <div className="flex items-center justify-between">
-            <TabsList className="grid grid-cols-4 w-full max-w-2xl">
-              <TabsTrigger value="general" className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                <span className="hidden sm:inline">General</span>
-              </TabsTrigger>
-              <TabsTrigger value="members" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Members</span>
-              </TabsTrigger>
-              <TabsTrigger value="teams" className="flex items-center gap-2">
-                <GanttChart className="h-4 w-4" />
-                <span className="hidden sm:inline">Teams</span>
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                <span className="hidden sm:inline">Settings</span>
-              </TabsTrigger>
-            </TabsList>
+    <PageLayout 
+      title="Organization Management" 
+      subtitle="Manage organizations, members, and invitations" 
+      icon={<Building2 className="h-6 w-6" />}
+    >
+      <div className="space-y-6">
+        <div className="flex items-center justify-end">
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Organization
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Create New Organization</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Organization Name *</Label>
+                  <Input
+                    id="name"
+                    value={newOrganization.name}
+                    onChange={(e) => setNewOrganization(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Enter organization name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={newOrganization.description}
+                    onChange={(e) => setNewOrganization(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Enter organization description"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="industry">Industry</Label>
+                    <Input
+                      id="industry"
+                      value={newOrganization.industry}
+                      onChange={(e) => setNewOrganization(prev => ({ ...prev, industry: e.target.value }))}
+                      placeholder="e.g., Technology"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="size">Size</Label>
+                    <Select
+                      value={newOrganization.size}
+                      onValueChange={(value) => setNewOrganization(prev => ({ ...prev, size: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1-10">1-10 employees</SelectItem>
+                        <SelectItem value="11-50">11-50 employees</SelectItem>
+                        <SelectItem value="51-200">51-200 employees</SelectItem>
+                        <SelectItem value="201-1000">201-1000 employees</SelectItem>
+                        <SelectItem value="1000+">1000+ employees</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="website">Website</Label>
+                  <Input
+                    id="website"
+                    value={newOrganization.website}
+                    onChange={(e) => setNewOrganization(prev => ({ ...prev, website: e.target.value }))}
+                    placeholder="https://example.com"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={handleCreateOrganization} className="flex-1">
+                    Create Organization
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsCreateDialogOpen(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Organizations List */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Organizations</CardTitle>
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8 w-full"
+                    />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="space-y-1">
+                  {filteredOrganizations.map((org) => (
+                    <div
+                      key={org.id}
+                      className={`p-3 cursor-pointer hover:bg-muted/50 border-l-2 ${
+                        selectedOrganization?.id === org.id
+                          ? 'border-primary bg-muted/50'
+                          : 'border-transparent'
+                      }`}
+                      onClick={() => setSelectedOrganization(org)}
+                    >
+                      <div className="font-medium">{org.name}</div>
+                      <div className="text-sm text-muted-foreground truncate">
+                        {org.description || 'No description'}
+                      </div>
+                      {org.industry && (
+                        <Badge variant="outline" className="mt-1 text-xs">
+                          {org.industry}
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                  {filteredOrganizations.length === 0 && (
+                    <div className="p-6 text-center text-muted-foreground">
+                      No organizations found
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          <TabsContent value="general" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Organization Information</CardTitle>
-                <CardDescription>
-                  Update your organization's basic information
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="org-name">Organization Name</Label>
-                    <Input
-                      id="org-name"
-                      value={generalInfo.name}
-                      onChange={(e) => handleGeneralInfoChange('name', e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="org-description">Description</Label>
-                    <Textarea
-                      id="org-description"
-                      rows={4}
-                      value={generalInfo.description}
-                      onChange={(e) => handleGeneralInfoChange('description', e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="org-website">Website</Label>
-                    <div className="flex">
-                      <Globe className="h-4 w-4 mr-2 mt-3 text-muted-foreground" />
-                      <Input
-                        id="org-website"
-                        value={generalInfo.website}
-                        onChange={(e) => handleGeneralInfoChange('website', e.target.value)}
-                        placeholder="https://example.com"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="org-industry">Industry</Label>
-                      <div className="flex">
-                        <Briefcase className="h-4 w-4 mr-2 mt-3 text-muted-foreground" />
-                        <Select
-                          value={generalInfo.industry}
-                          onValueChange={(value) => handleGeneralInfoChange('industry', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select industry" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="technology">Technology</SelectItem>
-                            <SelectItem value="finance">Finance</SelectItem>
-                            <SelectItem value="healthcare">Healthcare</SelectItem>
-                            <SelectItem value="education">Education</SelectItem>
-                            <SelectItem value="retail">Retail</SelectItem>
-                            <SelectItem value="manufacturing">Manufacturing</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
+          {/* Organization Details */}
+          <div className="lg:col-span-2">
+            {selectedOrganization ? (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>{selectedOrganization.name}</CardTitle>
+                        <p className="text-muted-foreground mt-1">
+                          {selectedOrganization.description || 'No description'}
+                        </p>
                       </div>
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <Label htmlFor="org-size">Company Size</Label>
-                      <div className="flex">
-                        <Users className="h-4 w-4 mr-2 mt-3 text-muted-foreground" />
-                        <Select
-                          value={generalInfo.size}
-                          onValueChange={(value) => handleGeneralInfoChange('size', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select size" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1-10">1-10 employees</SelectItem>
-                            <SelectItem value="11-50">11-50 employees</SelectItem>
-                            <SelectItem value="51-200">51-200 employees</SelectItem>
-                            <SelectItem value="201-500">201-500 employees</SelectItem>
-                            <SelectItem value="501-1000">501-1000 employees</SelectItem>
-                            <SelectItem value="1000+">1000+ employees</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-end">
-                  <Button onClick={saveGeneralInfo}>
-                    Save Changes
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="members" className="space-y-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Organization Members</CardTitle>
-                  <CardDescription>
-                    Manage members of your organization
-                  </CardDescription>
-                </div>
-                <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="flex items-center gap-2">
-                      <Plus className="h-4 w-4" />
-                      <span>Invite Member</span>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Invite New Member</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email Address</Label>
-                        <div className="flex">
-                          <Mail className="h-4 w-4 mr-2 mt-3 text-muted-foreground" />
-                          <Input
-                            id="email"
-                            placeholder="colleague@example.com"
-                            value={inviteEmail}
-                            onChange={(e) => setInviteEmail(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="role">Role</Label>
-                        <Select
-                          value={inviteRole}
-                          onValueChange={setInviteRole}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="manager">Manager</SelectItem>
-                            <SelectItem value="analyst">Analyst</SelectItem>
-                            <SelectItem value="viewer">Viewer</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleInviteUser}>Invite</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <div className="flex justify-center p-6">
-                    <div className="loader">Loading...</div>
-                  </div>
-                ) : members.length === 0 ? (
-                  <div className="text-center p-6">
-                    <p className="text-muted-foreground">No members found</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-12 py-2 px-4 font-medium text-sm text-muted-foreground">
-                      <div className="col-span-5">User</div>
-                      <div className="col-span-3">Role</div>
-                      <div className="col-span-3">Department</div>
-                      <div className="col-span-1">Actions</div>
-                    </div>
-                    
-                    {members.map((member) => (
-                      <div
-                        key={member.id}
-                        className="grid grid-cols-12 py-3 px-4 items-center border rounded-md"
-                      >
-                        <div className="col-span-5 flex items-center gap-3">
-                          <Avatar>
-                            <AvatarImage src={member.avatar} />
-                            <AvatarFallback>
-                              {member.name.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium">{member.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {member.email}
+                      <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button>
+                            <Mail className="h-4 w-4 mr-2" />
+                            Invite Member
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Invite Team Member</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="invite-email">Email Address</Label>
+                              <Input
+                                id="invite-email"
+                                type="email"
+                                value={inviteData.email}
+                                onChange={(e) => setInviteData(prev => ({ ...prev, email: e.target.value }))}
+                                placeholder="user@example.com"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="invite-role">Role</Label>
+                              <Select
+                                value={inviteData.role}
+                                onValueChange={(role) => setInviteData(prev => ({ ...prev, role }))}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="viewer">Viewer</SelectItem>
+                                  <SelectItem value="analyst">Analyst</SelectItem>
+                                  <SelectItem value="manager">Manager</SelectItem>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button onClick={handleInviteUser} className="flex-1">
+                                Send Invitation
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => setIsInviteDialogOpen(false)}
+                                className="flex-1"
+                              >
+                                Cancel
+                              </Button>
                             </div>
                           </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      {selectedOrganization.industry && (
+                        <div>
+                          <span className="font-medium">Industry:</span> {selectedOrganization.industry}
                         </div>
-                        <div className="col-span-3">
-                          <Badge variant={member.role === 'admin' ? 'destructive' : 
-                                         member.role === 'manager' ? 'default' : 
-                                         'secondary'}>
-                            {member.role}
-                          </Badge>
+                      )}
+                      {selectedOrganization.size && (
+                        <div>
+                          <span className="font-medium">Size:</span> {selectedOrganization.size}
                         </div>
-                        <div className="col-span-3 text-sm">
-                          {member.department || 'Not specified'}
+                      )}
+                      {selectedOrganization.website && (
+                        <div>
+                          <span className="font-medium">Website:</span>{' '}
+                          <a
+                            href={selectedOrganization.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            {selectedOrganization.website}
+                          </a>
                         </div>
-                        <div className="col-span-1 flex justify-end">
-                          <Button variant="ghost" size="icon">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </div>
+                      )}
+                      <div>
+                        <span className="font-medium">Created:</span>{' '}
+                        {new Date(selectedOrganization.created_at).toLocaleDateString()}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Members ({members.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Member</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead>Joined</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {members.map((member) => (
+                          <TableRow key={member.id}>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium">Member #{member.user_id.slice(0, 8)}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Select
+                                value={member.role}
+                                onValueChange={(role) => handleUpdateMemberRole(member.user_id, role)}
+                                disabled={!hasRole('admin')}
+                              >
+                                <SelectTrigger className="w-28">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="viewer">Viewer</SelectItem>
+                                  <SelectItem value="analyst">Analyst</SelectItem>
+                                  <SelectItem value="manager">Manager</SelectItem>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell>
+                              {new Date(member.joined_at).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveMember(member.user_id)}
+                                disabled={!hasRole('admin')}
+                              >
+                                Remove
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {members.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center py-8">
+                              No members found
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+
+                {/* Pending Invitations */}
+                {invitations.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Pending Invitations ({invitations.length})</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {invitations.map((invitation) => (
+                          <div key={invitation.id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div>
+                              <div className="font-medium">{invitation.email}</div>
+                              <div className="text-sm text-muted-foreground">
+                                Role: {invitation.role} • Expires: {new Date(invitation.expires_at).toLocaleDateString()}
+                              </div>
+                            </div>
+                            <Badge variant="outline">Pending</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="teams" className="space-y-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Team Structure</CardTitle>
-                  <CardDescription>
-                    Manage your organization's team hierarchy
-                  </CardDescription>
-                </div>
-                <Button className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  <span>Add Team</span>
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="rounded-md border p-4">
-                    <h3 className="font-medium mb-2 flex items-center">
-                      <GanttChart className="h-4 w-4 mr-2" />
-                      Team Hierarchy View
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Create and manage teams to organize your company structure
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h2 className="text-lg font-semibold mb-2">Select an Organization</h2>
+                    <p className="text-muted-foreground">
+                      Choose an organization from the list to view its details and members.
                     </p>
-                    {/* Team hierarchy would go here */}
-                    <div className="py-4 flex justify-center">
-                      <div className="text-center p-6 border rounded-md w-full max-w-lg">
-                        <GanttChart className="h-12 w-12 mx-auto text-muted-foreground" />
-                        <h3 className="text-lg font-medium mt-4">Team Structure</h3>
-                        <p className="text-sm text-muted-foreground mt-2 mb-4">
-                          Create nested teams to reflect your organization's structure
-                        </p>
-                        <Button>Create Your First Team</Button>
-                      </div>
-                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Security & Compliance</CardTitle>
-                <CardDescription>
-                  Enterprise-level security settings for your organization
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-8">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium flex items-center gap-2">
-                      <Shield className="h-5 w-5 text-blue-500" />
-                      Authentication & Access
-                    </h3>
-                    
-                    <div className="space-y-6 pl-7">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-0.5">
-                          <Label className="text-base">Single Sign-On (SSO)</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Allow users to sign in with your identity provider
-                          </p>
-                        </div>
-                        <Switch
-                          checked={settings.sso_enabled}
-                          onCheckedChange={(checked) => 
-                            handleSettingsChange('sso_enabled', checked)
-                          }
-                        />
-                      </div>
-                      
-                      {settings.sso_enabled && (
-                        <div className="space-y-4 border-l-2 pl-4">
-                          <div className="grid gap-2">
-                            <Label htmlFor="sso-provider">SSO Provider</Label>
-                            <Select
-                              value={settings.sso_provider}
-                              onValueChange={(value) => 
-                                handleSettingsChange('sso_provider', value)
-                              }
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select provider" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="saml">SAML</SelectItem>
-                                <SelectItem value="oidc">OpenID Connect</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          <div className="grid gap-2">
-                            <Label htmlFor="sso-domain">Domain Restriction</Label>
-                            <Input
-                              id="sso-domain"
-                              placeholder="company.com"
-                              value={settings.sso_domain || ''}
-                              onChange={(e) => 
-                                handleSettingsChange('sso_domain', e.target.value)
-                              }
-                            />
-                            <p className="text-xs text-muted-foreground">
-                              Only users with email addresses from this domain can sign in
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <Separator />
-                      
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-0.5">
-                          <Label className="text-base">Enforce Multi-Factor Authentication</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Require all users to set up MFA for their accounts
-                          </p>
-                        </div>
-                        <Switch
-                          checked={settings.enforce_mfa}
-                          onCheckedChange={(checked) => 
-                            handleSettingsChange('enforce_mfa', checked)
-                          }
-                        />
-                      </div>
-                      
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-0.5">
-                          <Label className="text-base">IP Restrictions</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Restrict access to specific IP addresses or ranges
-                          </p>
-                        </div>
-                        <Switch
-                          checked={settings.ip_restrictions_enabled}
-                          onCheckedChange={(checked) => 
-                            handleSettingsChange('ip_restrictions_enabled', checked)
-                          }
-                        />
-                      </div>
-                      
-                      {settings.ip_restrictions_enabled && (
-                        <div className="grid gap-2 border-l-2 pl-4">
-                          <Label htmlFor="ip-ranges">Allowed IP Ranges</Label>
-                          <Textarea
-                            id="ip-ranges"
-                            placeholder="192.168.1.0/24&#10;10.0.0.0/8"
-                            value={(settings.allowed_ip_ranges || []).join('\n')}
-                            onChange={(e) => 
-                              handleSettingsChange('allowed_ip_ranges', 
-                                e.target.value.split('\n').filter(Boolean)
-                              )
-                            }
-                            rows={3}
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            Enter one IP address or CIDR range per line
-                          </p>
-                        </div>
-                      )}
-                      
-                      <div className="grid gap-2">
-                        <Label htmlFor="session-timeout">Session Timeout (minutes)</Label>
-                        <Input
-                          id="session-timeout"
-                          type="number"
-                          min={5}
-                          max={1440}
-                          value={settings.session_duration_minutes || 60}
-                          onChange={(e) => 
-                            handleSettingsChange('session_duration_minutes', 
-                              parseInt(e.target.value) || 60
-                            )
-                          }
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          How long until inactive users are automatically logged out
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-amber-500" />
-                      Compliance
-                    </h3>
-                    
-                    <div className="space-y-6 pl-7">
-                      <div className="grid gap-2">
-                        <Label htmlFor="compliance-mode">Compliance Mode</Label>
-                        <Select
-                          value={settings.compliance_mode}
-                          onValueChange={(value) => 
-                            handleSettingsChange('compliance_mode', value)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select compliance mode" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="standard">Standard</SelectItem>
-                            <SelectItem value="hipaa">HIPAA</SelectItem>
-                            <SelectItem value="gdpr">GDPR</SelectItem>
-                            <SelectItem value="custom">Custom</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-muted-foreground">
-                          Enables specific compliance features for regulatory requirements
-                        </p>
-                      </div>
-                      
-                      <div className="grid gap-2">
-                        <Label htmlFor="data-retention">Data Retention Period (days)</Label>
-                        <Input
-                          id="data-retention"
-                          type="number"
-                          min={1}
-                          value={settings.data_retention_days || 90}
-                          onChange={(e) => 
-                            handleSettingsChange('data_retention_days', 
-                              parseInt(e.target.value) || 90
-                            )
-                          }
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          How long to retain audit logs and other compliance data
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium flex items-center gap-2">
-                      <Server className="h-5 w-5 text-green-500" />
-                      API & Integrations
-                    </h3>
-                    
-                    <div className="space-y-6 pl-7">
-                      <div className="grid gap-2">
-                        <Label htmlFor="rate-limit">API Rate Limit (requests per minute)</Label>
-                        <Input
-                          id="rate-limit"
-                          type="number"
-                          min={10}
-                          max={10000}
-                          value={settings.api_rate_limit_per_minute || 100}
-                          onChange={(e) => 
-                            handleSettingsChange('api_rate_limit_per_minute', 
-                              parseInt(e.target.value) || 100
-                            )
-                          }
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Maximum number of API requests allowed per minute
-                        </p>
-                      </div>
-                      
-                      <div className="grid gap-2">
-                        <Label htmlFor="webhooks">Webhook URLs</Label>
-                        <Textarea
-                          id="webhooks"
-                          placeholder="https://example.com/webhook&#10;https://api.company.com/events"
-                          value={(settings.webhook_urls || []).join('\n')}
-                          onChange={(e) => 
-                            handleSettingsChange('webhook_urls', 
-                              e.target.value.split('\n').filter(Boolean)
-                            )
-                          }
-                          rows={3}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Enter one webhook URL per line for event notifications
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-end mt-8">
-                  <Button onClick={saveSettings}>
-                    Save Settings
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
       </div>
     </PageLayout>
   );
 };
 
-export default withAuth(['admin', 'manager'])(OrganizationManagement);
+export default OrganizationManagement;
