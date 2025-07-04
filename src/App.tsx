@@ -33,6 +33,7 @@ import SimpleAuthGuard from '@/components/SimpleAuthGuard';
 import AccessDenied from '@/pages/AccessDenied';
 import MfaVerify from '@/pages/MfaVerify';
 import TacticalMap from '@/pages/TacticalMap';
+import UserManagement from '@/pages/UserManagement';
 
 function App() {
   return (
@@ -63,6 +64,7 @@ function App() {
                 <Route path="/industry" element={<SimpleAuthGuard><Industry /></SimpleAuthGuard>} />
                 <Route path="/organization" element={<SimpleAuthGuard><Organization /></SimpleAuthGuard>} />
                 <Route path="/organization-management" element={<SimpleAuthGuard><OrganizationManagement /></SimpleAuthGuard>} />
+                <Route path="/user-management" element={<SimpleAuthGuard><UserManagement /></SimpleAuthGuard>} />
                 <Route path="/profile" element={<SimpleAuthGuard><Profile /></SimpleAuthGuard>} />
                 <Route path="/settings" element={<SimpleAuthGuard><Settings /></SimpleAuthGuard>} />
                 <Route path="/admin" element={<SimpleAuthGuard><Admin /></SimpleAuthGuard>} />

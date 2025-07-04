@@ -8,7 +8,9 @@ import {
   Lightbulb,
   Map,
   Settings,
-  TrendingUp
+  TrendingUp,
+  UserCheck,
+  Shield
 } from "lucide-react";
 
 export const navItems = [
@@ -51,6 +53,16 @@ export const navItems = [
     title: "Organization",
     url: "/organization",
     icon: Building2,
+  },
+  {
+    title: "User Management",
+    url: "/user-management",
+    icon: UserCheck,
+  },
+  {
+    title: "Admin",
+    url: "/admin",
+    icon: Shield,
   },
   {
     title: "Settings",
