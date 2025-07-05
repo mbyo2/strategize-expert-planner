@@ -33,20 +33,27 @@ class AuthService {
       }
 
       if (session?.user) {
-        // Get user profile and role
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*, user_roles(role)')
-          .eq('id', session.user.id)
-          .single();
+        // Get user profile and role separately 
+        const [profileResult, roleResult] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single(),
+          supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .single()
+        ]);
 
         return {
           user: {
             id: session.user.id,
             email: session.user.email || '',
-            name: profile?.name || session.user.user_metadata?.name || 'User',
-            role: profile?.user_roles?.role || 'viewer',
-            avatar: profile?.avatar
+            name: profileResult.data?.name || session.user.user_metadata?.name || 'User',
+            role: roleResult.data?.role || 'viewer',
+            avatar: profileResult.data?.avatar
           }
         };
       }
