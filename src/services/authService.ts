@@ -25,18 +25,28 @@ class AuthService {
 
   async getCurrentSession(): Promise<AuthSession> {
     try {
-      const { data: { session }, error } = await customSupabase.auth.getSession();
-      if (error) throw error;
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (error) {
+        console.error('Session error:', error);
+        throw error;
+      }
 
       if (session?.user) {
-        const userData = await this.getUserData(session.user.id);
+        // Get user profile and role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*, user_roles(role)')
+          .eq('id', session.user.id)
+          .single();
+
         return {
           user: {
             id: session.user.id,
             email: session.user.email || '',
-            name: userData?.name || session.user.user_metadata?.name || 'User',
-            role: userData?.role || 'viewer',
-            avatar: userData?.avatar
+            name: profile?.name || session.user.user_metadata?.name || 'User',
+            role: profile?.user_roles?.role || 'viewer',
+            avatar: profile?.avatar
           }
         };
       }
@@ -50,7 +60,7 @@ class AuthService {
 
   async signIn(credentials: AuthCredentials): Promise<void> {
     try {
-      const { data, error } = await customSupabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
       });
@@ -69,7 +79,7 @@ class AuthService {
 
   async signUp(credentials: AuthCredentials): Promise<void> {
     try {
-      const { data, error } = await customSupabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: credentials.email,
         password: credentials.password,
         options: {
@@ -98,7 +108,7 @@ class AuthService {
 
   async signOut(): Promise<void> {
     try {
-      const { error } = await customSupabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
       toast.success('Successfully signed out!');
@@ -111,7 +121,7 @@ class AuthService {
 
   async resetPassword(email: string): Promise<void> {
     try {
-      const { error } = await customSupabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`
       });
 
