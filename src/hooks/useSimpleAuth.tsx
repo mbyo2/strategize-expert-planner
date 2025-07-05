@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { authService, AuthSession, AuthCredentials } from '@/services/authService';
-import { customSupabase } from '@/integrations/supabase/customClient';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SimpleAuthContextType {
   session: AuthSession;
@@ -42,7 +42,7 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     initializeAuth();
 
     // Listen for auth state changes
-    const { data: { subscription } } = customSupabase.auth.onAuthStateChange(
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, supabaseSession) => {
         if (!isMounted) return;
         
