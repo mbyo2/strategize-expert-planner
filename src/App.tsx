@@ -34,6 +34,7 @@ import AccessDenied from '@/pages/AccessDenied';
 import MfaVerify from '@/pages/MfaVerify';
 import TacticalMap from '@/pages/TacticalMap';
 import UserManagement from '@/pages/UserManagement';
+import Support from '@/pages/Support';
 
 function App() {
   return (
@@ -73,6 +74,7 @@ function App() {
                 <Route path="/ai-operations" element={<SimpleAuthGuard><AIOperations /></SimpleAuthGuard>} />
                 <Route path="/data-foundry" element={<SimpleAuthGuard><DataFoundry /></SimpleAuthGuard>} />
                 <Route path="/infrastructure" element={<SimpleAuthGuard><Infrastructure /></SimpleAuthGuard>} />
+                <Route path="/support" element={<SimpleAuthGuard><Support /></SimpleAuthGuard>} />
                 <Route path="/test-setup" element={<SimpleAuthGuard><TestSetup /></SimpleAuthGuard>} />
                 
                 {/* Catch all route */}

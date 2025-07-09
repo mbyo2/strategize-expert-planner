@@ -113,7 +113,7 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const userRole = session.user?.role;
       if (!userRole) return false;
       
-      const roleHierarchy = ['viewer', 'analyst', 'manager', 'admin'];
+      const roleHierarchy = ['viewer', 'analyst', 'manager', 'admin', 'superuser'];
       const userRoleIndex = roleHierarchy.indexOf(userRole);
       const requiredRoleIndex = roleHierarchy.indexOf(role);
       

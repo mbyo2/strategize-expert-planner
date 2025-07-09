@@ -10,7 +10,8 @@ import {
   Settings,
   TrendingUp,
   UserCheck,
-  Shield
+  Shield,
+  Ticket
 } from "lucide-react";
 
 export const navItems = [
@@ -63,6 +64,11 @@ export const navItems = [
     title: "Admin",
     url: "/admin",
     icon: Shield,
+  },
+  {
+    title: "Support",
+    url: "/support",
+    icon: Ticket,
   },
   {
     title: "Settings",

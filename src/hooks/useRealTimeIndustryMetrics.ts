@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { IndustryMetric, fetchIndustryMetrics } from '@/services/industryMetricsService';
-import { customSupabase } from "@/integrations/supabase/customClient";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useRealTimeIndustryMetrics = () => {
   const [metrics, setMetrics] = useState<IndustryMetric[]>([]);
@@ -26,7 +26,7 @@ export const useRealTimeIndustryMetrics = () => {
     loadMetrics();
 
     // Set up real-time subscription
-    const channel = customSupabase
+    const channel = supabase
       .channel('industry-metrics-changes')
       .on(
         'postgres_changes',
@@ -45,7 +45,7 @@ export const useRealTimeIndustryMetrics = () => {
       .subscribe();
 
     return () => {
-      customSupabase.removeChannel(channel);
+      supabase.removeChannel(channel);
     };
   }, []);
 

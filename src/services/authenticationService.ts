@@ -1,5 +1,5 @@
 
-import { customSupabase } from "@/integrations/supabase/customClient";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { logAuditEvent } from "./auditService";
 
@@ -25,7 +25,7 @@ export interface MfaVerification {
 
 export const login = async (credentials: LoginCredentials) => {
   try {
-    const { data, error } = await customSupabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: credentials.email,
       password: credentials.password,
     });
@@ -64,7 +64,7 @@ export const login = async (credentials: LoginCredentials) => {
 
 export const signup = async (credentials: SignupCredentials) => {
   try {
-    const { data, error } = await customSupabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: credentials.email,
       password: credentials.password,
       options: {
@@ -98,9 +98,9 @@ export const signup = async (credentials: SignupCredentials) => {
 
 export const logout = async () => {
   try {
-    const { data: { user } } = await customSupabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     
-    const { error } = await customSupabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
 
     if (error) {
       throw error;
@@ -125,7 +125,7 @@ export const logout = async () => {
 
 export const resetPassword = async (request: ResetPasswordRequest) => {
   try {
-    const { error } = await customSupabase.auth.resetPasswordForEmail(request.email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(request.email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
 
@@ -143,7 +143,7 @@ export const resetPassword = async (request: ResetPasswordRequest) => {
 
 export const verifyMfa = async (verification: MfaVerification) => {
   try {
-    const { data, error } = await customSupabase.auth.mfa.verify({
+    const { data, error } = await supabase.auth.mfa.verify({
       factorId: verification.factorId,
       challengeId: verification.token,
       code: verification.token

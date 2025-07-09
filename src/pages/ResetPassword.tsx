@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Lock, CheckCircle } from 'lucide-react';
-import { customSupabase } from '@/integrations/supabase/customClient';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const ResetPassword = () => {
@@ -62,17 +62,18 @@ const ResetPassword = () => {
 
     try {
       // Set the session with the tokens from the URL
-      const { error: sessionError } = await customSupabase.auth.setSession({
+      const { error: sessionError } = await supabase.auth.setSession({
         access_token: accessToken,
-        refresh_token: refreshToken
+        refresh_token: refreshToken,
       });
 
       if (sessionError) {
-        throw sessionError;
+        setError('Invalid or expired reset link');
+        setIsLoading(false);
+        return;
       }
 
-      // Update the password
-      const { error: updateError } = await customSupabase.auth.updateUser({
+      const { error: updateError } = await supabase.auth.updateUser({
         password: password
       });
 
