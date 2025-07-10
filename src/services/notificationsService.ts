@@ -1,5 +1,5 @@
 
-import { customSupabase } from "@/integrations/supabase/customClient";
+import { supabase } from "@/integrations/supabase/client";
 import { Notification } from "@/types/database";
 
 export type CreateNotificationParams = Omit<Notification, 'id' | 'timestamp' | 'isRead' | 'created_at'> & {
@@ -15,7 +15,7 @@ export const createNotification = async (notification: CreateNotificationParams)
       isRead: false
     };
 
-    const { data, error } = await customSupabase
+    const { data, error } = await supabase
       .from('notifications')
       .insert(newNotification as any)
       .select()
@@ -48,7 +48,7 @@ export const createGlobalNotification = async (
     let userIds: string[] = [];
     
     if (options?.roles && options.roles.length > 0) {
-      const { data: users, error: usersError } = await customSupabase
+      const { data: users, error: usersError } = await supabase
         .from('user_roles')
         .select('user_id')
         .in('role', options.roles);
@@ -60,7 +60,7 @@ export const createGlobalNotification = async (
       userIds = users.map(user => user.user_id);
     } else {
       // Get all users if no roles specified
-      const { data: users, error: usersError } = await customSupabase
+      const { data: users, error: usersError } = await supabase
         .from('profiles')
         .select('id');
       
@@ -83,7 +83,7 @@ export const createGlobalNotification = async (
     }));
     
     if (notifications.length > 0) {
-      const { error } = await customSupabase
+      const { error } = await supabase
         .from('notifications')
         .insert(notifications as any);
       
@@ -102,7 +102,7 @@ export const createGlobalNotification = async (
 // Get notification by ID
 export const getNotification = async (id: string): Promise<Notification | null> => {
   try {
-    const { data, error } = await customSupabase
+    const { data, error } = await supabase
       .from('notifications')
       .select('*')
       .eq('id', id)

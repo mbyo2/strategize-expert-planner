@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { customSupabase } from "@/integrations/supabase/customClient";
+import { supabase } from "@/integrations/supabase/client";
 import { notifyEvent } from '@/services/notificationsService';
 
 // This hook centralizes all real-time updates and triggers notifications
@@ -10,7 +10,7 @@ export const useRealTimeUpdates = () => {
   // Setup real-time listeners
   const setupRealtimeListeners = useCallback(() => {
     // Set up real-time subscription for strategy reviews
-    const reviewsChannel = customSupabase
+    const reviewsChannel = supabase
       .channel('strategy-reviews-changes')
       .on(
         'postgres_changes',
@@ -44,7 +44,7 @@ export const useRealTimeUpdates = () => {
       .subscribe();
       
     // Set up real-time subscription for strategic goals
-    const goalsChannel = customSupabase
+    const goalsChannel = supabase
       .channel('strategic-goals-changes')
       .on(
         'postgres_changes',
@@ -74,7 +74,7 @@ export const useRealTimeUpdates = () => {
       .subscribe();
       
     // Set up real-time subscription for planning initiatives
-    const initiativesChannel = customSupabase
+    const initiativesChannel = supabase
       .channel('planning-initiatives-changes')
       .on(
         'postgres_changes',
@@ -101,7 +101,7 @@ export const useRealTimeUpdates = () => {
       .subscribe();
       
     // Set up real-time subscription for market changes
-    const marketChangesChannel = customSupabase
+    const marketChangesChannel = supabase
       .channel('market-changes-changes')
       .on(
         'postgres_changes',
@@ -140,10 +140,10 @@ export const useRealTimeUpdates = () => {
   // Cleanup real-time listeners
   const cleanupRealtimeListeners = useCallback((channels) => {
     if (channels) {
-      customSupabase.removeChannel(channels.reviewsChannel);
-      customSupabase.removeChannel(channels.goalsChannel);
-      customSupabase.removeChannel(channels.initiativesChannel);
-      customSupabase.removeChannel(channels.marketChangesChannel);
+      supabase.removeChannel(channels.reviewsChannel);
+      supabase.removeChannel(channels.goalsChannel);
+      supabase.removeChannel(channels.initiativesChannel);
+      supabase.removeChannel(channels.marketChangesChannel);
     }
     setIsConnected(false);
   }, []);

@@ -1,6 +1,6 @@
 
 import { toast } from "sonner";
-import { customSupabase } from "@/integrations/supabase/customClient";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface Recommendation {
   id: string;
@@ -14,7 +14,7 @@ export interface Recommendation {
 
 export const fetchRecommendations = async (): Promise<Recommendation[]> => {
   try {
-    const { data, error } = await customSupabase
+    const { data, error } = await supabase
       .from('recommendations')
       .select('*')
       .order('priority', { ascending: true });
@@ -38,7 +38,7 @@ export const fetchRecommendations = async (): Promise<Recommendation[]> => {
 
 export const fetchTopRecommendations = async (limit: number = 3): Promise<Recommendation[]> => {
   try {
-    const { data, error } = await customSupabase
+    const { data, error } = await supabase
       .from('recommendations')
       .select('*')
       .order('priority', { ascending: true })

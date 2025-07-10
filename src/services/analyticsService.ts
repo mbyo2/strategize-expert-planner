@@ -1,5 +1,5 @@
 
-import { customSupabase } from "@/integrations/supabase/customClient";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export interface AnalyticsData {
@@ -40,21 +40,21 @@ export interface TrendData {
 export const fetchAnalyticsOverview = async (): Promise<AnalyticsData> => {
   try {
     // Fetch strategic goals data
-    const { data: goals, error: goalsError } = await customSupabase
+    const { data: goals, error: goalsError } = await supabase
       .from('strategic_goals')
       .select('status, progress');
 
     if (goalsError) throw goalsError;
 
     // Fetch planning initiatives data
-    const { data: initiatives, error: initiativesError } = await customSupabase
+    const { data: initiatives, error: initiativesError } = await supabase
       .from('planning_initiatives')
       .select('status, progress');
 
     if (initiativesError) throw initiativesError;
 
     // Fetch upcoming strategy reviews
-    const { data: reviews, error: reviewsError } = await customSupabase
+    const { data: reviews, error: reviewsError } = await supabase
       .from('strategy_reviews')
       .select('id')
       .eq('status', 'scheduled')
@@ -63,7 +63,7 @@ export const fetchAnalyticsOverview = async (): Promise<AnalyticsData> => {
     if (reviewsError) throw reviewsError;
 
     // Fetch high priority recommendations
-    const { data: recommendations, error: recommendationsError } = await customSupabase
+    const { data: recommendations, error: recommendationsError } = await supabase
       .from('recommendations')
       .select('id')
       .eq('status', 'pending')
@@ -101,7 +101,7 @@ export const fetchAnalyticsOverview = async (): Promise<AnalyticsData> => {
 
 export const fetchGoalProgressData = async (): Promise<GoalProgress[]> => {
   try {
-    const { data, error } = await customSupabase
+    const { data, error } = await supabase
       .from('strategic_goals')
       .select('id, name, progress, status, due_date')
       .order('progress', { ascending: false });
@@ -118,7 +118,7 @@ export const fetchGoalProgressData = async (): Promise<GoalProgress[]> => {
 
 export const fetchInitiativeStatusData = async (): Promise<InitiativeStatus[]> => {
   try {
-    const { data, error } = await customSupabase
+    const { data, error } = await supabase
       .from('planning_initiatives')
       .select('id, name, status, progress, start_date, end_date')
       .order('progress', { ascending: false });

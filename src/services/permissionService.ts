@@ -1,5 +1,5 @@
 
-import { customSupabase } from "@/integrations/supabase/customClient";
+import { supabase } from "@/integrations/supabase/client";
 
 export type UserRole = 'admin' | 'manager' | 'analyst' | 'viewer';
 
@@ -58,7 +58,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 
 export const getUserRole = async (userId: string): Promise<UserRole | null> => {
   try {
-    const { data, error } = await customSupabase
+    const { data, error } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
@@ -111,7 +111,7 @@ export const getUserPermissions = async (userId: string): Promise<Permission[]> 
 
 export const updateUserRole = async (userId: string, newRole: UserRole) => {
   try {
-    const { data, error } = await customSupabase
+    const { data, error } = await supabase
       .from('user_roles')
       .upsert({ user_id: userId, role: newRole })
       .select();

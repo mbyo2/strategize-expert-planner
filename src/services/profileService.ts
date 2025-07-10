@@ -1,5 +1,5 @@
 
-import { customSupabase } from "@/integrations/supabase/customClient";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export interface UserProfile {
@@ -30,7 +30,7 @@ export interface UserProfile {
 
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
-    const { data, error } = await customSupabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
@@ -51,7 +51,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
 
 export const updateUserProfile = async (userId: string, updates: Partial<UserProfile>) => {
   try {
-    const { data, error } = await customSupabase
+    const { data, error } = await supabase
       .from('profiles')
       .update(updates)
       .eq('id', userId)
@@ -78,7 +78,7 @@ export const uploadAvatar = async (userId: string, file: File): Promise<string |
     const fileName = `${userId}-${Math.random()}.${fileExt}`;
     const filePath = `avatars/${fileName}`;
 
-    const { error: uploadError } = await customSupabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(filePath, file);
 
@@ -86,7 +86,7 @@ export const uploadAvatar = async (userId: string, file: File): Promise<string |
       throw uploadError;
     }
 
-    const { data } = customSupabase.storage
+    const { data } = supabase.storage
       .from('avatars')
       .getPublicUrl(filePath);
 
@@ -104,7 +104,7 @@ export const uploadAvatar = async (userId: string, file: File): Promise<string |
 
 export const deleteUserProfile = async (userId: string) => {
   try {
-    const { error } = await customSupabase
+    const { error } = await supabase
       .from('profiles')
       .delete()
       .eq('id', userId);

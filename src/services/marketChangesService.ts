@@ -1,6 +1,6 @@
 
 import { toast } from "sonner";
-import { customSupabase } from "@/integrations/supabase/customClient";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface MarketChange {
   id: string;
@@ -14,7 +14,7 @@ export interface MarketChange {
 
 export const fetchMarketChanges = async (): Promise<MarketChange[]> => {
   try {
-    const { data, error } = await customSupabase
+    const { data, error } = await supabase
       .from('market_changes')
       .select('*')
       .order('date_identified', { ascending: false });
@@ -38,7 +38,7 @@ export const fetchMarketChanges = async (): Promise<MarketChange[]> => {
 
 export const fetchRecentMarketChanges = async (limit: number = 3): Promise<MarketChange[]> => {
   try {
-    const { data, error } = await customSupabase
+    const { data, error } = await supabase
       .from('market_changes')
       .select('*')
       .order('date_identified', { ascending: false })

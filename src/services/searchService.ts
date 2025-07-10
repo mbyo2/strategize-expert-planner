@@ -1,5 +1,5 @@
 
-import { customSupabase } from "@/integrations/supabase/customClient";
+import { supabase } from "@/integrations/supabase/client";
 import { sanitizeInput } from "@/utils/securityUtils";
 
 export interface SearchResult {
@@ -36,7 +36,7 @@ export const searchContent = async (
 
     // Search strategic goals
     if (!filters?.types || filters.types.includes('goal')) {
-      const { data: goals } = await customSupabase
+      const { data: goals } = await supabase
         .from('strategic_goals')
         .select('id, name, description, status')
         .or(`name.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%`)
@@ -56,7 +56,7 @@ export const searchContent = async (
 
     // Search planning initiatives
     if (!filters?.types || filters.types.includes('initiative')) {
-      const { data: initiatives } = await customSupabase
+      const { data: initiatives } = await supabase
         .from('planning_initiatives')
         .select('id, name, description, status')
         .or(`name.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%`)
@@ -76,7 +76,7 @@ export const searchContent = async (
 
     // Search strategy reviews
     if (!filters?.types || filters.types.includes('review')) {
-      const { data: reviews } = await customSupabase
+      const { data: reviews } = await supabase
         .from('strategy_reviews')
         .select('id, title, description, status')
         .or(`title.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%`)
@@ -96,7 +96,7 @@ export const searchContent = async (
 
     // Search recommendations
     if (!filters?.types || filters.types.includes('recommendation')) {
-      const { data: recommendations } = await customSupabase
+      const { data: recommendations } = await supabase
         .from('recommendations')
         .select('id, title, description, status')
         .or(`title.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%`)
@@ -116,7 +116,7 @@ export const searchContent = async (
 
     // Search industry metrics
     if (!filters?.types || filters.types.includes('metric')) {
-      const { data: metrics } = await customSupabase
+      const { data: metrics } = await supabase
         .from('industry_metrics')
         .select('id, name, category, source')
         .or(`name.ilike.%${sanitizedQuery}%,category.ilike.%${sanitizedQuery}%`)
@@ -136,7 +136,7 @@ export const searchContent = async (
 
     // Search market changes
     if (!filters?.types || filters.types.includes('change')) {
-      const { data: changes } = await customSupabase
+      const { data: changes } = await supabase
         .from('market_changes')
         .select('id, title, description, category')
         .or(`title.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%`)
@@ -209,7 +209,7 @@ export const getSearchSuggestions = async (query: string): Promise<string[]> => 
     const suggestions = new Set<string>();
 
     // Get suggestions from goal names
-    const { data: goals } = await customSupabase
+    const { data: goals } = await supabase
       .from('strategic_goals')
       .select('name')
       .ilike('name', `%${sanitizedQuery}%`)
@@ -218,7 +218,7 @@ export const getSearchSuggestions = async (query: string): Promise<string[]> => 
     goals?.forEach(goal => suggestions.add(goal.name));
 
     // Get suggestions from initiative names
-    const { data: initiatives } = await customSupabase
+    const { data: initiatives } = await supabase
       .from('planning_initiatives')
       .select('name')
       .ilike('name', `%${sanitizedQuery}%`)

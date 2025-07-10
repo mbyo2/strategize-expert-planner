@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Recommendation, fetchRecommendations } from '@/services/recommendationsService';
-import { customSupabase } from "@/integrations/supabase/customClient";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useRealTimeRecommendations = () => {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
@@ -26,7 +26,7 @@ export const useRealTimeRecommendations = () => {
     loadRecommendations();
 
     // Set up real-time subscription
-    const channel = customSupabase
+    const channel = supabase
       .channel('recommendations-changes')
       .on(
         'postgres_changes',
@@ -45,7 +45,7 @@ export const useRealTimeRecommendations = () => {
       .subscribe();
 
     return () => {
-      customSupabase.removeChannel(channel);
+      supabase.removeChannel(channel);
     };
   }, []);
 
