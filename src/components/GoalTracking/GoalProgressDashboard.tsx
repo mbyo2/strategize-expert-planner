@@ -1,123 +1,132 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, Target, Clock, CheckCircle } from "lucide-react";
+import { TrendingUp, Target, Clock, CheckCircle, AlertTriangle } from "lucide-react";
+import { fetchStrategicGoals, StrategicGoal } from '@/services/strategicGoalsService';
+import { toast } from 'sonner';
 
-// Mock data for demonstration
-const mockGoals = [
-  {
-    id: 1,
-    title: "Increase Market Share",
-    description: "Expand market presence by 15% in Q1",
-    progress: 75,
-    target: 15,
-    current: 11.25,
-    unit: "%",
-    status: "on-track",
-    dueDate: "2024-03-31",
-    category: "Growth"
-  },
-  {
-    id: 2,
-    title: "Revenue Growth",
-    description: "Achieve $2M revenue target",
-    progress: 60,
-    target: 2000000,
-    current: 1200000,
-    unit: "$",
-    status: "behind",
-    dueDate: "2024-06-30",
-    category: "Financial"
-  },
-  {
-    id: 3,
-    title: "Customer Satisfaction",
-    description: "Maintain 95% customer satisfaction score",
-    progress: 90,
-    target: 95,
-    current: 85.5,
-    unit: "%",
-    status: "at-risk",
-    dueDate: "2024-12-31",
-    category: "Quality"
-  }
-];
+export default function GoalProgressDashboard() {
+  const [goals, setGoals] = useState<StrategicGoal[]>([]);
+  const [loading, setLoading] = useState(true);
 
-const GoalProgressDashboard = () => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'on-track': return 'bg-green-500';
-      case 'behind': return 'bg-red-500';
-      case 'at-risk': return 'bg-yellow-500';
-      default: return 'bg-gray-500';
-    }
-  };
+  useEffect(() => {
+    const loadGoals = async () => {
+      try {
+        const data = await fetchStrategicGoals();
+        setGoals(data);
+      } catch (error) {
+        console.error('Failed to load goals:', error);
+        toast.error('Failed to load strategic goals');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadGoals();
+  }, []);
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'on-track': return <Badge className="bg-green-100 text-green-800">On Track</Badge>;
-      case 'behind': return <Badge className="bg-red-100 text-red-800">Behind</Badge>;
-      case 'at-risk': return <Badge className="bg-yellow-100 text-yellow-800">At Risk</Badge>;
-      default: return <Badge>Unknown</Badge>;
-    }
+    const statusConfig = {
+      'planned': { variant: 'secondary' as const, label: 'Planned' },
+      'active': { variant: 'default' as const, label: 'Active' },
+      'completed': { variant: 'default' as const, label: 'Completed' },
+      'paused': { variant: 'destructive' as const, label: 'Paused' },
+    };
+    
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.planned;
+    return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const formatValue = (value: number, unit: string) => {
-    if (unit === '$') {
-      return `$${(value / 1000000).toFixed(1)}M`;
+  const getStatusIcon = (status: string, progress: number) => {
+    if (status === 'completed' || progress === 100) {
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
     }
-    return `${value}${unit}`;
+    if (progress < 30) {
+      return <AlertTriangle className="h-4 w-4 text-red-500" />;
+    }
+    if (progress < 70) {
+      return <Clock className="h-4 w-4 text-yellow-500" />;
+    }
+    return <TrendingUp className="h-4 w-4 text-blue-500" />;
   };
+
+  const stats = {
+    total: goals.length,
+    completed: goals.filter(g => g.status === 'completed' || g.progress === 100).length,
+    active: goals.filter(g => g.status === 'active').length,
+    averageProgress: goals.length > 0 ? Math.round(goals.reduce((acc, goal) => acc + goal.progress, 0) / goals.length) : 0
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                  <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Goals</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mockGoals.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">On Track</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {mockGoals.filter(g => g.status === 'on-track').length}
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-muted-foreground">Total Goals</p>
+                <div className="text-2xl font-bold">{stats.total}</div>
+              </div>
+              <Target className="h-8 w-8 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">At Risk</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
-              {mockGoals.filter(g => g.status === 'at-risk').length}
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-muted-foreground">Active Goals</p>
+                <div className="text-2xl font-bold">{stats.active}</div>
+              </div>
+              <TrendingUp className="h-8 w-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Progress</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {Math.round(mockGoals.reduce((acc, goal) => acc + goal.progress, 0) / mockGoals.length)}%
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-muted-foreground">Completed</p>
+                <div className="text-2xl font-bold">{stats.completed}</div>
+              </div>
+              <CheckCircle className="h-8 w-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-muted-foreground">Avg Progress</p>
+                <div className="text-2xl font-bold">{stats.averageProgress}%</div>
+              </div>
+              <TrendingUp className="h-8 w-8 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
@@ -125,41 +134,57 @@ const GoalProgressDashboard = () => {
 
       {/* Goals List */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Goal Progress</h3>
-        {mockGoals.map((goal) => (
-          <Card key={goal.id}>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg">{goal.title}</CardTitle>
-                  <CardDescription>{goal.description}</CardDescription>
-                </div>
-                {getStatusBadge(goal.status)}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Progress: {formatValue(goal.current, goal.unit)} / {formatValue(goal.target, goal.unit)}</span>
-                <span>Due: {goal.dueDate}</span>
-              </div>
-              
-              <Progress 
-                value={goal.progress} 
-                className="h-3"
-              />
-              
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">{goal.progress}% Complete</span>
-                <Button variant="outline" size="sm">
-                  View Details
-                </Button>
-              </div>
+        {goals.length === 0 ? (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Strategic Goals</h3>
+              <p className="text-muted-foreground mb-4">
+                Create your first strategic goal to start tracking progress.
+              </p>
+              <Button>Create Goal</Button>
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          goals.map((goal) => (
+            <Card key={goal.id}>
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      {getStatusIcon(goal.status, goal.progress)}
+                      <h3 className="font-semibold">{goal.name}</h3>
+                      {getStatusBadge(goal.status)}
+                    </div>
+                    {goal.description && (
+                      <p className="text-sm text-muted-foreground mb-3">{goal.description}</p>
+                    )}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Progress</span>
+                        <span className="font-medium">{goal.progress}%</span>
+                      </div>
+                      <Progress value={goal.progress} className="h-2" />
+                    </div>
+                    {(goal.current_value !== null && goal.target_value !== null) && (
+                      <div className="flex items-center justify-between text-sm mt-2">
+                        <span>Current: {goal.current_value}</span>
+                        <span>Target: {goal.target_value}</span>
+                      </div>
+                    )}
+                    {goal.due_date && (
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground mt-2">
+                        <Clock className="h-3 w-3" />
+                        <span>Due: {new Date(goal.due_date).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );
-};
-
-export default GoalProgressDashboard;
+}
