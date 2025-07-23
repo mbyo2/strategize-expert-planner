@@ -41,7 +41,8 @@ interface Task {
 }
 
 export default function EnhancedTeamCollaboration() {
-  const { currentUser: user } = useSimpleAuth();
+  const { session } = useSimpleAuth();
+  const user = session.user;
   const [activeTab, setActiveTab] = useState<'chat' | 'tasks' | 'members'>('chat');
   const [newMessage, setNewMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
