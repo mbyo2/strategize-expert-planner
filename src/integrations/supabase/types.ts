@@ -314,6 +314,142 @@ export type Database = {
         }
         Relationships: []
       }
+      erp_entities: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          entity_data: Json
+          entity_type: string
+          id: string
+          metadata: Json
+          module_key: string
+          organization_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          entity_data?: Json
+          entity_type: string
+          id?: string
+          metadata?: Json
+          module_key: string
+          organization_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          entity_data?: Json
+          entity_type?: string
+          id?: string
+          metadata?: Json
+          module_key?: string
+          organization_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      erp_modules: {
+        Row: {
+          created_at: string
+          dependencies: string[] | null
+          description: string | null
+          id: string
+          industry_category: string | null
+          is_core_module: boolean
+          module_key: string
+          name: string
+          updated_at: string
+          version: string | null
+        }
+        Insert: {
+          created_at?: string
+          dependencies?: string[] | null
+          description?: string | null
+          id?: string
+          industry_category?: string | null
+          is_core_module?: boolean
+          module_key: string
+          name: string
+          updated_at?: string
+          version?: string | null
+        }
+        Update: {
+          created_at?: string
+          dependencies?: string[] | null
+          description?: string | null
+          id?: string
+          industry_category?: string | null
+          is_core_module?: boolean
+          module_key?: string
+          name?: string
+          updated_at?: string
+          version?: string | null
+        }
+        Relationships: []
+      }
+      erp_strategic_links: {
+        Row: {
+          created_at: string
+          erp_entity_id: string
+          id: string
+          impact_weight: number | null
+          link_type: string
+          metadata: Json | null
+          organization_id: string
+          planning_initiative_id: string | null
+          strategic_goal_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          erp_entity_id: string
+          id?: string
+          impact_weight?: number | null
+          link_type: string
+          metadata?: Json | null
+          organization_id: string
+          planning_initiative_id?: string | null
+          strategic_goal_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          erp_entity_id?: string
+          id?: string
+          impact_weight?: number | null
+          link_type?: string
+          metadata?: Json | null
+          organization_id?: string
+          planning_initiative_id?: string | null
+          strategic_goal_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_erp_entity"
+            columns: ["erp_entity_id"]
+            isOneToOne: false
+            referencedRelation: "erp_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_erp_planning_initiative"
+            columns: ["planning_initiative_id"]
+            isOneToOne: false
+            referencedRelation: "planning_initiatives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_erp_strategic_goal"
+            columns: ["strategic_goal_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goal_attachments: {
         Row: {
           created_at: string | null
@@ -656,6 +792,36 @@ export type Database = {
           stripe_session_id?: string | null
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      organization_erp_config: {
+        Row: {
+          active_modules: string[]
+          created_at: string
+          id: string
+          integration_settings: Json
+          module_settings: Json
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          active_modules?: string[]
+          created_at?: string
+          id?: string
+          integration_settings?: Json
+          module_settings?: Json
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          active_modules?: string[]
+          created_at?: string
+          id?: string
+          integration_settings?: Json
+          module_settings?: Json
+          organization_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
