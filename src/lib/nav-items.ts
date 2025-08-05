@@ -11,7 +11,8 @@ import {
   TrendingUp,
   UserCheck,
   Shield,
-  Ticket
+  Ticket,
+  Package
 } from "lucide-react";
 
 export const navItems = [
@@ -49,6 +50,11 @@ export const navItems = [
     title: "Industry",
     url: "/industry",
     icon: Lightbulb,
+  },
+  {
+    title: "ERP",
+    url: "/erp",
+    icon: Package,
   },
   {
     title: "Organization",

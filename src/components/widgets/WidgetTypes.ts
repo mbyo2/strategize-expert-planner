@@ -5,7 +5,8 @@ export type WidgetType =
   | 'market-changes'
   | 'recommendations'
   | 'team-alignment'
-  | 'upcoming-reviews';
+  | 'upcoming-reviews'
+  | 'erp-integration';
 
 export interface Widget {
   id: string;
@@ -51,5 +52,10 @@ export const WIDGET_TEMPLATES: Record<WidgetType, Omit<Widget, 'id' | 'position'
     type: 'upcoming-reviews',
     title: 'Upcoming Reviews',
     size: 'small'
+  },
+  'erp-integration': {
+    type: 'erp-integration',
+    title: 'ERP Integration',
+    size: 'medium'
   }
 };

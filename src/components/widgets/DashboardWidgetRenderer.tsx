@@ -7,6 +7,7 @@ import MarketChangesWidget from './MarketChangesWidget';
 import RecommendationsWidget from './RecommendationsWidget';
 import TeamAlignmentWidget from './TeamAlignmentWidget';
 import UpcomingReviewsWidget from './UpcomingReviewsWidget';
+import ERPIntegrationWidget from './ERPIntegrationWidget';
 
 const DashboardWidgetRenderer: React.FC<WidgetProps> = (props) => {
   const { widget } = props;
@@ -24,6 +25,8 @@ const DashboardWidgetRenderer: React.FC<WidgetProps> = (props) => {
       return <TeamAlignmentWidget {...props} />;
     case 'upcoming-reviews':
       return <UpcomingReviewsWidget {...props} />;
+    case 'erp-integration':
+      return <ERPIntegrationWidget {...props} />;
     default:
       return <div>Unknown widget type: {widget.type}</div>;
   }

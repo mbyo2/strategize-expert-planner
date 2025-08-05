@@ -35,6 +35,7 @@ import MfaVerify from '@/pages/MfaVerify';
 import TacticalMap from '@/pages/TacticalMap';
 import UserManagement from '@/pages/UserManagement';
 import Support from '@/pages/Support';
+import ERP from '@/pages/ERP';
 
 function App() {
   return (
