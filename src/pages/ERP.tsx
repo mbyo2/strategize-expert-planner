@@ -4,9 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import ERPModuleSelector from '@/components/erp/ERPModuleSelector';
 import ERPStrategicIntegration from '@/components/erp/ERPStrategicIntegration';
+import { FinancialModule } from '@/components/erp/modules/FinancialModule';
+import { HRModule } from '@/components/erp/modules/HRModule';
+import { OperationsModule } from '@/components/erp/modules/OperationsModule';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganizationERP, useERPAnalytics } from '@/hooks/useERP';
-import { Package, Link2, BarChart3, Settings, Building2 } from 'lucide-react';
+import { Package, Link2, BarChart3, Settings, Building2, Users } from 'lucide-react';
 
 const ERPPage: React.FC = () => {
   const { user } = useAuth();
@@ -124,14 +127,26 @@ const ERPPage: React.FC = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="modules" className="flex items-center gap-2">
             <Package className="h-4 w-4" />
-            Modules
+            Setup
+          </TabsTrigger>
+          <TabsTrigger value="financial" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Financial
+          </TabsTrigger>
+          <TabsTrigger value="hr" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            HR
+          </TabsTrigger>
+          <TabsTrigger value="operations" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Operations
           </TabsTrigger>
           <TabsTrigger value="integration" className="flex items-center gap-2">
             <Link2 className="h-4 w-4" />
-            Strategic Integration
+            Integration
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
@@ -146,6 +161,18 @@ const ERPPage: React.FC = () => {
               // Refresh analytics when configuration changes
             }}
           />
+        </TabsContent>
+
+        <TabsContent value="financial" className="space-y-6">
+          <FinancialModule />
+        </TabsContent>
+
+        <TabsContent value="hr" className="space-y-6">
+          <HRModule />
+        </TabsContent>
+
+        <TabsContent value="operations" className="space-y-6">
+          <OperationsModule />
         </TabsContent>
 
         <TabsContent value="integration" className="space-y-6">

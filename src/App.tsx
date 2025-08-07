@@ -75,6 +75,7 @@ function App() {
                 <Route path="/ai-operations" element={<SimpleAuthGuard><AIOperations /></SimpleAuthGuard>} />
                 <Route path="/data-foundry" element={<SimpleAuthGuard><DataFoundry /></SimpleAuthGuard>} />
                 <Route path="/infrastructure" element={<SimpleAuthGuard><Infrastructure /></SimpleAuthGuard>} />
+                <Route path="/erp" element={<SimpleAuthGuard><ERP /></SimpleAuthGuard>} />
                 <Route path="/support" element={<SimpleAuthGuard><Support /></SimpleAuthGuard>} />
                 <Route path="/test-setup" element={<SimpleAuthGuard><TestSetup /></SimpleAuthGuard>} />
                 
