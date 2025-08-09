@@ -70,7 +70,8 @@ export const signup = async (credentials: SignupCredentials) => {
       options: {
         data: {
           name: credentials.name,
-        }
+        },
+        emailRedirectTo: `${window.location.origin}/`
       }
     });
 

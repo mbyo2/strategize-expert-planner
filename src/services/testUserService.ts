@@ -53,7 +53,8 @@ export const createTestUser = async (testUser: TestUser) => {
       options: {
         data: {
           name: testUser.name
-        }
+        },
+        emailRedirectTo: `${window.location.origin}/`
       }
     });
 
