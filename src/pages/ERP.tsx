@@ -21,6 +21,8 @@ import ServicesIndustry from '@/components/erp/industries/ServicesIndustry';
 import HealthcareIndustry from '@/components/erp/industries/HealthcareIndustry';
 import FinancialServicesIndustry from '@/components/erp/industries/FinancialServicesIndustry';
 import EducationIndustry from '@/components/erp/industries/EducationIndustry';
+import ConstructionIndustry from '@/components/erp/industries/ConstructionIndustry';
+import LogisticsIndustry from '@/components/erp/industries/LogisticsIndustry';
 import SEO from '@/components/SEO';
 
 const ERPPage: React.FC = () => {
@@ -139,12 +141,13 @@ const ERPPage: React.FC = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="modules">Setup</TabsTrigger>
           <TabsTrigger value="financial">Financial</TabsTrigger>
           <TabsTrigger value="sales">Sales</TabsTrigger>
           <TabsTrigger value="operations">Operations</TabsTrigger>
           <TabsTrigger value="integration">Integration</TabsTrigger>
+          <TabsTrigger value="industries">Industries</TabsTrigger>
         </TabsList>
 
         <TabsContent value="modules" className="space-y-6">
@@ -185,6 +188,21 @@ const ERPPage: React.FC = () => {
 
         <TabsContent value="integration">
           <ERPStrategicIntegration organizationId={organizationId} />
+        </TabsContent>
+
+        <TabsContent value="industries" className="space-y-6">
+          <Tabs defaultValue="construction">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="construction">Construction</TabsTrigger>
+              <TabsTrigger value="logistics">Logistics</TabsTrigger>
+            </TabsList>
+            <TabsContent value="construction">
+              <ConstructionIndustry />
+            </TabsContent>
+            <TabsContent value="logistics">
+              <LogisticsIndustry />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
