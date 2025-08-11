@@ -23,6 +23,9 @@ import FinancialServicesIndustry from '@/components/erp/industries/FinancialServ
 import EducationIndustry from '@/components/erp/industries/EducationIndustry';
 import ConstructionIndustry from '@/components/erp/industries/ConstructionIndustry';
 import LogisticsIndustry from '@/components/erp/industries/LogisticsIndustry';
+import EnergyUtilitiesIndustry from '@/components/erp/industries/EnergyUtilitiesIndustry';
+import PharmaceuticalsIndustry from '@/components/erp/industries/PharmaceuticalsIndustry';
+import HospitalityIndustry from '@/components/erp/industries/HospitalityIndustry';
 import SEO from '@/components/SEO';
 
 const ERPPage: React.FC = () => {
@@ -192,15 +195,27 @@ const ERPPage: React.FC = () => {
 
         <TabsContent value="industries" className="space-y-6">
           <Tabs defaultValue="construction">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="construction">Construction</TabsTrigger>
               <TabsTrigger value="logistics">Logistics</TabsTrigger>
+              <TabsTrigger value="energy">Energy & Utilities</TabsTrigger>
+              <TabsTrigger value="pharma">Pharmaceuticals</TabsTrigger>
+              <TabsTrigger value="hospitality">Hospitality</TabsTrigger>
             </TabsList>
             <TabsContent value="construction">
               <ConstructionIndustry />
             </TabsContent>
             <TabsContent value="logistics">
               <LogisticsIndustry />
+            </TabsContent>
+            <TabsContent value="energy">
+              <EnergyUtilitiesIndustry />
+            </TabsContent>
+            <TabsContent value="pharma">
+              <PharmaceuticalsIndustry />
+            </TabsContent>
+            <TabsContent value="hospitality">
+              <HospitalityIndustry />
             </TabsContent>
           </Tabs>
         </TabsContent>
