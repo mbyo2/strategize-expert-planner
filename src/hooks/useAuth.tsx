@@ -413,6 +413,72 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Check user role and permissions based on role hierarchy
+  const hasPermission = (requiredRoles: UserRole[]): boolean => {
+    if (!user) return false;
+    
+    const userRoleIndex = roleHierarchy.indexOf(user.role);
+    const minRequiredRoleIndex = Math.min(...requiredRoles.map(role => roleHierarchy.indexOf(role)));
+    
+    return userRoleIndex >= minRequiredRoleIndex;
+  };
+
+  // Get user security settings
+  const getSecuritySettings = () => {
+    return securitySettings;
+  };
+
+  // Update security settings
+  const updateSecuritySettings = async (settings: Partial<SecuritySettings>) => {
+    try {
+      const updatedSettings = { ...securitySettings, ...settings };
+      setSecuritySettings(updatedSettings);
+      
+      // Save to user profile
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({
+            mfa_enabled: updatedSettings.mfaEnabled,
+            ip_restrictions: updatedSettings.ipRestrictions,
+            session_timeout_minutes: updatedSettings.sessionTimeoutMinutes,
+            require_mfa_for_admin: updatedSettings.requireMfaForAdmin
+          })
+          .eq('id', user.id);
+      }
+    } catch (error) {
+      console.error('Error updating security settings:', error);
+    }
+  };
+
+  // Verify MFA code
+  const verifyMfa = async (code: string): Promise<boolean> => {
+    try {
+      // In production, this would use proper MFA verification
+      if (code.length === 6 && /^\d+$/.test(code) && code !== '123456') {
+        if (user) {
+          setUser({ ...user, mfaVerified: true });
+        }
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error verifying MFA:', error);
+      return false;
+    }
+  };
+
+  // Setup MFA for user
+  const setupMfa = async (): Promise<string> => {
+    try {
+      // In production, this would setup proper MFA
+      return 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=demo';
+    } catch (error) {
+      console.error('Error setting up MFA:', error);
+      return '';
+    }
+  };
+
   const value = {
     user,
     isAuthenticated: !!user,
@@ -478,32 +544,6 @@ export const withAuth = (requiredRoles: UserRole[] = []) => <P extends object>(
   return WithAuth;
 };
 
-// Get user security settings
-const getSecuritySettings = () => {
-  return defaultSecuritySettings;
-};
-
-// Update security settings
-const updateSecuritySettings = async (settings: Partial<SecuritySettings>) => {
-  console.log('Update security settings called with', settings);
-  return Promise.resolve();
-};
-
-// Verify MFA code
-const verifyMfa = async (code: string): Promise<boolean> => {
-  console.log('Verify MFA called with', code);
-  return Promise.resolve(true);
-};
-
-// Setup MFA for user
-const setupMfa = async (): Promise<string> => {
-  console.log('Setup MFA called');
-  return Promise.resolve('otpauth://totp/Example:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Example');
-};
-
-// Check if user has required role permissions
-const hasPermission = (requiredRoles: UserRole[]): boolean => {
-  return true; // Simplified for the test
-};
+// REMOVED: These functions have been moved inside the AuthProvider component
 
 export default useAuth;

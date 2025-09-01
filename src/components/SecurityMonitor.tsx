@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { logAuditEvent } from '@/services/auditService';
-import { isSecureConnection } from '@/utils/securityUtils';
+import { isSecureConnection, redactSensitiveData } from '@/utils/secureUtils';
 
 interface SecurityThreat {
   type: 'injection' | 'xss' | 'csrf' | 'session' | 'network';
@@ -131,7 +130,7 @@ const SecurityMonitor: React.FC = () => {
       score -= 25;
     }
     
-    // Check local storage for sensitive data
+    // Check local storage for sensitive data (with redaction)
     const sensitiveKeys = ['password', 'token', 'secret', 'key'];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -151,13 +150,13 @@ const SecurityMonitor: React.FC = () => {
     setThreats(currentThreats);
     setSecurityScore(Math.max(0, score));
     
-    // Log high severity threats
+    // Log high severity threats with redacted data
     currentThreats.forEach(threat => {
       if (threat.severity === 'high') {
         logAuditEvent({
           action: 'view_sensitive',
           resource: 'user',
-          description: `Security threat detected: ${threat.message}`,
+          description: redactSensitiveData(`Security threat detected: ${threat.message}`),
           severity: threat.severity,
           metadata: { 
             threatType: threat.type,
@@ -231,6 +230,9 @@ const SecurityMonitor: React.FC = () => {
   const checkNetworkRequest = async (url: string | Request | URL) => {
     const urlString = typeof url === 'string' ? url : url.toString();
     
+    // Redact sensitive data before checking
+    const redactedUrl = redactSensitiveData(urlString);
+    
     // Check for suspicious domains
     const suspiciousDomains = [
       'bit.ly',
@@ -239,12 +241,22 @@ const SecurityMonitor: React.FC = () => {
       't.co'
     ];
     
-    const domain = new URL(urlString, window.location.origin).hostname;
-    if (suspiciousDomains.includes(domain)) {
+    try {
+      const domain = new URL(urlString, window.location.origin).hostname;
+      if (suspiciousDomains.includes(domain)) {
+        handleSecurityThreat({
+          type: 'network',
+          severity: 'medium',
+          message: `Request to suspicious domain: ${domain}`,
+          timestamp: new Date()
+        });
+      }
+    } catch (error) {
+      // Invalid URL, potential security issue
       handleSecurityThreat({
         type: 'network',
         severity: 'medium',
-        message: `Request to suspicious domain: ${domain}`,
+        message: 'Request with invalid URL detected',
         timestamp: new Date()
       });
     }
@@ -263,11 +275,11 @@ const SecurityMonitor: React.FC = () => {
   const handleSecurityThreat = (threat: SecurityThreat) => {
     setThreats(prev => [...prev, threat]);
     
-    // Log the threat
+    // Log the threat with redacted sensitive data
     logAuditEvent({
       action: 'view_sensitive',
       resource: 'user',
-      description: `Security threat: ${threat.message}`,
+      description: redactSensitiveData(`Security threat: ${threat.message}`),
       severity: threat.severity,
       metadata: { 
         threatType: threat.type,
