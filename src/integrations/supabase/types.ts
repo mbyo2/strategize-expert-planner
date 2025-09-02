@@ -694,6 +694,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_public: boolean | null
           isRead: boolean
           message: string
           relatedEntityId: string | null
@@ -705,6 +706,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_public?: boolean | null
           isRead?: boolean
           message: string
           relatedEntityId?: string | null
@@ -716,6 +718,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_public?: boolean | null
           isRead?: boolean
           message?: string
           relatedEntityId?: string | null
@@ -1027,6 +1030,7 @@ export type Database = {
           onboarding_completed: boolean | null
           organization_id: string | null
           primary_team_id: string | null
+          require_mfa: boolean | null
           require_mfa_for_admin: boolean | null
           role: string | null
           session_timeout_minutes: number | null
@@ -1056,6 +1060,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           organization_id?: string | null
           primary_team_id?: string | null
+          require_mfa?: boolean | null
           require_mfa_for_admin?: boolean | null
           role?: string | null
           session_timeout_minutes?: number | null
@@ -1085,6 +1090,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           organization_id?: string | null
           primary_team_id?: string | null
+          require_mfa?: boolean | null
           require_mfa_for_admin?: boolean | null
           role?: string | null
           session_timeout_minutes?: number | null
@@ -1743,6 +1749,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_user_role: {
         Args: { user_uuid: string }
         Returns: string
