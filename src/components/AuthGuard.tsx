@@ -88,41 +88,15 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    // Check IP restrictions
+    // Check IP restrictions (removed third-party IP collection)
     const checkIpRestrictions = async () => {
       try {
-        // In a real app, we would fetch the client IP from a service
-        // For demo purposes, we'll simulate an IP check
-        const ipCheckResponse = await fetch('https://api.ipify.org?format=json');
-        const ipData = await ipCheckResponse.json();
-        const clientIp = ipData.ip;
+        // Note: IP restrictions should be handled server-side for security
+        // Client-side IP checks can be bypassed and are not reliable
+        console.log('IP restriction checks should be implemented server-side');
         
-        // Also check if user has specific IP restrictions
-        const userIpRestrictions = user?.ipRestrictions || [];
-        const allRestrictions = [...RESTRICTED_IP_RANGES, ...userIpRestrictions];
-        
-        const isRestricted = allRestrictions.some(range => 
-          clientIp.startsWith(range)
-        );
-        
-        if (isRestricted) {
-          setIpAllowed(false);
-          logAuditEvent({
-            action: 'view_sensitive',
-            resource: 'access_control',
-            description: `Access denied from restricted IP: ${clientIp}`,
-            userId: user?.id,
-            severity: 'high',
-            metadata: { ip: clientIp }
-          });
-          
-          toast.error('Access Denied', {
-            description: 'You are accessing from a restricted IP address',
-            duration: 5000,
-          });
-          
-          navigate('/access-denied');
-        }
+        // If needed, implement IP restrictions via Edge Functions or server-side logic
+        // that doesn't rely on third-party services or client-side checks
       } catch (error) {
         console.error('Error checking IP restrictions:', error);
       }

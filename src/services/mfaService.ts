@@ -20,18 +20,20 @@ export interface MFASetupResponse {
 }
 
 export const mfaService = {
-  // Get user's MFA methods
+  // Get user's MFA factors from Supabase Auth
   async getMFAMethods(): Promise<MFAMethod[]> {
     try {
-      const { data, error } = await supabase
-        .from('user_mfa_methods')
-        .select('*')
-        .order('created_at', { ascending: false });
-
+      const { data, error } = await supabase.auth.mfa.listFactors();
       if (error) throw error;
-      return (data || []).map(method => ({
-        ...method,
-        method_type: method.method_type as 'totp' | 'sms' | 'email'
+
+      return data.totp.map(factor => ({
+        id: factor.id,
+        user_id: factor.id, // Use factor ID as identifier
+        method_type: 'totp' as const,
+        is_verified: factor.status === 'verified',
+        is_primary: false,
+        created_at: factor.created_at,
+        updated_at: factor.updated_at || factor.created_at
       }));
     } catch (error) {
       console.error('Error fetching MFA methods:', error);
@@ -39,33 +41,19 @@ export const mfaService = {
     }
   },
 
-  // Setup TOTP MFA
+  // Setup TOTP MFA using Supabase Auth
   async setupTOTP(): Promise<MFASetupResponse | null> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      // Generate a secret for TOTP
-      const secret = this.generateTOTPSecret();
-      const qr_code_url = this.generateQRCodeURL(user.email || '', secret);
-
-      // Save the method to database (unverified initially)
-      const { error } = await supabase
-        .from('user_mfa_methods')
-        .insert({
-          user_id: user.id,
-          method_type: 'totp',
-          secret: secret,
-          is_verified: false,
-          is_primary: false
-        });
+      const { data, error } = await supabase.auth.mfa.enroll({
+        factorType: 'totp'
+      });
 
       if (error) throw error;
 
       return {
-        secret,
-        qr_code_url,
-        backup_codes: this.generateBackupCodes()
+        secret: data.totp.secret,
+        qr_code_url: data.totp.qr_code,
+        backup_codes: [] // Supabase handles backup codes differently
       };
     } catch (error) {
       console.error('Error setting up TOTP:', error);
@@ -74,14 +62,13 @@ export const mfaService = {
     }
   },
 
-  // Verify TOTP code
-  async verifyTOTP(code: string, methodId?: string): Promise<boolean> {
+  // Verify TOTP code using Supabase Auth
+  async verifyTOTP(code: string, factorId: string, challengeId: string): Promise<boolean> {
     try {
-      // Use Supabase Auth MFA verification
-      const { data, error } = await supabase.auth.mfa.verify({
-        factorId: methodId || '',
-        challengeId: code,
-        code: code
+      const { error } = await supabase.auth.mfa.verify({
+        factorId,
+        challengeId,
+        code
       });
 
       if (error) {
@@ -90,26 +77,8 @@ export const mfaService = {
         return false;
       }
 
-      // If using fallback verification for demo purposes
-      if (!data && code.length === 6 && /^\d+$/.test(code) && code !== '123456') {
-        if (methodId) {
-          const { error } = await supabase
-            .from('user_mfa_methods')
-            .update({ 
-              is_verified: true,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', methodId);
-
-          if (error) throw error;
-        }
-        
-        toast.success('MFA verified successfully');
-        return true;
-      }
-      
-      toast.error('Invalid verification code');
-      return false;
+      toast.success('MFA verified successfully');
+      return true;
     } catch (error) {
       console.error('Error verifying TOTP:', error);
       toast.error('Verification failed');
@@ -117,40 +86,10 @@ export const mfaService = {
     }
   },
 
-  // Setup SMS MFA
-  async setupSMS(phoneNumber: string): Promise<boolean> {
+  // Remove MFA method using Supabase Auth
+  async removeMFAMethod(factorId: string): Promise<boolean> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      const { error } = await supabase
-        .from('user_mfa_methods')
-        .insert({
-          user_id: user.id,
-          method_type: 'sms',
-          phone_number: phoneNumber,
-          is_verified: false,
-          is_primary: false
-        });
-
-      if (error) throw error;
-      
-      toast.success('SMS MFA setup initiated. Please verify your phone number.');
-      return true;
-    } catch (error) {
-      console.error('Error setting up SMS MFA:', error);
-      toast.error('Failed to setup SMS MFA');
-      return false;
-    }
-  },
-
-  // Remove MFA method
-  async removeMFAMethod(methodId: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('user_mfa_methods')
-        .delete()
-        .eq('id', methodId);
+      const { error } = await supabase.auth.mfa.unenroll({ factorId });
 
       if (error) throw error;
       
@@ -159,6 +98,35 @@ export const mfaService = {
     } catch (error) {
       console.error('Error removing MFA method:', error);
       toast.error('Failed to remove MFA method');
+      return false;
+    }
+  },
+
+  // Create MFA challenge
+  async createChallenge(factorId: string): Promise<string | null> {
+    try {
+      const { data, error } = await supabase.auth.mfa.challenge({ factorId });
+      if (error) throw error;
+      return data.id;
+    } catch (error) {
+      console.error('Error creating MFA challenge:', error);
+      return null;
+    }
+  },
+
+  // Verify MFA challenge
+  async verifyChallenge(factorId: string, challengeId: string, code: string): Promise<boolean> {
+    try {
+      const { error } = await supabase.auth.mfa.verify({
+        factorId,
+        challengeId,
+        code
+      });
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error verifying MFA challenge:', error);
       return false;
     }
   },

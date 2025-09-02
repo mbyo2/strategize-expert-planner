@@ -69,17 +69,13 @@ export interface LogAuditEventParams {
 }
 
 /**
- * Get client IP address - in a real app, this would be more robust
+ * Get client IP address - removed third-party service dependency
+ * IP address should be captured server-side for security and reliability
  */
 export const getClientIp = async (): Promise<string> => {
-  try {
-    const response = await fetch('https://api.ipify.org?format=json');
-    const data = await response.json();
-    return data.ip;
-  } catch (error) {
-    console.error('Error getting client IP:', error);
-    return 'unknown';
-  }
+  // Remove third-party IP collection for security reasons
+  // IP should be captured via Edge Functions or server-side
+  return 'server-side-only';
 };
 
 /**
@@ -122,54 +118,57 @@ const calculateExpirationDate = (severity: 'low' | 'medium' | 'high' = 'medium')
  */
 export const logAuditEvent = async (params: LogAuditEventParams): Promise<boolean> => {
   try {
-    // Get client IP if not provided
-    const userIp = await getClientIp();
-    
-    // Add timestamp and expiration if not provided
+    // Remove IP collection from client-side
     const timestamp = new Date().toISOString();
     
-    // Sanitize any user-provided input
+    // Import redactSensitiveData from secureUtils
+    const { redactSensitiveData } = await import('@/utils/secureUtils');
+    
+    // Sanitize and redact sensitive data
     const sanitizedOldValues = params.old_values ? sanitizeData(params.old_values) : undefined;
     const sanitizedNewValues = params.new_values ? sanitizeData(params.new_values) : undefined;
     
-    // Create the complete log entry - map 'resource' to 'resource_type'
+    // Create the complete log entry with data redaction
     const logEntry: AuditLogEntry = {
       action: params.action,
-      resource_type: params.resource, // Map resource to resource_type
+      resource_type: params.resource,
       resource_id: params.resourceId,
       user_id: params.userId,
       created_at: timestamp,
       old_values: sanitizedOldValues,
       new_values: sanitizedNewValues,
-      ip_address: userIp,
-      user_agent: navigator.userAgent,
+      ip_address: null, // Remove IP collection
+      user_agent: redactSensitiveData(navigator.userAgent),
     };
 
-    // In a real application, this would insert into a database table
-    // For now, we'll log to console and simulate storing it
-    console.log('[AUDIT LOG]', {
-      ...logEntry,
-      description: params.description,
-      severity: params.severity,
-      metadata: params.metadata
-    });
-    
-    // In a production environment, you would store this in Supabase
-    // Commented out to avoid creating schema changes
-    /*
-    const { error } = await supabase
-      .from('audit_logs')
-      .insert(logEntry);
+    // Store in Supabase audit_logs table
+    try {
+      const { error } = await supabase
+        .from('audit_logs')
+        .insert({
+          action: logEntry.action,
+          resource_type: logEntry.resource_type,
+          resource_id: logEntry.resource_id,
+          user_id: logEntry.user_id,
+          old_values: logEntry.old_values,
+          new_values: logEntry.new_values,
+          user_agent: logEntry.user_agent
+        });
       
-    if (error) throw error;
-    */
+      if (error) throw error;
+    } catch (dbError) {
+      // Fallback to console logging if database insert fails
+      console.log('[AUDIT LOG]', {
+        ...logEntry,
+        description: params.description,
+        severity: params.severity,
+        metadata: params.metadata
+      });
+    }
     
     return true;
   } catch (error) {
     console.error('Error logging audit event:', error);
-    toast.error('Failed to log security audit event', {
-      description: 'This may impact compliance reporting.'
-    });
     return false;
   }
 };

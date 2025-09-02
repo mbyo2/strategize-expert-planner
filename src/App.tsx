@@ -6,7 +6,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
 import QueryClient from './QueryClient';
 import SEO from './components/SEO';
-import SecurityHeaders from './components/SecurityHeaders';
+import SecureHeaders from './components/security/SecureHeaders';
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -45,7 +45,7 @@ function App() {
           <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
             <Toaster />
             <SEO />
-            <SecurityHeaders />
+            <SecureHeaders />
             <div className="min-h-screen bg-background">
               <Routes>
                 {/* Public routes */}
