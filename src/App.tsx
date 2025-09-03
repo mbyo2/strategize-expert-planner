@@ -31,6 +31,8 @@ import TestSetup from '@/pages/TestSetup';
 import NotFound from '@/pages/NotFound';
 import SimpleAuthGuard from '@/components/SimpleAuthGuard';
 import AccessDenied from '@/pages/AccessDenied';
+import SecurityBoundary from '@/components/SecurityBoundary';
+import SecurePasswordReset from '@/components/security/SecurePasswordReset';
 import MfaVerify from '@/pages/MfaVerify';
 import TacticalMap from '@/pages/TacticalMap';
 import UserManagement from '@/pages/UserManagement';
@@ -46,13 +48,15 @@ function App() {
             <Toaster />
             <SEO />
             <SecureHeaders />
-            <div className="min-h-screen bg-background">
-              <Routes>
+            <SecurityBoundary>
+              <div className="min-h-screen bg-background">
+                <Routes>
                 {/* Public routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/auth/callback" element={<SecurePasswordReset />} />
                 <Route path="/access-denied" element={<AccessDenied />} />
                 <Route path="/mfa-verify" element={<MfaVerify />} />
                 
@@ -81,8 +85,9 @@ function App() {
                 
                 {/* Catch all route */}
                 <Route path="*" element={<NotFound />} />
-              </Routes>
-            </div>
+                </Routes>
+              </div>
+            </SecurityBoundary>
           </ThemeProvider>
         </HelmetProvider>
       </BrowserRouter>

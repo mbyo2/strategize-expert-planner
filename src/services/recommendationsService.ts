@@ -6,7 +6,7 @@ export interface Recommendation {
   id: string;
   title: string;
   description: string;
-  priority: number;
+  priority: string;
   created_at: string;
   status: 'pending' | 'in-progress' | 'completed' | 'rejected';
   category?: string;
@@ -17,7 +17,7 @@ export const fetchRecommendations = async (): Promise<Recommendation[]> => {
     const { data, error } = await supabase
       .from('recommendations')
       .select('*')
-      .order('priority', { ascending: true });
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching recommendations:', error);
@@ -41,7 +41,7 @@ export const fetchTopRecommendations = async (limit: number = 3): Promise<Recomm
     const { data, error } = await supabase
       .from('recommendations')
       .select('*')
-      .order('priority', { ascending: true })
+      .order('created_at', { ascending: false })
       .limit(limit);
 
     if (error) {
