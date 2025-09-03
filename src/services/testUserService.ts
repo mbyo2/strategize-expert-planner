@@ -42,6 +42,133 @@ export const TEST_USERS: TestUser[] = [
   }
 ];
 
+const createSampleData = async (userId: string, role: string) => {
+  console.log(`Creating sample data for ${role}...`);
+
+  // Create sample strategic goals
+  const goals = [
+    {
+      user_id: userId,
+      name: 'Increase Market Share',
+      description: 'Expand our market presence by 25% in the next quarter',
+      status: 'in_progress',
+      priority: 'high',
+      category: 'growth',
+      progress: 65,
+      target_value: 100,
+      current_value: 65,
+      start_date: new Date('2024-01-01').toISOString(),
+      due_date: new Date('2024-06-30').toISOString(),
+    },
+    {
+      user_id: userId,
+      name: 'Digital Transformation',
+      description: 'Modernize our technology stack and improve operational efficiency',
+      status: 'planned',
+      priority: 'medium',
+      category: 'technology',
+      progress: 30,
+      target_value: 100,
+      current_value: 30,
+      start_date: new Date('2024-02-01').toISOString(),
+      due_date: new Date('2024-12-31').toISOString(),
+    }
+  ];
+
+  await supabase.from('strategic_goals').upsert(goals, { onConflict: 'user_id,name' });
+
+  // Create sample planning initiatives (for managers and admins)
+  if (role === 'admin' || role === 'manager') {
+    const initiatives = [
+      {
+        name: 'Product Launch Campaign',
+        description: 'Launch our new product line with comprehensive marketing strategy',
+        status: 'in_progress',
+        priority: 'high',
+        progress: 45,
+        budget: 150000,
+        currency: 'USD',
+        start_date: new Date('2024-03-01').toISOString(),
+        end_date: new Date('2024-08-30').toISOString(),
+        owner_id: userId,
+      },
+      {
+        name: 'Team Expansion Initiative',
+        description: 'Hire 15 new team members across engineering and sales',
+        status: 'planned',
+        priority: 'medium',
+        progress: 20,
+        budget: 500000,
+        currency: 'USD',
+        start_date: new Date('2024-04-01').toISOString(),
+        end_date: new Date('2024-10-31').toISOString(),
+        owner_id: userId,
+      }
+    ];
+
+    await supabase.from('planning_initiatives').upsert(initiatives, { onConflict: 'name' });
+  }
+
+  // Create sample industry metrics (for admins and managers)
+  if (role === 'admin' || role === 'manager') {
+    const metrics = [
+      {
+        name: 'Market Growth Rate',
+        category: 'market',
+        value: 8.5,
+        previous_value: 7.2,
+        change_percentage: 18.1,
+        trend: 'up',
+        source: 'Industry Report Q1 2024'
+      },
+      {
+        name: 'Customer Satisfaction Score',
+        category: 'customer',
+        value: 4.2,
+        previous_value: 3.9,
+        change_percentage: 7.7,
+        trend: 'up',
+        source: 'Customer Survey'
+      },
+      {
+        name: 'Competitive Index',
+        category: 'competition',
+        value: 75.3,
+        previous_value: 78.1,
+        change_percentage: -3.6,
+        trend: 'down',
+        source: 'Market Analysis'
+      }
+    ];
+
+    await supabase.from('industry_metrics').upsert(metrics, { onConflict: 'name,category' });
+  }
+
+  // Create sample market changes (for analysts and above)
+  if (role !== 'viewer') {
+    const changes = [
+      {
+        title: 'New Competitor Enters Market',
+        description: 'A well-funded startup has launched a competing product with innovative features',
+        impact_level: 'high',
+        category: 'competition',
+        source: 'Market Intelligence',
+      },
+      {
+        title: 'Regulatory Changes in Industry',
+        description: 'New compliance requirements will affect product development timelines',
+        impact_level: 'medium',
+        category: 'regulatory',
+        source: 'Government Announcement',
+      }
+    ];
+
+    await supabase.from('market_changes').upsert(changes, { onConflict: 'title' });
+  }
+
+  console.log(`Sample data created successfully for ${role}`);
+};
+
 export const createTestUser = async (testUser: TestUser) => {
   try {
     console.log(`Creating test user: ${testUser.email}`);
@@ -119,6 +246,9 @@ export const createTestUser = async (testUser: TestUser) => {
     } else {
       console.log(`Assigned role ${testUser.role} to user: ${testUser.email}`);
     }
+
+    // Create sample data for the user
+    await createSampleData(authData.user.id, testUser.role);
 
     return { user: authData.user, session: authData.session };
   } catch (error) {

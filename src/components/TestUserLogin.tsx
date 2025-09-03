@@ -8,36 +8,36 @@ import { toast } from 'sonner';
 
 const testUsers = [
   {
-    email: 'admin@test.com',
-    password: 'admin123',
+    email: 'admin@techcorp.com',
+    password: 'password123',
     role: 'Admin',
-    name: 'Test Admin',
+    name: 'Alex Admin',
     icon: Shield,
-    description: 'Full system access'
+    description: 'Full system access with sample data'
   },
   {
-    email: 'manager@test.com', 
-    password: 'manager123',
+    email: 'manager@techcorp.com', 
+    password: 'password123',
     role: 'Manager',
-    name: 'Test Manager',
+    name: 'Morgan Manager',
     icon: BarChart3,
-    description: 'Team management access'
+    description: 'Team management with initiatives'
   },
   {
-    email: 'user@test.com',
-    password: 'user123', 
-    role: 'User',
-    name: 'Test User',
+    email: 'analyst@techcorp.com',
+    password: 'password123', 
+    role: 'Analyst',
+    name: 'Ana Analyst',
     icon: User,
-    description: 'Standard user access'
+    description: 'Analysis access with market data'
   },
   {
-    email: 'viewer@test.com',
-    password: 'viewer123',
+    email: 'viewer@techcorp.com',
+    password: 'password123',
     role: 'Viewer', 
-    name: 'Test Viewer',
+    name: 'Victor Viewer',
     icon: Eye,
-    description: 'Read-only access'
+    description: 'Read-only access to goals'
   }
 ];
 
