@@ -1104,31 +1104,43 @@ export type Database = {
       }
       recommendations: {
         Row: {
-          category: string | null
+          category: string
+          confidence_score: number | null
           created_at: string
           description: string
+          expires_at: string | null
           id: string
-          priority: number
+          priority: string
           status: string
           title: string
+          updated_at: string
+          user_id: string
         }
         Insert: {
-          category?: string | null
+          category?: string
+          confidence_score?: number | null
           created_at?: string
           description: string
+          expires_at?: string | null
           id?: string
-          priority?: number
+          priority?: string
           status?: string
           title: string
+          updated_at?: string
+          user_id: string
         }
         Update: {
-          category?: string | null
+          category?: string
+          confidence_score?: number | null
           created_at?: string
           description?: string
+          expires_at?: string | null
           id?: string
-          priority?: number
+          priority?: string
           status?: string
           title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1198,24 +1210,30 @@ export type Database = {
       strategic_pillars: {
         Row: {
           created_at: string
-          description: string
+          description: string | null
           id: string
           name: string
           updated_at: string
+          user_id: string
+          weight: number | null
         }
         Insert: {
           created_at?: string
-          description: string
+          description?: string | null
           id?: string
           name: string
           updated_at?: string
+          user_id: string
+          weight?: number | null
         }
         Update: {
           created_at?: string
-          description?: string
+          description?: string | null
           id?: string
           name?: string
           updated_at?: string
+          user_id?: string
+          weight?: number | null
         }
         Relationships: []
       }
@@ -1752,6 +1770,10 @@ export type Database = {
       cleanup_expired_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      create_secure_session_hash: {
+        Args: { user_id_param: string }
+        Returns: string
       }
       get_user_role: {
         Args: { user_uuid: string }
