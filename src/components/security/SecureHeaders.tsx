@@ -8,21 +8,23 @@ import { Helmet } from 'react-helmet-async';
 const SecureHeaders: React.FC = () => {
   return (
     <Helmet>
-      {/* Content Security Policy - Relaxed for Lovable environment */}
+      {/* Content Security Policy - Hardened for Security */}
       <meta 
         httpEquiv="Content-Security-Policy" 
         content="
-          default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:;
-          script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.qrserver.com https://cdn.jsdelivr.net;
-          style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+          default-src 'self';
+          script-src 'self' 'nonce-{SCRIPT_NONCE}' https://api.qrserver.com https://cdn.jsdelivr.net;
+          style-src 'self' 'nonce-{STYLE_NONCE}' https://fonts.googleapis.com;
           font-src 'self' data: https://fonts.gstatic.com;
           img-src 'self' data: blob: https: http://localhost:*;
           connect-src 'self' https: wss: ws://localhost:* https://api.dicebear.com https://ublzhmimdynqzqsdicyn.supabase.co;
-          frame-src 'self' blob:;
+          frame-src 'none';
           object-src 'none';
           base-uri 'self';
           form-action 'self';
-          frame-ancestors 'self';
+          frame-ancestors 'none';
+          upgrade-insecure-requests;
+          block-all-mixed-content;
         " 
       />
       
@@ -35,8 +37,8 @@ const SecureHeaders: React.FC = () => {
       {/* Control referrer information */}
       <meta name="referrer" content="strict-origin-when-cross-origin" />
       
-      {/* Prevent clickjacking - Modified for Lovable */}
-      <meta httpEquiv="X-Frame-Options" content="SAMEORIGIN" />
+      {/* Prevent clickjacking - Hardened */}
+      <meta httpEquiv="X-Frame-Options" content="DENY" />
       
       {/* Control DNS prefetching */}
       <meta httpEquiv="x-dns-prefetch-control" content="off" />

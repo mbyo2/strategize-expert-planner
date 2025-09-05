@@ -1783,6 +1783,10 @@ export type Database = {
         Args: { required_role: string; user_uuid: string }
         Returns: boolean
       }
+      is_session_valid: {
+        Args: { session_hash: string }
+        Returns: boolean
+      }
     }
     Enums: {
       user_role: "admin" | "manager" | "analyst" | "viewer" | "superuser"
