@@ -95,11 +95,11 @@ export const createPerformanceAlert = async (
     await logAuditEvent({
       action: 'create',
       resource: 'admin',
-      description: `Performance alert created: ${alertData.message}`,
-      severity: alertData.severity === 'critical' ? 'high' : 'medium',
       metadata: {
+        description: `Performance alert created: ${alertData.message}`,
+        severity: alertData.severity === 'critical' ? 'high' : 'medium',
         alertType: alertData.alert_type,
-        severity: alertData.severity
+        alertSeverity: alertData.severity
       }
     });
     
@@ -153,8 +153,10 @@ export const resolvePerformanceAlert = async (alertId: string): Promise<Performa
       action: 'update',
       resource: 'admin',
       resourceId: alertId,
-      description: 'Performance alert resolved',
-      severity: 'low'
+      metadata: {
+        description: 'Performance alert resolved',
+        severity: 'low'
+      }
     });
     
     return result.data;
@@ -261,9 +263,9 @@ export const optimizeDatabase = async (): Promise<{
     await logAuditEvent({
       action: 'update',
       resource: 'admin',
-      description: 'Database optimization completed',
-      severity: 'medium',
       metadata: {
+        description: 'Database optimization completed',
+        severity: 'medium',
         optimizations,
         performance_improvement
       }
@@ -312,9 +314,9 @@ export const clearCache = async (
     await logAuditEvent({
       action: 'delete',
       resource: 'admin',
-      description: `Cache cleared${dataType ? ` for ${dataType}` : ''}`,
-      severity: 'low',
       metadata: {
+        description: `Cache cleared${dataType ? ` for ${dataType}` : ''}`,
+        severity: 'low',
         dataType,
         clearedEntries: entriesToClear.length
       }

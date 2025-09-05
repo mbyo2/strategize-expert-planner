@@ -16,13 +16,13 @@ const SecurityBoundary: React.FC<SecurityBoundaryProps> = ({ children }) => {
       logAuditEvent({
         action: 'unauthorized_access',
         resource: 'security_setting',
-        description: `CSP violation: ${event.violatedDirective}`,
         metadata: {
+          description: `CSP violation: ${event.violatedDirective}`,
           blockedURI: event.blockedURI,
           violatedDirective: event.violatedDirective,
-          sourceFile: event.sourceFile
-        },
-        severity: 'high'
+          sourceFile: event.sourceFile,
+          severity: 'high'
+        }
       });
     };
 
@@ -36,8 +36,10 @@ const SecurityBoundary: React.FC<SecurityBoundaryProps> = ({ children }) => {
         logAuditEvent({
           action: 'view_sensitive',
           resource: 'security_setting',
-          description: 'Potential sensitive data logged to console',
-          severity: 'medium'
+          metadata: {
+            description: 'Potential sensitive data logged to console',
+            severity: 'medium'
+          }
         });
       }
       originalConsoleLog.apply(console, args);
@@ -49,8 +51,10 @@ const SecurityBoundary: React.FC<SecurityBoundaryProps> = ({ children }) => {
         logAuditEvent({
           action: 'unauthorized_access',
           resource: 'security_setting',
-          description: 'Authentication error detected',
-          severity: 'high'
+          metadata: {
+            description: 'Authentication error detected',
+            severity: 'high'
+          }
         });
       }
       originalConsoleError.apply(console, args);
@@ -79,8 +83,10 @@ const SecurityBoundary: React.FC<SecurityBoundaryProps> = ({ children }) => {
         logAuditEvent({
           action: 'logout',
           resource: 'user',
-          description: 'Automatic logout due to session timeout',
-          severity: 'medium'
+          metadata: {
+            description: 'Automatic logout due to session timeout',
+            severity: 'medium'
+          }
         });
         // Force logout
         window.location.href = '/login';

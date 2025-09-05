@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logAuditEvent } from '@/services/auditService';
-import { sessionService } from '@/services/sessionService';
+import { enhancedSessionService } from '@/services/enhancedSessionService';
 
 interface UnifiedAuthState {
   user: User | null;
@@ -35,7 +35,7 @@ export const useUnifiedAuth = () => {
       });
 
       // Create session record
-      await sessionService.createSession();
+      await enhancedSessionService.createSession();
 
       return { data, error: null };
     } catch (error: any) {
@@ -62,7 +62,7 @@ export const useUnifiedAuth = () => {
 
   const updateActivity = useCallback(async () => {
     if (authState.isAuthenticated) {
-      await sessionService.updateSessionActivity();
+      await enhancedSessionService.updateSessionActivity();
     }
   }, [authState.isAuthenticated]);
 
@@ -79,7 +79,7 @@ export const useUnifiedAuth = () => {
 
         if (event === 'SIGNED_OUT') {
           // Clean up session records
-          await sessionService.cleanupExpiredSessions();
+          await enhancedSessionService.cleanupExpiredSessions();
         }
       }
     );

@@ -38,9 +38,11 @@ export const login = async (credentials: LoginCredentials) => {
     await logAuditEvent({
       action: 'login',
       resource: 'user',
-      description: 'User successfully logged in',
       userId: data.user?.id,
-      severity: 'low'
+      metadata: {
+        description: 'User successfully logged in',
+        severity: 'low'
+      }
     });
 
     toast.success('Login successful');
@@ -52,9 +54,11 @@ export const login = async (credentials: LoginCredentials) => {
     await logAuditEvent({
       action: 'login',
       resource: 'user',
-      description: `Failed login attempt for email: ${credentials.email}`,
-      severity: 'medium',
-      metadata: { email: credentials.email }
+      metadata: { 
+        description: `Failed login attempt for email: ${credentials.email}`,
+        severity: 'medium',
+        email: credentials.email
+      }
     });
 
     toast.error('Login failed. Please check your credentials.');
@@ -83,9 +87,11 @@ export const signup = async (credentials: SignupCredentials) => {
     await logAuditEvent({
       action: 'signup',
       resource: 'user',
-      description: 'New user account created',
       userId: data.user?.id,
-      severity: 'low'
+      metadata: {
+        description: 'New user account created',
+        severity: 'low'
+      }
     });
 
     toast.success('Account created successfully. Please check your email for verification.');
@@ -111,9 +117,11 @@ export const logout = async () => {
     await logAuditEvent({
       action: 'logout',
       resource: 'user',
-      description: 'User logged out',
       userId: user?.id,
-      severity: 'low'
+      metadata: {
+        description: 'User logged out',
+        severity: 'low'
+      }
     });
 
     toast.success('Logged out successfully');
