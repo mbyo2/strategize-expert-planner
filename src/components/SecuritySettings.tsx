@@ -4,7 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield } from 'lucide-react';
 import { mfaService, type MFAMethod } from '@/services/mfaService';
 import { oauthService, type OAuthConnection } from '@/services/oauthService';
-import { sessionService, type UserSession } from '@/services/sessionService';
+import { enhancedSessionService } from '@/services/enhancedSessionService';
+import type { SessionInfo as UserSession } from '@/services/enhancedSessionService';
 import MFASection from '@/components/security/MFASection';
 import OAuthSection from '@/components/security/OAuthSection';
 import SessionsSection from '@/components/security/SessionsSection';
@@ -22,7 +23,7 @@ const SecuritySettings = () => {
       const [mfaData, oauthData, sessionData] = await Promise.all([
         mfaService.getMFAMethods(),
         oauthService.getOAuthConnections(),
-        sessionService.getUserSessions()
+        enhancedSessionService.getUserSessions()
       ]);
       
       setMfaMethods(mfaData);

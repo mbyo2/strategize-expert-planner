@@ -1,11 +1,11 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logAuditEvent } from './auditService';
 
-interface SessionInfo {
+export interface SessionInfo {
   id: string;
   user_id: string;
   session_token: string;
-  ip_address?: unknown;
+  ip_address?: string;
   user_agent?: string;
   is_active: boolean | null;
   last_activity: string | null;
@@ -29,7 +29,7 @@ export const enhancedSessionService = {
       return [];
     }
 
-    return data || [];
+    return (data || []) as SessionInfo[];
   },
 
   /**
@@ -210,18 +210,12 @@ export const enhancedSessionService = {
   },
 
   /**
-   * Get client IP address (best effort)
+   * Get client IP address (security risk removed)
    */
   async getClientIP(): Promise<string | null> {
-    try {
-      // This is a simplified approach - in production you'd want to use a proper service
-      const response = await fetch('https://api.ipify.org?format=json');
-      const data = await response.json();
-      return data.ip || null;
-    } catch (error) {
-      console.warn('Could not determine client IP:', error);
-      return null;
-    }
+    // Removed external IP collection for security - use server-side headers instead
+    console.warn('Client IP collection disabled for security');
+    return null;
   },
 
   /**

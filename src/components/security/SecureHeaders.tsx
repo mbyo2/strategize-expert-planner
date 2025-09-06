@@ -13,8 +13,8 @@ const SecureHeaders: React.FC = () => {
         httpEquiv="Content-Security-Policy" 
         content="
           default-src 'self';
-          script-src 'self' 'nonce-{SCRIPT_NONCE}' https://api.qrserver.com https://cdn.jsdelivr.net;
-          style-src 'self' 'nonce-{STYLE_NONCE}' https://fonts.googleapis.com;
+          script-src 'self' https://api.qrserver.com https://cdn.jsdelivr.net https://va.vercel-scripts.com;
+          style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
           font-src 'self' data: https://fonts.gstatic.com;
           img-src 'self' data: blob: https: http://localhost:*;
           connect-src 'self' https: wss: ws://localhost:* https://api.dicebear.com https://ublzhmimdynqzqsdicyn.supabase.co;
@@ -37,8 +37,7 @@ const SecureHeaders: React.FC = () => {
       {/* Control referrer information */}
       <meta name="referrer" content="strict-origin-when-cross-origin" />
       
-      {/* Prevent clickjacking - Hardened */}
-      <meta httpEquiv="X-Frame-Options" content="DENY" />
+      {/* Prevent clickjacking via CSP frame-ancestors directive */}
       
       {/* Control DNS prefetching */}
       <meta httpEquiv="x-dns-prefetch-control" content="off" />

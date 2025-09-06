@@ -3,7 +3,8 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Activity } from 'lucide-react';
-import { sessionService, type UserSession } from '@/services/sessionService';
+import { enhancedSessionService } from '@/services/enhancedSessionService';
+import type { SessionInfo as UserSession } from '@/services/enhancedSessionService';
 
 interface SessionsSectionProps {
   sessions: UserSession[];
@@ -12,14 +13,14 @@ interface SessionsSectionProps {
 
 const SessionsSection: React.FC<SessionsSectionProps> = ({ sessions, onRefresh }) => {
   const handleTerminateSession = async (sessionId: string) => {
-    const success = await sessionService.terminateSession(sessionId);
+    const success = await enhancedSessionService.terminateSession(sessionId);
     if (success) {
       onRefresh();
     }
   };
 
   const handleTerminateAllOtherSessions = async () => {
-    const success = await sessionService.terminateAllOtherSessions();
+    const success = await enhancedSessionService.terminateAllOtherSessions();
     if (success) {
       onRefresh();
     }
@@ -56,7 +57,7 @@ const SessionsSection: React.FC<SessionsSectionProps> = ({ sessions, onRefresh }
                    session.user_agent?.includes('Safari') ? 'Safari' : 'Unknown Browser'}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {session.ip_address} • Last active: {new Date(session.last_activity).toLocaleString()}
+                  {session.ip_address || 'Unknown IP'} • Last active: {session.last_activity ? new Date(session.last_activity).toLocaleString() : 'Unknown'}
                 </p>
               </div>
               <Button

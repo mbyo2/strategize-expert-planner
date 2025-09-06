@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { secureSessionService } from '@/services/secureSessionService';
+import { enhancedSessionService } from '@/services/enhancedSessionService';
 import type { User, Session } from '@supabase/supabase-js';
 
 interface SecureAuthState {
@@ -30,7 +30,7 @@ export const useSecureAuth = () => {
 
       // Create secure session record
       if (data.session) {
-        await secureSessionService.createSession();
+        await enhancedSessionService.createSession();
       }
 
       return { data, error: null };
@@ -43,9 +43,9 @@ export const useSecureAuth = () => {
   const signOut = useCallback(async () => {
     try {
       // Clean up secure session records first
-      const sessions = await secureSessionService.getUserSessions();
+      const sessions = await enhancedSessionService.getUserSessions();
       if (sessions.length > 0) {
-        await secureSessionService.terminateSession(sessions[0].id);
+        await enhancedSessionService.terminateSession(sessions[0].id);
       }
 
       // Then sign out from Supabase
@@ -61,7 +61,7 @@ export const useSecureAuth = () => {
   // Update session activity
   const updateActivity = useCallback(async () => {
     if (authState.isAuthenticated) {
-      await secureSessionService.updateSessionActivity();
+      await enhancedSessionService.updateSessionActivity();
     }
   }, [authState.isAuthenticated]);
 
@@ -83,7 +83,7 @@ export const useSecureAuth = () => {
           console.log('User signed in');
         } else if (event === 'SIGNED_OUT') {
           // Clean up expired sessions
-          await secureSessionService.cleanupExpiredSessions();
+          await enhancedSessionService.cleanupExpiredSessions();
         }
       }
     );
@@ -123,8 +123,8 @@ export const useSecureAuth = () => {
     signOut,
     updateActivity,
     // Secure session management
-    getUserSessions: secureSessionService.getUserSessions,
-    terminateSession: secureSessionService.terminateSession,
-    terminateAllOtherSessions: secureSessionService.terminateAllOtherSessions
+    getUserSessions: enhancedSessionService.getUserSessions,
+    terminateSession: enhancedSessionService.terminateSession,
+    terminateAllOtherSessions: enhancedSessionService.terminateAllOtherSessions
   };
 };
