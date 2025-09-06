@@ -1674,7 +1674,6 @@ export type Database = {
           is_verified: boolean | null
           method_type: string
           phone_number: string | null
-          secret: string | null
           updated_at: string | null
           user_id: string
         }
@@ -1685,7 +1684,6 @@ export type Database = {
           is_verified?: boolean | null
           method_type: string
           phone_number?: string | null
-          secret?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -1696,7 +1694,6 @@ export type Database = {
           is_verified?: boolean | null
           method_type?: string
           phone_number?: string | null
-          secret?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -1764,7 +1761,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      orders_redacted: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          currency: string | null
+          id: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_expired_sessions: {
