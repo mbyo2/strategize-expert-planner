@@ -142,6 +142,8 @@ const TestSetup = () => {
         </Card>
 
         <TestUserCreator />
+        
+        <TestUserLogin />
 
         <Card>
           <CardHeader>

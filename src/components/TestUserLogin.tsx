@@ -1,100 +1,122 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { LogIn, Loader2, Shield, BarChart3, User, Eye } from 'lucide-react';
+import { TEST_USERS } from '@/services/testUserService';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
-import { User, Shield, Eye, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const testUsers = [
-  {
-    email: 'admin@techcorp.com',
-    password: 'password123',
-    role: 'Admin',
-    name: 'Alex Admin',
-    icon: Shield,
-    description: 'Full system access with sample data'
-  },
-  {
-    email: 'manager@techcorp.com', 
-    password: 'password123',
-    role: 'Manager',
-    name: 'Morgan Manager',
-    icon: BarChart3,
-    description: 'Team management with initiatives'
-  },
-  {
-    email: 'analyst@techcorp.com',
-    password: 'password123', 
-    role: 'Analyst',
-    name: 'Ana Analyst',
-    icon: User,
-    description: 'Analysis access with market data'
-  },
-  {
-    email: 'viewer@techcorp.com',
-    password: 'password123',
-    role: 'Viewer', 
-    name: 'Victor Viewer',
-    icon: Eye,
-    description: 'Read-only access to goals'
-  }
-];
-
 const TestUserLogin = () => {
-  const { signIn, isLoading } = useSimpleAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn, isAuthenticated } = useSimpleAuth();
 
-  const handleTestLogin = async (email: string, password: string, name: string) => {
+  const handleQuickLogin = async (testUser: typeof TEST_USERS[0]) => {
+    setIsLoading(true);
     try {
-      toast.loading(`Signing in as ${name}...`);
-      await signIn({ email, password });
-      toast.success(`Successfully signed in as ${name}`);
+      await signIn({ email: testUser.email, password: testUser.password });
+      toast.success(`Logged in as ${testUser.name}!`);
     } catch (error: any) {
-      console.error('Test login error:', error);
-      toast.error(`Login failed: ${error.message || 'Unknown error'}`);
+      toast.error(`Login error: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case 'admin': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      case 'manager': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      case 'analyst': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'viewer': return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'admin': return Shield;
+      case 'manager': return BarChart3;
+      case 'analyst': return User;
+      case 'viewer': return Eye;
+      default: return User;
+    }
+  };
+
+  if (isAuthenticated) {
+    return (
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle className="text-center text-green-600">
+            ✓ Already Logged In
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-muted-foreground">
+            You are currently logged in to the application.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="space-y-3">
-      {testUsers.map((user) => {
-        const IconComponent = user.icon;
-        return (
-          <div key={user.email} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
-            <div className="flex items-center space-x-3">
-              <IconComponent className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium">{user.name}</span>
-                  <Badge variant="outline" className="text-xs">
-                    {user.role}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">{user.description}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Email: {user.email} • Password: {user.password}
-                </p>
-              </div>
-            </div>
-            <Button 
-              size="sm" 
-              onClick={() => handleTestLogin(user.email, user.password, user.name)}
-              disabled={isLoading}
-              className="min-w-[60px]"
-            >
-              {isLoading ? 'Signing in...' : 'Login'}
-            </Button>
-          </div>
-        );
-      })}
-      
-      <div className="mt-4 p-3 bg-muted rounded-lg">
-        <p className="text-xs text-muted-foreground">
-          <strong>Note:</strong> These are test accounts for demo purposes. 
-          In production, you would create real user accounts through the signup flow.
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle>Quick Login - Test Users</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Click on any test user below to login instantly and explore role-based features.
         </p>
-      </div>
-    </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-3 md:grid-cols-2">
+          {TEST_USERS.map((user) => {
+            const IconComponent = getRoleIcon(user.role);
+            return (
+              <Card key={user.email} className="p-4 hover:shadow-md transition-shadow">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <IconComponent className="h-4 w-4" />
+                      <h4 className="font-medium">{user.name}</h4>
+                    </div>
+                    <Badge className={getRoleBadgeColor(user.role)}>
+                      {user.role}
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <p>{user.email}</p>
+                    <p>{user.organization}</p>
+                  </div>
+
+                  <Button 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => handleQuickLogin(user)}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-3 w-3 animate-spin mr-2" />
+                    ) : (
+                      <LogIn className="h-3 w-3 mr-2" />
+                    )}
+                    Login as {user.role}
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+        
+        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <p className="text-sm text-blue-800 dark:text-blue-200">
+            <strong>Tip:</strong> Each role has different permissions. Try logging in with different users to see how the interface and available features change based on your role.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
