@@ -23,32 +23,49 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   useEffect(() => {
     let isMounted = true;
 
-    // Initialize session
-    const initializeAuth = async () => {
-      try {
-        const currentSession = await authService.getCurrentSession();
-        if (isMounted) {
-          setSession(currentSession);
-        }
-      } catch (error) {
-        console.error('Failed to initialize auth:', error);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    initializeAuth();
-
-    // Listen for auth state changes
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, supabaseSession) => {
         if (!isMounted) return;
         
+        console.log('Auth state changed:', event, supabaseSession?.user?.email);
+        
         if (supabaseSession?.user) {
-          const currentSession = await authService.getCurrentSession();
-          setSession(currentSession);
+          try {
+            // Get user profile and role
+            const [profileResult, roleResult] = await Promise.all([
+              supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', supabaseSession.user.id)
+                .maybeSingle(),
+              supabase
+                .from('user_roles')
+                .select('role')
+                .eq('user_id', supabaseSession.user.id)
+                .maybeSingle()
+            ]);
+
+            setSession({
+              user: {
+                id: supabaseSession.user.id,
+                email: supabaseSession.user.email || '',
+                name: profileResult.data?.name || supabaseSession.user.user_metadata?.name || 'User',
+                role: roleResult.data?.role || 'viewer',
+                avatar: profileResult.data?.avatar
+              }
+            });
+          } catch (error) {
+            console.error('Error fetching user data:', error);
+            setSession({
+              user: {
+                id: supabaseSession.user.id,
+                email: supabaseSession.user.email || '',
+                name: supabaseSession.user.user_metadata?.name || 'User',
+                role: 'viewer',
+              }
+            });
+          }
         } else {
           setSession({ user: null });
         }
@@ -56,17 +73,31 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }
     );
 
-    // Listen for session changes from auth service
-    const unsubscribeFromService = authService.onSessionChange((newSession) => {
-      if (isMounted) {
-        setSession(newSession);
+    // THEN check for existing session
+    const initSession = async () => {
+      try {
+        const { data: { session: supabaseSession } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+        
+        if (!supabaseSession?.user) {
+          setSession({ user: null });
+          setIsLoading(false);
+        }
+        // If there is a session, the onAuthStateChange will handle it
+      } catch (error) {
+        console.error('Error getting session:', error);
+        if (isMounted) {
+          setSession({ user: null });
+          setIsLoading(false);
+        }
       }
-    });
+    };
+    
+    initSession();
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
-      unsubscribeFromService();
     };
   }, []);
 

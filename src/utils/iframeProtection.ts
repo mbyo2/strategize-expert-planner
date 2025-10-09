@@ -62,7 +62,7 @@ export const isTrustedEnvironment = (): boolean => {
 export const breakOutOfIframe = (): void => {
   try {
     if (window.top && window.self !== window.top) {
-      window.top.location = window.self.location;
+      window.top.location.href = window.self.location.href;
     }
   } catch (e) {
     // Cross-origin access blocked, which is expected
