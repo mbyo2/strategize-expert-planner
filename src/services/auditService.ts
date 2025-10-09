@@ -141,19 +141,15 @@ export const logAuditEvent = async (params: LogAuditEventParams): Promise<boolea
       user_agent: redactSensitiveData(navigator.userAgent),
     };
 
-    // Store in Supabase audit_logs table
+    // Store in Supabase using secure database function
     try {
-      const { error } = await supabase
-        .from('audit_logs')
-        .insert({
-          action: logEntry.action,
-          resource_type: logEntry.resource_type,
-          resource_id: logEntry.resource_id,
-          user_id: logEntry.user_id,
-          old_values: logEntry.old_values,
-          new_values: logEntry.new_values,
-          user_agent: logEntry.user_agent
-        });
+      const { error } = await supabase.rpc('create_audit_log', {
+        p_action: logEntry.action,
+        p_resource_type: logEntry.resource_type,
+        p_resource_id: logEntry.resource_id,
+        p_old_values: logEntry.old_values,
+        p_new_values: logEntry.new_values
+      });
       
       if (error) throw error;
     } catch (dbError) {

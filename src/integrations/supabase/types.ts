@@ -839,6 +839,7 @@ export type Database = {
           organization_id: string
           role: string
           token: string
+          token_hash: string | null
           updated_at: string | null
         }
         Insert: {
@@ -851,6 +852,7 @@ export type Database = {
           organization_id: string
           role?: string
           token?: string
+          token_hash?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -863,6 +865,7 @@ export type Database = {
           organization_id?: string
           role?: string
           token?: string
+          token_hash?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -1415,6 +1418,7 @@ export type Database = {
           role: string
           team_id: string
           token: string
+          token_hash: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1427,6 +1431,7 @@ export type Database = {
           role?: string
           team_id: string
           token?: string
+          token_hash?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1439,6 +1444,7 @@ export type Database = {
           role?: string
           team_id?: string
           token?: string
+          token_hash?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -1731,6 +1737,7 @@ export type Database = {
           ip_address: unknown | null
           is_active: boolean | null
           last_activity: string | null
+          session_hash: string | null
           session_token: string
           user_agent: string | null
           user_id: string
@@ -1742,6 +1749,7 @@ export type Database = {
           ip_address?: unknown | null
           is_active?: boolean | null
           last_activity?: string | null
+          session_hash?: string | null
           session_token: string
           user_agent?: string | null
           user_id: string
@@ -1753,6 +1761,7 @@ export type Database = {
           ip_address?: unknown | null
           is_active?: boolean | null
           last_activity?: string | null
+          session_hash?: string | null
           session_token?: string
           user_agent?: string | null
           user_id?: string
@@ -1768,6 +1777,7 @@ export type Database = {
           currency: string | null
           id: string | null
           status: string | null
+          stripe_session_id: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -1777,6 +1787,7 @@ export type Database = {
           currency?: string | null
           id?: string | null
           status?: string | null
+          stripe_session_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -1786,16 +1797,76 @@ export type Database = {
           currency?: string | null
           id?: string | null
           status?: string | null
+          stripe_session_id?: string | null
           updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_sessions_safe: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string | null
+          ip_address: unknown | null
+          is_active: boolean | null
+          last_activity: string | null
+          session_hash: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          ip_address?: unknown | null
+          is_active?: boolean | null
+          last_activity?: string | null
+          session_hash?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          ip_address?: unknown | null
+          is_active?: boolean | null
+          last_activity?: string | null
+          session_hash?: string | null
+          user_agent?: string | null
           user_id?: string | null
         }
         Relationships: []
       }
     }
     Functions: {
+      can_view_profile: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
       cleanup_expired_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      create_activity_log: {
+        Args: {
+          p_action: string
+          p_entity_id: string
+          p_entity_type: string
+          p_metadata?: Json
+        }
+        Returns: string
+      }
+      create_audit_log: {
+        Args: {
+          p_action: string
+          p_new_values?: Json
+          p_old_values?: Json
+          p_resource_id?: string
+          p_resource_type: string
+        }
+        Returns: string
       }
       create_secure_session_hash: {
         Args: { user_id_param: string }
@@ -1809,9 +1880,41 @@ export type Database = {
         Args: { required_role: string; user_uuid: string }
         Returns: boolean
       }
+      is_organization_admin: {
+        Args: { org_id: string; user_id: string }
+        Returns: boolean
+      }
+      is_organization_member: {
+        Args: { org_id: string; user_id: string }
+        Returns: boolean
+      }
       is_session_valid: {
         Args: { session_hash: string }
         Returns: boolean
+      }
+      is_team_admin: {
+        Args: { team_id_param: string; user_id: string }
+        Returns: boolean
+      }
+      is_team_member: {
+        Args: { team_id_param: string; user_id: string }
+        Returns: boolean
+      }
+      mask_phone_number: {
+        Args: { phone: string }
+        Returns: string
+      }
+      validate_org_invitation_token: {
+        Args: { hash: string }
+        Returns: string
+      }
+      validate_session_hash: {
+        Args: { hash: string }
+        Returns: boolean
+      }
+      validate_team_invitation_token: {
+        Args: { hash: string }
+        Returns: string
       }
     }
     Enums: {

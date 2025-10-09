@@ -4,7 +4,7 @@ import { logAuditEvent } from './auditService';
 export interface SessionInfo {
   id: string;
   user_id: string;
-  session_token: string;
+  session_hash?: string; // Changed from session_token for security
   ip_address?: string;
   user_agent?: string;
   is_active: boolean | null;
@@ -16,10 +16,11 @@ export interface SessionInfo {
 export const enhancedSessionService = {
   /**
    * Get all active sessions for the current user
+   * Uses safe view that excludes session_token for security
    */
   async getUserSessions(): Promise<SessionInfo[]> {
     const { data, error } = await supabase
-      .from('user_sessions')
+      .from('user_sessions_safe')
       .select('*')
       .eq('is_active', true)
       .order('last_activity', { ascending: false });
@@ -51,7 +52,7 @@ export const enhancedSessionService = {
 
       const sessionData = {
         user_id: user.id,
-        session_token: hashData,
+        session_hash: hashData, // Store hash instead of token
         ip_address: await this.getClientIP(),
         user_agent: this.sanitizeUserAgent(navigator.userAgent),
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
@@ -66,11 +67,14 @@ export const enhancedSessionService = {
         return false;
       }
 
-      // Log session creation
-      await logAuditEvent({
-        action: 'login',
-        resource: 'user',
-        new_values: { session_token: hashData }
+      // Store hash in localStorage for validation
+      localStorage.setItem('session_hash', hashData);
+
+      // Log session creation using secure function
+      await supabase.rpc('create_audit_log', {
+        p_action: 'login',
+        p_resource_type: 'user',
+        p_resource_id: user.id
       });
 
       return true;
@@ -121,11 +125,11 @@ export const enhancedSessionService = {
         return false;
       }
 
-      // Log session termination
-      await logAuditEvent({
-        action: 'logout',
-        resource: 'user',
-        resourceId: sessionId
+      // Log session termination using secure function
+      await supabase.rpc('create_audit_log', {
+        p_action: 'logout',
+        p_resource_type: 'user',
+        p_resource_id: sessionId
       });
 
       return true;
@@ -160,10 +164,10 @@ export const enhancedSessionService = {
         return false;
       }
 
-      // Log mass session termination
-      await logAuditEvent({
-        action: 'logout',
-        resource: 'user'
+      // Log mass session termination using secure function
+      await supabase.rpc('create_audit_log', {
+        p_action: 'logout',
+        p_resource_type: 'user'
       });
 
       return true;
@@ -176,10 +180,10 @@ export const enhancedSessionService = {
   /**
    * Validate session is still active and not expired
    */
-  async validateSession(sessionToken: string): Promise<boolean> {
+  async validateSession(sessionHash: string): Promise<boolean> {
     try {
       const { data, error } = await supabase
-        .rpc('is_session_valid', { session_hash: sessionToken });
+        .rpc('validate_session_hash', { hash: sessionHash });
 
       if (error) {
         console.error('Error validating session:', error);
