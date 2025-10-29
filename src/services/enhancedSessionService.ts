@@ -53,6 +53,7 @@ export const enhancedSessionService = {
       const sessionData = {
         user_id: user.id,
         session_hash: hashData, // Store hash instead of token
+        session_token: null, // Explicitly set to null as it's now nullable
         ip_address: await this.getClientIP(),
         user_agent: this.sanitizeUserAgent(navigator.userAgent),
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
