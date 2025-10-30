@@ -20,7 +20,7 @@ export type Database = {
           created_at: string | null
           description: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           metadata: Json | null
           organization_id: string | null
           resource_id: string | null
@@ -34,7 +34,7 @@ export type Database = {
           created_at?: string | null
           description: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           organization_id?: string | null
           resource_id?: string | null
@@ -48,7 +48,7 @@ export type Database = {
           created_at?: string | null
           description?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           organization_id?: string | null
           resource_id?: string | null
@@ -157,7 +157,7 @@ export type Database = {
           action: string
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_values: Json | null
           old_values: Json | null
           resource_id: string | null
@@ -169,7 +169,7 @@ export type Database = {
           action: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           resource_id?: string | null
@@ -181,7 +181,7 @@ export type Database = {
           action?: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           resource_id?: string | null
@@ -839,7 +839,7 @@ export type Database = {
           organization_id: string
           role: string
           token: string
-          token_hash: string | null
+          token_hash: string
           updated_at: string | null
         }
         Insert: {
@@ -852,7 +852,7 @@ export type Database = {
           organization_id: string
           role?: string
           token?: string
-          token_hash?: string | null
+          token_hash: string
           updated_at?: string | null
         }
         Update: {
@@ -865,7 +865,7 @@ export type Database = {
           organization_id?: string
           role?: string
           token?: string
-          token_hash?: string | null
+          token_hash?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -1418,7 +1418,7 @@ export type Database = {
           role: string
           team_id: string
           token: string
-          token_hash: string | null
+          token_hash: string
           updated_at: string | null
         }
         Insert: {
@@ -1431,7 +1431,7 @@ export type Database = {
           role?: string
           team_id: string
           token?: string
-          token_hash?: string | null
+          token_hash: string
           updated_at?: string | null
         }
         Update: {
@@ -1444,7 +1444,7 @@ export type Database = {
           role?: string
           team_id?: string
           token?: string
-          token_hash?: string | null
+          token_hash?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -1734,7 +1734,7 @@ export type Database = {
           created_at: string | null
           expires_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           is_active: boolean | null
           last_activity: string | null
           session_hash: string | null
@@ -1746,7 +1746,7 @@ export type Database = {
           created_at?: string | null
           expires_at: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           is_active?: boolean | null
           last_activity?: string | null
           session_hash?: string | null
@@ -1758,7 +1758,7 @@ export type Database = {
           created_at?: string | null
           expires_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           is_active?: boolean | null
           last_activity?: string | null
           session_hash?: string | null
@@ -1803,12 +1803,100 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_invitations_safe: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          email: string | null
+          expires_at: string | null
+          id: string | null
+          invited_by: string | null
+          organization_id: string | null
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email?: string | null
+          expires_at?: string | null
+          id?: string | null
+          invited_by?: string | null
+          organization_id?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email?: string | null
+          expires_at?: string | null
+          id?: string | null
+          invited_by?: string | null
+          organization_id?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_invitations_safe: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          email: string | null
+          expires_at: string | null
+          id: string | null
+          invited_by: string | null
+          role: string | null
+          team_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email?: string | null
+          expires_at?: string | null
+          id?: string | null
+          invited_by?: string | null
+          role?: string | null
+          team_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          email?: string | null
+          expires_at?: string | null
+          id?: string | null
+          invited_by?: string | null
+          role?: string | null
+          team_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invitations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_sessions_safe: {
         Row: {
           created_at: string | null
           expires_at: string | null
           id: string | null
-          ip_address: unknown | null
+          ip_address: unknown
           is_active: boolean | null
           last_activity: string | null
           session_hash: string | null
@@ -1819,7 +1907,7 @@ export type Database = {
           created_at?: string | null
           expires_at?: string | null
           id?: string | null
-          ip_address?: unknown | null
+          ip_address?: unknown
           is_active?: boolean | null
           last_activity?: string | null
           session_hash?: string | null
@@ -1830,7 +1918,7 @@ export type Database = {
           created_at?: string | null
           expires_at?: string | null
           id?: string | null
-          ip_address?: unknown | null
+          ip_address?: unknown
           is_active?: boolean | null
           last_activity?: string | null
           session_hash?: string | null
@@ -1841,14 +1929,8 @@ export type Database = {
       }
     }
     Functions: {
-      can_view_profile: {
-        Args: { target_user_id: string }
-        Returns: boolean
-      }
-      cleanup_expired_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      can_view_profile: { Args: { target_user_id: string }; Returns: boolean }
+      cleanup_expired_sessions: { Args: never; Returns: undefined }
       create_activity_log: {
         Args: {
           p_action: string
@@ -1872,10 +1954,8 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: string
       }
-      get_user_role: {
-        Args: { user_uuid: string }
-        Returns: string
-      }
+      generate_invitation_token_hash: { Args: never; Returns: string }
+      get_user_role: { Args: { user_uuid: string }; Returns: string }
       has_role_level: {
         Args: { required_role: string; user_uuid: string }
         Returns: boolean
@@ -1888,10 +1968,7 @@ export type Database = {
         Args: { org_id: string; user_id: string }
         Returns: boolean
       }
-      is_session_valid: {
-        Args: { session_hash: string }
-        Returns: boolean
-      }
+      is_session_valid: { Args: { session_hash: string }; Returns: boolean }
       is_team_admin: {
         Args: { team_id_param: string; user_id: string }
         Returns: boolean
@@ -1900,18 +1977,9 @@ export type Database = {
         Args: { team_id_param: string; user_id: string }
         Returns: boolean
       }
-      mask_phone_number: {
-        Args: { phone: string }
-        Returns: string
-      }
-      validate_org_invitation_token: {
-        Args: { hash: string }
-        Returns: string
-      }
-      validate_session_hash: {
-        Args: { hash: string }
-        Returns: boolean
-      }
+      mask_phone_number: { Args: { phone: string }; Returns: string }
+      validate_org_invitation_token: { Args: { hash: string }; Returns: string }
+      validate_session_hash: { Args: { hash: string }; Returns: boolean }
       validate_team_invitation_token: {
         Args: { hash: string }
         Returns: string
