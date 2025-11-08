@@ -235,38 +235,58 @@ export class UserManagementService {
     const { data: currentUser } = await supabase.auth.getUser();
     if (!currentUser.user) throw new Error('Not authenticated');
 
-    const { data, error } = await supabase
+    // Generate token and hash
+    const token = crypto.randomUUID();
+    const encoder = new TextEncoder();
+    const data = encoder.encode(token);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const token_hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    const { data: invitation, error } = await supabase
       .from('organization_invitations')
       .insert({
         organization_id: organizationId,
         email,
         role,
-        invited_by: currentUser.user.id
+        invited_by: currentUser.user.id,
+        token,
+        token_hash
       })
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return invitation;
   }
 
   static async inviteToTeam(teamId: string, email: string, role: string = 'member') {
     const { data: currentUser } = await supabase.auth.getUser();
     if (!currentUser.user) throw new Error('Not authenticated');
 
-    const { data, error } = await supabase
+    // Generate token and hash
+    const token = crypto.randomUUID();
+    const encoder = new TextEncoder();
+    const data = encoder.encode(token);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const token_hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    const { data: invitation, error } = await supabase
       .from('team_invitations')
       .insert({
         team_id: teamId,
         email,
         role,
-        invited_by: currentUser.user.id
+        invited_by: currentUser.user.id,
+        token,
+        token_hash
       })
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return invitation;
   }
 
   static async getOrganizationInvitations(organizationId: string) {
