@@ -18,6 +18,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -30,15 +31,33 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { planningInitiativeCreateSchema } from '@/services/validation/schemas';
+import { toast } from 'sonner';
 
-const initiativeSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name is too long'),
-  description: z.string().optional(),
-  status: z.enum(['planning', 'in-progress', 'completed', 'cancelled']),
-  progress: z.number().min(0).max(100),
-  start_date: z.string().optional(),
-  end_date: z.string().optional(),
-});
+// Use centralized schema with enhanced validation
+const initiativeSchema = planningInitiativeCreateSchema.extend({
+  start_date: z.string().optional().refine(
+    (date) => !date || !isNaN(Date.parse(date)),
+    { message: 'Invalid start date format' }
+  ),
+  end_date: z.string().optional().refine(
+    (date) => !date || !isNaN(Date.parse(date)),
+    { message: 'Invalid end date format' }
+  ),
+}).refine(
+  (data) => {
+    if (data.start_date && data.end_date) {
+      return new Date(data.start_date) <= new Date(data.end_date);
+    }
+    return true;
+  },
+  {
+    message: 'End date must be after start date',
+    path: ['end_date'],
+  }
+);
 
 type InitiativeFormValues = z.infer<typeof initiativeSchema>;
 
@@ -55,6 +74,9 @@ const PlanningInitiativeDialog: React.FC<PlanningInitiativeDialogProps> = ({
   initiative,
   onSubmit,
 }) => {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [formError, setFormError] = React.useState<string | null>(null);
+
   const form = useForm<InitiativeFormValues>({
     resolver: zodResolver(initiativeSchema),
     defaultValues: {
@@ -64,6 +86,7 @@ const PlanningInitiativeDialog: React.FC<PlanningInitiativeDialogProps> = ({
       progress: initiative?.progress || 0,
       start_date: initiative?.start_date ? new Date(initiative.start_date).toISOString().split('T')[0] : '',
       end_date: initiative?.end_date ? new Date(initiative.end_date).toISOString().split('T')[0] : '',
+      priority: initiative?.priority || 'medium',
     },
   });
 
@@ -89,8 +112,37 @@ const PlanningInitiativeDialog: React.FC<PlanningInitiativeDialogProps> = ({
     }
   }, [initiative, form]);
 
-  const handleSubmit = (data: InitiativeFormValues) => {
-    onSubmit(data);
+  const handleSubmit = async (data: InitiativeFormValues) => {
+    setIsSubmitting(true);
+    setFormError(null);
+    
+    try {
+      const transformedData = {
+        ...data,
+        start_date: data.start_date ? new Date(data.start_date).toISOString() : undefined,
+        end_date: data.end_date ? new Date(data.end_date).toISOString() : undefined,
+      };
+      
+      await onSubmit(transformedData as any);
+      
+      toast.success(initiative ? 'Initiative Updated' : 'Initiative Created', {
+        description: initiative 
+          ? 'Your planning initiative has been updated successfully'
+          : 'Your planning initiative has been created successfully',
+      });
+      
+      form.reset();
+      onOpenChange(false);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      setFormError(errorMessage);
+      
+      toast.error('Failed to Save Initiative', {
+        description: errorMessage,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

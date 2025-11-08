@@ -18,6 +18,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -30,17 +31,34 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { strategicGoalCreateSchema } from '@/services/validation/schemas';
+import { toast } from 'sonner';
 
-const goalSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255, 'Name is too long'),
-  description: z.string().optional(),
-  status: z.enum(['planned', 'active', 'completed', 'paused']),
-  progress: z.number().min(0).max(100),
-  target_value: z.number().optional(),
-  current_value: z.number().optional(),
-  start_date: z.string().optional(),
-  due_date: z.string().optional(),
-});
+// Use centralized schema with enhanced validation
+const goalSchema = strategicGoalCreateSchema.extend({
+  // Override date fields to accept string format from form
+  start_date: z.string().optional().refine(
+    (date) => !date || !isNaN(Date.parse(date)),
+    { message: 'Invalid start date format' }
+  ),
+  due_date: z.string().optional().refine(
+    (date) => !date || !isNaN(Date.parse(date)),
+    { message: 'Invalid due date format' }
+  ),
+}).refine(
+  (data) => {
+    if (data.start_date && data.due_date) {
+      return new Date(data.start_date) <= new Date(data.due_date);
+    }
+    return true;
+  },
+  {
+    message: 'Due date must be after start date',
+    path: ['due_date'],
+  }
+);
 
 type GoalFormValues = z.infer<typeof goalSchema>;
 
@@ -57,6 +75,9 @@ const GoalFormDialog: React.FC<GoalFormDialogProps> = ({
   goal,
   onSubmit,
 }) => {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [formError, setFormError] = React.useState<string | null>(null);
+
   const form = useForm<GoalFormValues>({
     resolver: zodResolver(goalSchema),
     defaultValues: {
@@ -68,6 +89,9 @@ const GoalFormDialog: React.FC<GoalFormDialogProps> = ({
       current_value: goal?.current_value || undefined,
       start_date: goal?.start_date ? new Date(goal.start_date).toISOString().split('T')[0] : '',
       due_date: goal?.due_date ? new Date(goal.due_date).toISOString().split('T')[0] : '',
+      priority: goal?.priority || 'medium',
+      category: goal?.category || 'general',
+      risk_level: goal?.risk_level || 'low',
     },
   });
 
@@ -97,8 +121,38 @@ const GoalFormDialog: React.FC<GoalFormDialogProps> = ({
     }
   }, [goal, form]);
 
-  const handleSubmit = (data: GoalFormValues) => {
-    onSubmit(data);
+  const handleSubmit = async (data: GoalFormValues) => {
+    setIsSubmitting(true);
+    setFormError(null);
+    
+    try {
+      // Transform dates to ISO format if provided
+      const transformedData = {
+        ...data,
+        start_date: data.start_date ? new Date(data.start_date).toISOString() : undefined,
+        due_date: data.due_date ? new Date(data.due_date).toISOString() : undefined,
+      };
+      
+      await onSubmit(transformedData as any);
+      
+      toast.success(goal ? 'Goal Updated' : 'Goal Created', {
+        description: goal 
+          ? 'Your strategic goal has been updated successfully'
+          : 'Your strategic goal has been created successfully',
+      });
+      
+      form.reset();
+      onOpenChange(false);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      setFormError(errorMessage);
+      
+      toast.error('Failed to Save Goal', {
+        description: errorMessage,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -116,6 +170,13 @@ const GoalFormDialog: React.FC<GoalFormDialogProps> = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            {formError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{formError}</AlertDescription>
+              </Alert>
+            )}
+
             <FormField
               control={form.control}
               name="name"
@@ -123,8 +184,16 @@ const GoalFormDialog: React.FC<GoalFormDialogProps> = ({
                 <FormItem>
                   <FormLabel>Goal Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Increase Market Share" {...field} />
+                    <Input 
+                      placeholder="e.g., Increase Market Share" 
+                      {...field}
+                      maxLength={255}
+                      disabled={isSubmitting}
+                    />
                   </FormControl>
+                  <FormDescription>
+                    {field.value.length}/255 characters
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -267,10 +336,16 @@ const GoalFormDialog: React.FC<GoalFormDialogProps> = ({
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {goal ? 'Update Goal' : 'Create Goal'}
               </Button>
             </DialogFooter>
