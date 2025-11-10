@@ -77,6 +77,12 @@ const Login = () => {
     }
   }, []);
 
+  // --- RTL layout adaptation ---
+  useEffect(() => {
+    document.body.dir = rtl ? 'rtl' : 'ltr';
+    return () => { document.body.dir = 'ltr'; };
+  }, [rtl]);
+
   // Redirect if already authenticated
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -216,12 +222,6 @@ const Login = () => {
     }
   };
   const gmtOffset = getGmtOffset(selectedTimezone);
-
-  // --- RTL layout adaptation ---
-  useEffect(() => {
-    document.body.dir = rtl ? 'rtl' : 'ltr';
-    return () => { document.body.dir = 'ltr'; };
-  }, [rtl]);
 
   if (isLoading) {
     return (
