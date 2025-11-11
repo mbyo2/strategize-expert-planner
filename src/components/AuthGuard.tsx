@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth, UserRole } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import AccessDenied from '@/pages/AccessDenied';
 import { logAuditEvent } from '@/services/auditService';
 import { toast } from 'sonner';
@@ -12,6 +12,9 @@ const RESTRICTED_IP_RANGES: string[] = [];
 
 // Timeout in minutes for automatic session logout
 const SESSION_TIMEOUT_MINUTES = 30;
+
+// Type for user roles
+type UserRole = 'admin' | 'manager' | 'analyst' | 'viewer';
 
 // List of known attack patterns to detect suspicious activities
 const SUSPICIOUS_PATTERNS = [
@@ -54,7 +57,8 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   actionType = 'view',
   requireMfa = false,
 }) => {
-  const { isAuthenticated, user, hasPermission, isLoading } = useAuth();
+  const { isAuthenticated, session, hasRole, isLoading } = useSimpleAuth();
+  const user = session?.user || null;
   const location = useLocation();
   const navigate = useNavigate();
   const [lastActivity, setLastActivity] = useState<number>(Date.now());
@@ -197,7 +201,8 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   }
 
   // If MFA is required but not completed
-  if (requireMfa && !user?.mfaVerified) {
+  // Note: MFA verification should be implemented in SimpleAuth
+  if (requireMfa) {
     // Log MFA requirement
     logAuditEvent({
       action: 'view_sensitive',
@@ -212,8 +217,9 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     return <Navigate to="/mfa-verify" state={{ from: location }} replace />;
   }
 
-  // If roles are specified, check if user has permission
-  if (requiredRoles.length > 0 && !hasPermission(requiredRoles)) {
+  // If roles are specified, check if user has required role
+  const hasRequiredRole = requiredRoles.length === 0 || requiredRoles.some(role => hasRole(role));
+  if (!hasRequiredRole) {
     // Log unauthorized access attempt
     logAuditEvent({
       action: 'view_sensitive',

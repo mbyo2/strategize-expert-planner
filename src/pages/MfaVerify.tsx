@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Shield, CheckCircle, KeyRound } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -10,7 +10,8 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { logAuditEvent } from '@/services/auditService';
 
 const MfaVerify = () => {
-  const { user } = useAuth();
+  const { session } = useSimpleAuth();
+  const user = session?.user || null;
   const navigate = useNavigate();
   const location = useLocation();
   const [otp, setOtp] = useState<string>('');
@@ -21,10 +22,8 @@ const MfaVerify = () => {
   const from = location.state?.from?.pathname || '/';
 
   useEffect(() => {
-    // If user is already MFA verified, redirect to the intended destination
-    if (user?.mfaVerified) {
-      navigate(from, { replace: true });
-    }
+    // In a real app with MFA system, check if verified
+    // For now, skip MFA check as SimpleAuth doesn't have this feature yet
     
     // In a real app, we would send the OTP code to the user's device
     // For this example, we'll log the mock code to the console
@@ -41,7 +40,7 @@ const MfaVerify = () => {
         severity: 'medium',
       });
     }
-  }, [user, navigate, from]);
+  }, [user]);
 
   const handleVerify = async () => {
     if (!user) return;

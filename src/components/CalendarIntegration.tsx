@@ -4,7 +4,7 @@ import { Calendar, Plus, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { logAuditEvent } from '@/services/auditService';
-import { useAuth } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 
 interface CalendarEvent {
   id: string;
@@ -14,7 +14,8 @@ interface CalendarEvent {
 }
 
 const CalendarIntegration: React.FC = () => {
-  const { user } = useAuth();
+  const { session } = useSimpleAuth();
+  const user = session?.user || null;
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isConnecting, setIsConnecting] = useState(false);
 

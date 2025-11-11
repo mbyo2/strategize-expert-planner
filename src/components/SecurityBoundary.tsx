@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { logAuditEvent } from '@/services/auditService';
 import { toast } from 'sonner';
 
@@ -8,7 +8,7 @@ interface SecurityBoundaryProps {
 }
 
 const SecurityBoundary: React.FC<SecurityBoundaryProps> = ({ children }) => {
-  const { isAuthenticated, user } = useUnifiedAuth();
+  const { isAuthenticated, session } = useSimpleAuth();
 
   useEffect(() => {
     // Set up security monitoring

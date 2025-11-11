@@ -7,13 +7,12 @@ import { useERPAnalytics, useOrganizationERP } from '@/hooks/useERP';
 import { WidgetProps } from './WidgetTypes';
 import WidgetWrapper from './WidgetWrapper';
 import { Link2, Package, TrendingUp, Settings, ExternalLink } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 const ERPIntegrationWidget: React.FC<WidgetProps> = (props) => {
-  const { user } = useAuth();
-  // For now, use a placeholder since organization_id is not on User interface
-  // This should be updated once the organization system is fully implemented
-  const organizationId = ''; // TODO: Get from user's organization context
+  const { session } = useSimpleAuth();
+  const { organizationId } = useOrganization();
   const { analytics, isLoading } = useERPAnalytics(organizationId || '');
   const { config } = useOrganizationERP(organizationId || '');
 

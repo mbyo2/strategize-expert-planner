@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRealTimeUpdates } from '@/hooks/useRealTimeUpdates';
-import { useAuth } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { Users, Activity } from 'lucide-react';
 
 interface ActiveUser {
@@ -26,7 +26,8 @@ interface RecentActivity {
 }
 
 const RealTimeCollaboration = () => {
-  const { user } = useAuth();
+  const { session } = useSimpleAuth();
+  const user = session?.user || null;
   const { isConnected } = useRealTimeUpdates();
   const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([

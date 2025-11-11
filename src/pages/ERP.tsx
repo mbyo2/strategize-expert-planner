@@ -12,7 +12,8 @@ import { ProcurementModule } from '@/components/erp/modules/ProcurementModule';
 import { SupplyChainModule } from '@/components/erp/modules/SupplyChainModule';
 import { ManufacturingModule } from '@/components/erp/modules/ManufacturingModule';
 import { ProjectModule } from '@/components/erp/modules/ProjectModule';
-import { useAuth } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import { useOrganization } from '@/contexts/OrganizationContext';
 import { useOrganizationERP, useERPAnalytics } from '@/hooks/useERP';
 import { Package, Link2, BarChart3, Settings, Building2, Users } from 'lucide-react';
 import ManufacturingIndustry from '@/components/erp/industries/ManufacturingIndustry';
@@ -29,12 +30,9 @@ import HospitalityIndustry from '@/components/erp/industries/HospitalityIndustry
 import SEO from '@/components/SEO';
 
 const ERPPage: React.FC = () => {
-  const { user } = useAuth();
+  const { session } = useSimpleAuth();
+  const { organizationId } = useOrganization();
   const [activeTab, setActiveTab] = useState('modules');
-  
-  // For now, use a placeholder organization ID
-  // This should be updated when organization system is fully implemented
-  const organizationId = 'placeholder-org-id';
   
   const { config, isLoading } = useOrganizationERP(organizationId);
   const { analytics } = useERPAnalytics(organizationId);

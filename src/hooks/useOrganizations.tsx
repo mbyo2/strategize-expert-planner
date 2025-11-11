@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Organization, OrganizationSettings, Team, TeamMember, UserRole } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
 
@@ -37,7 +37,8 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
   const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { session } = useSimpleAuth();
+  const user = session?.user || null;
 
   useEffect(() => {
     if (user) {

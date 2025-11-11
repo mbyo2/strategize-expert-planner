@@ -7,10 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DataImportService } from '@/services/dataImportService';
-import { useAuth } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 
 const DataImportDialog: React.FC = () => {
-  const { user } = useAuth();
+  const { session } = useSimpleAuth();
+  const user = session?.user || null;
   const [isOpen, setIsOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
