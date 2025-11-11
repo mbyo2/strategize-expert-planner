@@ -3,96 +3,87 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BarChart3, Target, Users, TrendingUp, Calendar, Bell, Plus } from 'lucide-react';
+import { BarChart3, Target, Users, TrendingUp, Calendar, Bell, Plus, Loader2 } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
 import InfoCard from '@/components/InfoCard';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const { session } = useSimpleAuth();
+  const { stats, activities, isLoading } = useDashboardData();
+  const navigate = useNavigate();
 
   const quickStats = [
     {
       title: 'Active Goals',
-      value: 12,
+      value: stats.activeGoals,
       description: 'Goals in progress',
       icon: <Target className="h-4 w-4" />,
-      trend: 'up',
-      trendValue: '+2 this month'
+      trend: 'up' as const,
+      trendValue: stats.activeGoals > 0 ? `${stats.activeGoals} active` : 'No active goals'
     },
     {
       title: 'Team Members',
-      value: 24,
+      value: stats.teamMembers,
       description: 'Across all teams',
       icon: <Users className="h-4 w-4" />,
-      trend: 'up',
-      trendValue: '+3 new'
+      trend: 'neutral' as const,
+      trendValue: `${stats.teamMembers} total`
     },
     {
       title: 'Planning Initiatives',
-      value: 8,
+      value: stats.planningInitiatives,
       description: 'Currently active',
       icon: <BarChart3 className="h-4 w-4" />,
-      trend: 'neutral',
-      trendValue: 'On track'
+      trend: 'neutral' as const,
+      trendValue: stats.planningInitiatives > 0 ? 'On track' : 'None active'
     },
     {
       title: 'Reviews Scheduled',
-      value: 5,
-      description: 'This quarter',
+      value: stats.reviewsScheduled,
+      description: 'Upcoming',
       icon: <Calendar className="h-4 w-4" />,
-      trend: 'up',
-      trendValue: 'Next: March 15'
+      trend: 'up' as const,
+      trendValue: stats.reviewsScheduled > 0 ? `${stats.reviewsScheduled} scheduled` : 'None scheduled'
     }
   ];
 
-  const recentActivities = [
-    {
-      title: 'Strategic Goal Updated',
-      description: 'Market expansion goal progress updated to 65%',
-      time: '2 hours ago',
-      type: 'goal'
-    },
-    {
-      title: 'New Team Member Added',
-      description: 'Sarah Johnson joined the Marketing team',
-      time: '5 hours ago',
-      type: 'team'
-    },
-    {
-      title: 'Industry Metric Alert',
-      description: 'Customer satisfaction index increased by 8%',
-      time: '1 day ago',
-      type: 'metric'
-    },
-    {
-      title: 'Planning Initiative Started',
-      description: 'Digital transformation initiative launched',
-      time: '2 days ago',
-      type: 'planning'
-    }
-  ];
+  if (isLoading) {
+    return (
+      <PageLayout 
+        title="Dashboard"
+        subtitle="Loading your dashboard..."
+        icon={<BarChart3 className="h-6 w-6" />}
+      >
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout 
       title="Dashboard"
-      subtitle={`Welcome back, ${session.user?.name || 'User'}!`}
+      subtitle={`Welcome back, ${session?.user?.email || 'User'}!`}
       icon={<BarChart3 className="h-6 w-6" />}
     >
       <div className="space-y-8">
         {/* Quick Actions */}
         <div className="flex flex-wrap gap-3">
-          <Button className="flex items-center gap-2">
+          <Button onClick={() => navigate('/goals')} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             New Goal
           </Button>
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button onClick={() => navigate('/teams')} variant="outline" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Add Team Member
+            Manage Teams
           </Button>
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button onClick={() => navigate('/planning')} variant="outline" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
-            Schedule Review
+            Planning
           </Button>
         </div>
 
@@ -126,7 +117,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentActivities.map((activity, index) => (
+                {activities.length > 0 ? activities.map((activity, index) => (
                   <div key={index} className="flex items-start space-x-3 pb-3 border-b border-border last:border-0">
                     <div className="flex-shrink-0 mt-1">
                       <div className="w-2 h-2 bg-primary rounded-full"></div>
@@ -140,7 +131,11 @@ const Dashboard = () => {
                       {activity.type}
                     </Badge>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No recent activities
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>

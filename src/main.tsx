@@ -5,6 +5,7 @@ import App from './App.tsx'
 import './index.css'
 import ErrorBoundary from './components/ErrorBoundary.tsx'
 import { SimpleAuthProvider } from './hooks/useSimpleAuth'
+import { OrganizationProvider } from './contexts/OrganizationContext'
 import { LanguageProvider } from './i18n/LanguageProvider'
 import { IntlProvider } from './i18n/IntlProvider'
 
@@ -14,9 +15,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <LanguageProvider>
       <IntlProvider>
         <SimpleAuthProvider>
-          <ErrorBoundary>
-            <App />
-          </ErrorBoundary>
+          <OrganizationProvider>
+            <ErrorBoundary>
+              <App />
+            </ErrorBoundary>
+          </OrganizationProvider>
         </SimpleAuthProvider>
       </IntlProvider>
     </LanguageProvider>

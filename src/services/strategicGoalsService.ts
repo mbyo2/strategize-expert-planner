@@ -1,5 +1,6 @@
-
 import { DatabaseService } from './databaseService';
+import { strategicGoalSchemas } from './validation/validatedServiceWrapper';
+import { validateForInsert, validateForUpdate } from './validation/validatedService';
 
 export interface StrategicGoal {
   id: string;
@@ -28,7 +29,9 @@ export const fetchStrategicGoals = async (): Promise<StrategicGoal[]> => {
 
 export const createStrategicGoal = async (goal: Omit<StrategicGoal, 'id' | 'created_at' | 'updated_at'>): Promise<StrategicGoal | null> => {
   try {
-    const result = await DatabaseService.createRecord<StrategicGoal>('strategic_goals', goal);
+    // Validate and sanitize input
+    const validatedGoal = await validateForInsert(strategicGoalSchemas.create, goal);
+    const result = await DatabaseService.createRecord<StrategicGoal>('strategic_goals', validatedGoal as any);
     return result.data;
   } catch (error) {
     console.error('Error creating strategic goal:', error);
@@ -38,7 +41,9 @@ export const createStrategicGoal = async (goal: Omit<StrategicGoal, 'id' | 'crea
 
 export const updateStrategicGoal = async (id: string, updates: Partial<StrategicGoal>): Promise<StrategicGoal | null> => {
   try {
-    const result = await DatabaseService.updateRecord<StrategicGoal>('strategic_goals', id, updates);
+    // Validate and sanitize input
+    const validatedUpdates = await validateForUpdate(strategicGoalSchemas.update, updates);
+    const result = await DatabaseService.updateRecord<StrategicGoal>('strategic_goals', id, validatedUpdates as any);
     return result.data;
   } catch (error) {
     console.error('Error updating strategic goal:', error);
