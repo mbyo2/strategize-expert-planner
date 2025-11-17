@@ -1,5 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ERPModule, OrganizationERPConfig, ERPEntity, ERPStrategicLink } from '@/types/erp';
+import { erpEntitySchemas } from './validation/validatedServiceWrapper';
+import { validateForInsert, validateForUpdate } from './validation/validatedService';
 
 export class ERPService {
   // ERP Modules
@@ -105,12 +107,15 @@ export class ERPService {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) throw new Error('User not authenticated');
 
+    // Validate and sanitize input
+    const validatedEntity = await validateForInsert(erpEntitySchemas.create, {
+      ...entity,
+      created_by: user.user.id
+    });
+
     const { data, error } = await supabase
       .from('erp_entities')
-      .insert({
-        ...entity,
-        created_by: user.user.id
-      })
+      .insert(validatedEntity as any)
       .select()
       .single();
 
@@ -124,13 +129,16 @@ export class ERPService {
   ): Promise<ERPEntity> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) throw new Error('User not authenticated');
+    
+    // Validate and sanitize input
+    const validatedUpdates = await validateForUpdate(erpEntitySchemas.update, {
+      ...updates,
+      updated_by: user.user.id
+    });
 
     const { data, error } = await supabase
       .from('erp_entities')
-      .update({
-        ...updates,
-        updated_by: user.user.id
-      })
+      .update(validatedUpdates as any)
       .eq('id', id)
       .select()
       .single();

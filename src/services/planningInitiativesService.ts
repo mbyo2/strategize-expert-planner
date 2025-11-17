@@ -1,5 +1,7 @@
 
 import { DatabaseService } from './databaseService';
+import { planningInitiativeSchemas } from './validation/validatedServiceWrapper';
+import { validateForInsert, validateForUpdate } from './validation/validatedService';
 
 export interface PlanningInitiative {
   id: string;
@@ -28,7 +30,9 @@ export const createPlanningInitiative = async (
   initiative: Omit<PlanningInitiative, 'id' | 'created_at' | 'updated_at'>
 ): Promise<PlanningInitiative> => {
   try {
-    const result = await DatabaseService.createRecord<PlanningInitiative>('planning_initiatives', initiative);
+    // Validate and sanitize input
+    const validatedInitiative = await validateForInsert(planningInitiativeSchemas.create, initiative);
+    const result = await DatabaseService.createRecord<PlanningInitiative>('planning_initiatives', validatedInitiative as any);
     if (!result.data) {
       throw new Error(result.error || 'Failed to create planning initiative');
     }
@@ -44,7 +48,9 @@ export const updatePlanningInitiative = async (
   updates: Partial<PlanningInitiative>
 ): Promise<PlanningInitiative> => {
   try {
-    const result = await DatabaseService.updateRecord<PlanningInitiative>('planning_initiatives', id, updates);
+    // Validate and sanitize input
+    const validatedUpdates = await validateForUpdate(planningInitiativeSchemas.update, updates);
+    const result = await DatabaseService.updateRecord<PlanningInitiative>('planning_initiatives', id, validatedUpdates as any);
     if (!result.data) {
       throw new Error(result.error || 'Failed to update planning initiative');
     }

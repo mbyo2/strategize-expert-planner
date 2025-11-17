@@ -68,9 +68,9 @@ export const enhancedSessionService = {
         return false;
       }
 
-      // Store hash in localStorage for validation
-      localStorage.setItem('session_hash', hashData);
-
+      // Store hash securely - REMOVED localStorage storage for security
+      // Session validation will be done server-side only
+      
       // Log session creation using secure function
       await supabase.rpc('create_audit_log', {
         p_action: 'login',
