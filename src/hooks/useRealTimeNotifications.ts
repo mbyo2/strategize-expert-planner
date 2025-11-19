@@ -29,10 +29,13 @@ export const useRealTimeNotifications = (): UseNotificationsReturn => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     const fetchNotifications = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user || !mounted) return;
 
         const { data, error } = await supabase
           .from('notifications')
@@ -46,22 +49,26 @@ export const useRealTimeNotifications = (): UseNotificationsReturn => {
           return;
         }
 
-        setNotifications(data?.map(item => ({
-          ...item,
-          type: item.type as 'info' | 'success' | 'warning' | 'error'
-        })) || []);
+        if (mounted) {
+          setNotifications(data?.map(item => ({
+            ...item,
+            type: item.type as 'info' | 'success' | 'warning' | 'error'
+          })) || []);
+        }
       } catch (error) {
         console.error('Failed to fetch notifications:', error);
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchNotifications();
 
     // Set up real-time subscription
-    const channel = supabase
-      .channel('notifications-changes')
+    channel = supabase
+      .channel(`notifications-${Date.now()}`)
       .on(
         'postgres_changes',
         { 
@@ -70,14 +77,18 @@ export const useRealTimeNotifications = (): UseNotificationsReturn => {
           table: 'notifications' 
         },
         async () => {
-          // Refetch notifications when changes occur
-          await fetchNotifications();
+          if (mounted) {
+            await fetchNotifications();
+          }
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      mounted = false;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 

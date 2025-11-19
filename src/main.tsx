@@ -10,18 +10,17 @@ import { LanguageProvider } from './i18n/LanguageProvider'
 import { IntlProvider } from './i18n/IntlProvider'
 
 // Wrap top-level app with IntlProvider for internationalization utilities
+// Note: StrictMode removed to prevent duplicate real-time subscriptions in development
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <LanguageProvider>
-      <IntlProvider>
-        <SimpleAuthProvider>
-          <OrganizationProvider>
-            <ErrorBoundary>
-              <App />
-            </ErrorBoundary>
-          </OrganizationProvider>
-        </SimpleAuthProvider>
-      </IntlProvider>
-    </LanguageProvider>
-  </React.StrictMode>,
+  <LanguageProvider>
+    <IntlProvider>
+      <SimpleAuthProvider>
+        <OrganizationProvider>
+          <ErrorBoundary>
+            <App />
+          </ErrorBoundary>
+        </OrganizationProvider>
+      </SimpleAuthProvider>
+    </IntlProvider>
+  </LanguageProvider>,
 )
