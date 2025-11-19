@@ -33,7 +33,12 @@ export const useDashboardData = () => {
       return;
     }
 
+    let mounted = true;
+    let subscription: ReturnType<typeof supabase.channel> | null = null;
+
     const fetchDashboardData = async () => {
+      if (!mounted) return;
+      
       try {
         // Fetch active goals count
         const { count: goalsCount } = await supabase
@@ -47,26 +52,28 @@ export const useDashboardData = () => {
           .from('team_members')
           .select('*', { count: 'exact', head: true });
 
-        // Fetch planning initiatives count (use any to avoid type issues)
+        // Fetch planning initiatives count
         const { count: initiativesCount } = await (supabase as any)
           .from('planning_initiatives')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', session.user.id)
           .eq('status', 'active');
 
-        // Fetch upcoming reviews count (use any to avoid type issues)
+        // Fetch upcoming reviews count
         const { count: reviewsCount } = await (supabase as any)
           .from('strategy_reviews')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', session.user.id)
           .gte('scheduled_date', new Date().toISOString());
 
-        setStats({
-          activeGoals: goalsCount || 0,
-          teamMembers: membersCount || 0,
-          planningInitiatives: initiativesCount || 0,
-          reviewsScheduled: reviewsCount || 0,
-        });
+        if (mounted) {
+          setStats({
+            activeGoals: goalsCount || 0,
+            teamMembers: membersCount || 0,
+            planningInitiatives: initiativesCount || 0,
+            reviewsScheduled: reviewsCount || 0,
+          });
+        }
 
         // Fetch recent activities from activity_logs
         const { data: activityData } = await supabase
@@ -76,7 +83,7 @@ export const useDashboardData = () => {
           .order('created_at', { ascending: false })
           .limit(5);
 
-        if (activityData) {
+        if (activityData && mounted) {
           const formattedActivities: RecentActivity[] = activityData.map((log) => {
             const timeAgo = getTimeAgo(new Date(log.created_at));
             return {
@@ -91,15 +98,17 @@ export const useDashboardData = () => {
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchDashboardData();
 
     // Set up real-time subscription for activity updates
-    const subscription = supabase
-      .channel('dashboard_updates')
+    subscription = supabase
+      .channel(`dashboard-${session.user.id}-${Date.now()}`)
       .on(
         'postgres_changes',
         {
@@ -109,13 +118,18 @@ export const useDashboardData = () => {
           filter: `user_id=eq.${session.user.id}`,
         },
         () => {
-          fetchDashboardData();
+          if (mounted) {
+            fetchDashboardData();
+          }
         }
       )
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      mounted = false;
+      if (subscription) {
+        subscription.unsubscribe();
+      }
     };
   }, [session?.user?.id]);
 
