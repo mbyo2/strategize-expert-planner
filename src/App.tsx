@@ -7,7 +7,6 @@ import { Toaster } from '@/components/ui/toaster';
 import QueryClient from './QueryClient';
 import SEO from './components/SEO';
 import SecureHeaders from './components/security/SecureHeaders';
-import { SimpleAuthProvider } from '@/hooks/useSimpleAuth';
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -46,7 +45,6 @@ function App() {
       <BrowserRouter>
         <HelmetProvider>
           <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-            <SimpleAuthProvider>
               <Toaster />
               <SEO />
               <SecureHeaders />
@@ -90,7 +88,6 @@ function App() {
                 </Routes>
               </div>
             </SecurityBoundary>
-            </SimpleAuthProvider>
           </ThemeProvider>
         </HelmetProvider>
       </BrowserRouter>
