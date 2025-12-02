@@ -140,43 +140,49 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Quick Insights */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Quick Insights
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                  Goals on Track
-                </p>
-                <p className="text-xs text-green-600 dark:text-green-300 mt-1">
-                  85% of strategic goals are meeting their targets
-                </p>
-              </div>
-              
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                  Team Productivity
-                </p>
-                <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
-                  Team collaboration up 23% this quarter
-                </p>
-              </div>
-              
-              <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                  Market Opportunity
-                </p>
-                <p className="text-xs text-yellow-600 dark:text-yellow-300 mt-1">
-                  New market segment showing 15% growth
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Quick Insights */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Quick Insights
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                Active Goals
+              </p>
+              <p className="text-xs text-green-600 dark:text-green-300 mt-1">
+                {stats.activeGoals > 0 
+                  ? `${stats.activeGoals} strategic goal${stats.activeGoals !== 1 ? 's' : ''} in progress`
+                  : 'No active goals - create one to get started'}
+              </p>
+            </div>
+            
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                Team Overview
+              </p>
+              <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                {stats.teamMembers > 0
+                  ? `${stats.teamMembers} team member${stats.teamMembers !== 1 ? 's' : ''} across your organization`
+                  : 'Invite team members to collaborate'}
+              </p>
+            </div>
+            
+            <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+              <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                Planning Status
+              </p>
+              <p className="text-xs text-yellow-600 dark:text-yellow-300 mt-1">
+                {stats.planningInitiatives > 0
+                  ? `${stats.planningInitiatives} initiative${stats.planningInitiatives !== 1 ? 's' : ''} currently active`
+                  : 'Start planning to track initiatives'}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
         </div>
       </div>
     </PageLayout>
