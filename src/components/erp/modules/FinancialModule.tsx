@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -11,27 +12,27 @@ import {
   FileText,
   Calculator
 } from 'lucide-react';
+import { useFinancialMetrics } from '@/hooks/useERPMetrics';
 import { useERPEntities } from '@/hooks/useERP';
 import { useOrganizations } from '@/hooks/useOrganizations';
 
 export const FinancialModule: React.FC = () => {
   const { currentOrganization } = useOrganizations();
-  const { entities: transactions, isLoading } = useERPEntities(
-    currentOrganization?.id || '',
+  const organizationId = currentOrganization?.id || '';
+  const { metrics, isLoading: metricsLoading } = useFinancialMetrics(organizationId);
+  const { entities: transactions, isLoading: transactionsLoading } = useERPEntities(
+    organizationId,
     'financial',
     'transaction'
   );
 
-  const mockFinancialData = {
-    revenue: 850000,
-    expenses: 620000,
-    profit: 230000,
-    cashFlow: 125000,
-    accounts: [
-      { id: '1', name: 'Operating Account', balance: 450000, type: 'checking' },
-      { id: '2', name: 'Savings Account', balance: 200000, type: 'savings' },
-      { id: '3', name: 'Investment Account', balance: 300000, type: 'investment' }
-    ]
+  const isLoading = metricsLoading || transactionsLoading;
+  const hasData = metrics.accounts.length > 0 || transactions.length > 0;
+
+  const formatCurrency = (value: number) => {
+    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+    return `$${value.toLocaleString()}`;
   };
 
   return (
@@ -52,13 +53,25 @@ export const FinancialModule: React.FC = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ${mockFinancialData.revenue.toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              <TrendingUp className="inline w-3 h-3 mr-1" />
-              +12.5% from last month
-            </p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-24" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(metrics.revenue)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {metrics.revenue > 0 ? (
+                    <>
+                      <TrendingUp className="inline w-3 h-3 mr-1 text-green-500" />
+                      From transactions
+                    </>
+                  ) : (
+                    'No revenue recorded'
+                  )}
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -68,12 +81,18 @@ export const FinancialModule: React.FC = () => {
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ${mockFinancialData.expenses.toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              +8.2% from last month
-            </p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-24" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(metrics.expenses)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {metrics.expenses > 0 ? 'From transactions' : 'No expenses recorded'}
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -83,13 +102,23 @@ export const FinancialModule: React.FC = () => {
             <Calculator className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              ${mockFinancialData.profit.toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              <TrendingUp className="inline w-3 h-3 mr-1 text-green-500" />
-              +18.1% from last month
-            </p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-24" />
+            ) : (
+              <>
+                <div className={`text-2xl font-bold ${metrics.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatCurrency(metrics.profit)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {metrics.profit >= 0 ? (
+                    <TrendingUp className="inline w-3 h-3 mr-1 text-green-500" />
+                  ) : (
+                    <TrendingDown className="inline w-3 h-3 mr-1 text-red-500" />
+                  )}
+                  Revenue - Expenses
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -99,12 +128,18 @@ export const FinancialModule: React.FC = () => {
             <PieChart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ${mockFinancialData.cashFlow.toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Available cash flow
-            </p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-24" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(metrics.cashFlow)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Total account balance
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -126,28 +161,45 @@ export const FinancialModule: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {mockFinancialData.accounts.map((account) => (
-                  <div key={account.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                        <DollarSign className="w-5 h-5 text-primary" />
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-20 w-full" />
+                  ))}
+                </div>
+              ) : metrics.accounts.length === 0 ? (
+                <div className="text-center p-8">
+                  <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <div className="text-muted-foreground mb-4">No accounts found</div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Create financial accounts to track your organization's funds
+                  </p>
+                  <Button>Add Account</Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {metrics.accounts.map((account) => (
+                    <div key={account.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                          <DollarSign className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium">{account.name}</h3>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="outline">{account.type}</Badge>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-medium">{account.name}</h3>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline">{account.type}</Badge>
+                      <div className="text-right">
+                        <div className="text-lg font-semibold">
+                          {formatCurrency(account.balance)}
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-lg font-semibold">
-                        ${account.balance.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -161,28 +213,37 @@ export const FinancialModule: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
-                <div className="flex items-center justify-center p-8">
-                  <div className="text-muted-foreground">Loading transactions...</div>
+              {transactionsLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
                 </div>
               ) : transactions.length === 0 ? (
                 <div className="text-center p-8">
+                  <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <div className="text-muted-foreground mb-4">No transactions found</div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Record your first transaction to start tracking finances
+                  </p>
                   <Button>Add Transaction</Button>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {transactions.map((transaction: any) => (
-                    <div key={transaction.id} className="flex items-center justify-between p-3 border rounded">
-                      <div>
-                        <div className="font-medium">{transaction.description}</div>
-                        <div className="text-sm text-muted-foreground">{transaction.category}</div>
+                  {transactions.map((transaction: any) => {
+                    const data = transaction.entity_data || {};
+                    return (
+                      <div key={transaction.id} className="flex items-center justify-between p-3 border rounded">
+                        <div>
+                          <div className="font-medium">{data.description || 'Transaction'}</div>
+                          <div className="text-sm text-muted-foreground">{data.category || 'Uncategorized'}</div>
+                        </div>
+                        <div className={`font-semibold ${(data.amount || 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {(data.amount || 0) > 0 ? '+' : ''}{formatCurrency(data.amount || 0)}
+                        </div>
                       </div>
-                      <div className={`font-semibold ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {transaction.amount > 0 ? '+' : ''}${transaction.amount?.toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
@@ -199,8 +260,11 @@ export const FinancialModule: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-center p-8">
+                <Calculator className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <div className="text-muted-foreground mb-4">Budget management coming soon</div>
-                <Button disabled>Create Budget</Button>
+                <p className="text-sm text-muted-foreground">
+                  Create and track budgets for departments and projects
+                </p>
               </div>
             </CardContent>
           </Card>

@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Package, 
   Truck, 
@@ -14,63 +14,27 @@ import {
   Zap,
   Activity
 } from 'lucide-react';
+import { useOperationsMetrics } from '@/hooks/useERPMetrics';
 import { useERPEntities } from '@/hooks/useERP';
 import { useOrganizations } from '@/hooks/useOrganizations';
 
 export const OperationsModule: React.FC = () => {
   const { currentOrganization } = useOrganizations();
-  const { entities: orders, isLoading } = useERPEntities(
-    currentOrganization?.id || '',
+  const organizationId = currentOrganization?.id || '';
+  const { metrics, isLoading: metricsLoading } = useOperationsMetrics(organizationId);
+  const { entities: orders, isLoading: ordersLoading } = useERPEntities(
+    organizationId,
     'operations',
     'order'
   );
 
-  const mockOperationsData = {
-    totalOrders: 1247,
-    pendingOrders: 23,
-    shippedOrders: 1180,
-    completedOrders: 1200,
-    inventory: {
-      totalItems: 450,
-      lowStock: 12,
-      outOfStock: 3,
-      value: 2850000
-    },
-    processes: [
-      {
-        id: '1',
-        name: 'Order Processing',
-        status: 'active',
-        efficiency: 94,
-        avgTime: '2.3 hours'
-      },
-      {
-        id: '2',
-        name: 'Quality Control',
-        status: 'active',
-        efficiency: 98,
-        avgTime: '45 minutes'
-      },
-      {
-        id: '3',
-        name: 'Shipping',
-        status: 'warning',
-        efficiency: 87,
-        avgTime: '4.2 hours'
-      },
-      {
-        id: '4',
-        name: 'Customer Service',
-        status: 'active',
-        efficiency: 92,
-        avgTime: '12 minutes'
-      }
-    ],
-    recentOrders: [
-      { id: 'ORD-001', customer: 'Acme Corp', amount: 15000, status: 'shipped', date: '2024-01-15' },
-      { id: 'ORD-002', customer: 'TechStart Inc', amount: 8500, status: 'processing', date: '2024-01-15' },
-      { id: 'ORD-003', customer: 'Global Industries', amount: 22000, status: 'completed', date: '2024-01-14' }
-    ]
+  const isLoading = metricsLoading || ordersLoading;
+  const hasData = metrics.totalOrders > 0 || metrics.inventory.totalItems > 0;
+
+  const formatCurrency = (value: number) => {
+    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+    return `$${value.toLocaleString()}`;
   };
 
   const getStatusIcon = (status: string) => {
@@ -79,15 +43,6 @@ export const OperationsModule: React.FC = () => {
       case 'shipped': return <Truck className="w-4 h-4 text-blue-500" />;
       case 'processing': return <Activity className="w-4 h-4 text-orange-500" />;
       default: return <Package className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-700';
-      case 'warning': return 'bg-orange-100 text-orange-700';
-      case 'error': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -109,10 +64,16 @@ export const OperationsModule: React.FC = () => {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockOperationsData.totalOrders}</div>
-            <p className="text-xs text-muted-foreground">
-              +{mockOperationsData.pendingOrders} pending
-            </p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{metrics.totalOrders}</div>
+                <p className="text-xs text-muted-foreground">
+                  {metrics.pendingOrders > 0 ? `+${metrics.pendingOrders} pending` : 'All processed'}
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -122,11 +83,22 @@ export const OperationsModule: React.FC = () => {
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockOperationsData.inventory.totalItems}</div>
-            <p className="text-xs text-muted-foreground">
-              <AlertCircle className="inline w-3 h-3 mr-1 text-orange-500" />
-              {mockOperationsData.inventory.lowStock} low stock
-            </p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-12" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{metrics.inventory.totalItems}</div>
+                <p className="text-xs text-muted-foreground">
+                  {metrics.inventory.lowStock > 0 && (
+                    <>
+                      <AlertCircle className="inline w-3 h-3 mr-1 text-orange-500" />
+                      {metrics.inventory.lowStock} low stock
+                    </>
+                  )}
+                  {metrics.inventory.lowStock === 0 && 'Stock levels OK'}
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -136,11 +108,21 @@ export const OperationsModule: React.FC = () => {
             <Truck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockOperationsData.shippedOrders}</div>
-            <p className="text-xs text-muted-foreground">
-              <CheckCircle className="inline w-3 h-3 mr-1 text-green-500" />
-              94.6% fulfillment rate
-            </p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-12" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{metrics.shippedOrders}</div>
+                <p className="text-xs text-muted-foreground">
+                  {metrics.totalOrders > 0 ? (
+                    <>
+                      <CheckCircle className="inline w-3 h-3 mr-1 text-green-500" />
+                      {Math.round((metrics.shippedOrders / metrics.totalOrders) * 100)}% fulfillment
+                    </>
+                  ) : 'No orders yet'}
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -150,12 +132,18 @@ export const OperationsModule: React.FC = () => {
             <Zap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ${(mockOperationsData.inventory.value / 1000000).toFixed(1)}M
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Total inventory value
-            </p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(metrics.inventory.value)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Total inventory value
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -164,7 +152,6 @@ export const OperationsModule: React.FC = () => {
         <TabsList>
           <TabsTrigger value="orders">Orders</TabsTrigger>
           <TabsTrigger value="inventory">Inventory</TabsTrigger>
-          <TabsTrigger value="processes">Processes</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
@@ -178,8 +165,19 @@ export const OperationsModule: React.FC = () => {
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <div className="flex items-center justify-center p-8">
-                  <div className="text-muted-foreground">Loading orders...</div>
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-20 w-full" />
+                  ))}
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="text-center p-8">
+                  <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <div className="text-muted-foreground mb-4">No orders found</div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Orders will appear here when customers place them
+                  </p>
+                  <Button>Create Order</Button>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -189,7 +187,7 @@ export const OperationsModule: React.FC = () => {
                         <CardTitle className="text-sm">Pending</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold">{mockOperationsData.pendingOrders}</div>
+                        <div className="text-2xl font-bold">{metrics.pendingOrders}</div>
                       </CardContent>
                     </Card>
                     <Card>
@@ -197,7 +195,7 @@ export const OperationsModule: React.FC = () => {
                         <CardTitle className="text-sm">Shipped</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold">{mockOperationsData.shippedOrders}</div>
+                        <div className="text-2xl font-bold">{metrics.shippedOrders}</div>
                       </CardContent>
                     </Card>
                     <Card>
@@ -205,28 +203,31 @@ export const OperationsModule: React.FC = () => {
                         <CardTitle className="text-sm">Completed</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold">{mockOperationsData.completedOrders}</div>
+                        <div className="text-2xl font-bold">{metrics.completedOrders}</div>
                       </CardContent>
                     </Card>
                   </div>
 
                   <div className="space-y-3">
                     <h4 className="font-medium">Recent Orders</h4>
-                    {mockOperationsData.recentOrders.map((order) => (
-                      <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center space-x-4">
-                          {getStatusIcon(order.status)}
-                          <div>
-                            <h3 className="font-medium">{order.id}</h3>
-                            <p className="text-sm text-muted-foreground">{order.customer}</p>
+                    {orders.slice(0, 5).map((order: any) => {
+                      const data = order.entity_data || {};
+                      return (
+                        <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="flex items-center space-x-4">
+                            {getStatusIcon(data.status)}
+                            <div>
+                              <h3 className="font-medium">ORD-{order.id.slice(0, 8)}</h3>
+                              <p className="text-sm text-muted-foreground">{data.customer || 'Unknown customer'}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-semibold">{formatCurrency(data.amount || 0)}</div>
+                            <Badge variant="outline">{data.status || 'pending'}</Badge>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="font-semibold">${order.amount.toLocaleString()}</div>
-                          <Badge variant="outline">{order.status}</Badge>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -243,69 +244,61 @@ export const OperationsModule: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Total Items</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{mockOperationsData.inventory.totalItems}</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Low Stock</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-orange-600">
-                      {mockOperationsData.inventory.lowStock}
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Out of Stock</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-red-600">
-                      {mockOperationsData.inventory.outOfStock}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              
-              <div className="text-center p-8">
-                <div className="text-muted-foreground mb-4">Detailed inventory management coming soon</div>
-                <Button disabled>Manage Inventory</Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="processes" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Process Efficiency</CardTitle>
-              <CardDescription>
-                Monitor and optimize operational processes
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {mockOperationsData.processes.map((process) => (
-                  <div key={process.id} className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-3 h-3 rounded-full ${getStatusColor(process.status)}`} />
-                        <h3 className="font-medium">{process.name}</h3>
-                        <Badge variant="outline">{process.avgTime}</Badge>
-                      </div>
-                      <div className="text-sm font-medium">{process.efficiency}%</div>
-                    </div>
-                    <Progress value={process.efficiency} className="w-full" />
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
+                </div>
+              ) : metrics.inventory.totalItems === 0 ? (
+                <div className="text-center p-8">
+                  <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <div className="text-muted-foreground mb-4">No inventory items found</div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Add inventory items to track stock levels
+                  </p>
+                  <Button>Add Inventory</Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Total Items</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{metrics.inventory.totalItems}</div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Low Stock</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-orange-600">
+                          {metrics.inventory.lowStock}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Out of Stock</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-red-600">
+                          {metrics.inventory.outOfStock}
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
-                ))}
-              </div>
+                  
+                  <div className="p-4 border rounded-lg text-center">
+                    <div className="text-muted-foreground">
+                      Total Inventory Value: <span className="font-bold text-foreground">{formatCurrency(metrics.inventory.value)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -320,11 +313,11 @@ export const OperationsModule: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-center p-8">
+                <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <div className="text-muted-foreground mb-4">Advanced analytics coming soon</div>
-                <Button disabled>
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  View Analytics
-                </Button>
+                <p className="text-sm text-muted-foreground">
+                  Track order trends, fulfillment rates, and operational efficiency
+                </p>
               </div>
             </CardContent>
           </Card>
