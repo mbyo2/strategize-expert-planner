@@ -85,6 +85,7 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
   };
 
   useEffect(() => {
+    console.log('[OrganizationContext] Effect triggered:', { isAuthenticated, userId: session?.user?.id });
     if (isAuthenticated && session?.user?.id) {
       setIsLoading(true);
       fetchUserOrganization(session.user.id);

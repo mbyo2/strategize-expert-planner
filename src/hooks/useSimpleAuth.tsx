@@ -22,13 +22,22 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   useEffect(() => {
     let isMounted = true;
+    let initComplete = false;
+
+    console.log('[useSimpleAuth] Effect starting');
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, supabaseSession) => {
         if (!isMounted) return;
         
-        console.log('Auth state changed:', event, supabaseSession?.user?.email);
+        console.log('[useSimpleAuth] Auth state changed:', event, supabaseSession?.user?.email);
+        
+        // Skip INITIAL_SESSION event if we haven't finished init - let initSession handle it
+        if (event === 'INITIAL_SESSION' && !initComplete) {
+          console.log('[useSimpleAuth] Skipping INITIAL_SESSION, will be handled by initSession');
+          return;
+        }
         
         if (supabaseSession?.user) {
           try {
@@ -46,6 +55,8 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 .maybeSingle()
             ]);
 
+            if (!isMounted) return;
+
             setSession({
               user: {
                 id: supabaseSession.user.id,
@@ -57,6 +68,7 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             });
           } catch (error) {
             console.error('Error fetching user data:', error);
+            if (!isMounted) return;
             setSession({
               user: {
                 id: supabaseSession.user.id,
@@ -76,14 +88,44 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     // THEN check for existing session
     const initSession = async () => {
       try {
+        console.log('[useSimpleAuth] Checking existing session');
         const { data: { session: supabaseSession } } = await supabase.auth.getSession();
         if (!isMounted) return;
         
-        if (!supabaseSession?.user) {
+        initComplete = true;
+        
+        if (supabaseSession?.user) {
+          console.log('[useSimpleAuth] Found existing session for:', supabaseSession.user.email);
+          // Fetch profile and role for existing session
+          const [profileResult, roleResult] = await Promise.all([
+            supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', supabaseSession.user.id)
+              .maybeSingle(),
+            supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', supabaseSession.user.id)
+              .maybeSingle()
+          ]);
+
+          if (!isMounted) return;
+
+          setSession({
+            user: {
+              id: supabaseSession.user.id,
+              email: supabaseSession.user.email || '',
+              name: profileResult.data?.name || supabaseSession.user.user_metadata?.name || 'User',
+              role: roleResult.data?.role || 'viewer',
+              avatar: profileResult.data?.avatar
+            }
+          });
+        } else {
+          console.log('[useSimpleAuth] No existing session');
           setSession({ user: null });
-          setIsLoading(false);
         }
-        // If there is a session, the onAuthStateChange will handle it
+        setIsLoading(false);
       } catch (error) {
         console.error('Error getting session:', error);
         if (isMounted) {
@@ -96,6 +138,7 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     initSession();
 
     return () => {
+      console.log('[useSimpleAuth] Cleanup');
       isMounted = false;
       subscription.unsubscribe();
     };
