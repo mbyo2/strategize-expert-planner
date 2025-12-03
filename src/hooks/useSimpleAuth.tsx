@@ -77,11 +77,13 @@ export const SimpleAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 role: 'viewer',
               }
             });
+          } finally {
+            if (isMounted) setIsLoading(false);
           }
         } else {
           setSession({ user: null });
+          setIsLoading(false);
         }
-        setIsLoading(false);
       }
     );
 
