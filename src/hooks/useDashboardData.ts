@@ -52,18 +52,17 @@ export const useDashboardData = () => {
           .from('team_members')
           .select('*', { count: 'exact', head: true });
 
-        // Fetch planning initiatives count
-        const { count: initiativesCount } = await (supabase as any)
+        // Fetch planning initiatives count (uses owner_id, not user_id)
+        const { count: initiativesCount } = await supabase
           .from('planning_initiatives')
           .select('*', { count: 'exact', head: true })
-          .eq('user_id', session.user.id)
+          .eq('owner_id', session.user.id)
           .eq('status', 'active');
 
-        // Fetch upcoming reviews count
-        const { count: reviewsCount } = await (supabase as any)
+        // Fetch upcoming reviews count (strategy_reviews has no user field - show all upcoming)
+        const { count: reviewsCount } = await supabase
           .from('strategy_reviews')
           .select('*', { count: 'exact', head: true })
-          .eq('user_id', session.user.id)
           .gte('scheduled_date', new Date().toISOString());
 
         if (mounted) {
