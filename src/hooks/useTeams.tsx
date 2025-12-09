@@ -1,191 +1,329 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Team, TeamMember, CreateTeamData, CreateTeamMemberData, UpdateTeamMemberData } from '@/types/team';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Team as TeamType, TeamMember as TeamMemberType, CreateTeamData as OldCreateTeamData, CreateTeamMemberData as OldMemberData, UpdateTeamMemberData } from '@/types/team';
 
-interface TeamsContextType {
-  teams: Team[];
-  isLoading: boolean;
-  error: string | null;
-  addTeam: (teamData: CreateTeamData) => void;
-  updateTeam: (id: string, updates: Partial<Team>) => void;
-  deleteTeam: (id: string) => void;
-  addMember: (teamId: string, memberData: CreateTeamMemberData) => Promise<void>;
-  updateMember: (teamId: string, memberId: string, updates: UpdateTeamMemberData) => void;
-  removeMember: (teamId: string, memberId: string) => void;
-  refreshTeams: () => Promise<void>;
+export interface Team {
+  id: string;
+  name: string;
+  description: string | null;
+  team_type: 'department' | 'project' | 'cross-functional';
+  organization_id: string | null;
+  parent_team_id: string | null;
+  created_at: string;
+  updated_at: string;
+  members: TeamMember[];
 }
 
-const TeamsContext = createContext<TeamsContextType | undefined>(undefined);
+export interface TeamMember {
+  id: string;
+  team_id: string;
+  user_id: string;
+  role: string;
+  department: string | null;
+  position: string | null;
+  joined_date: string;
+  status: string | null;
+  name: string;
+  email: string;
+  avatar?: string;
+}
 
-export const TeamsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [teams, setTeams] = useState<Team[]>([
-    {
-      id: '1',
-      name: 'Engineering Team',
-      description: 'Core development team responsible for product engineering',
-      team_type: 'department',
-      organization_id: 'org-1',
-      created_at: '2024-01-15T09:00:00Z',
-      updated_at: '2024-01-15T09:00:00Z',
-      members: [
-        {
-          id: 'm1',
-          team_id: '1',
-          user_id: 'u1',
-          role: 'Team Lead',
-          department: 'Engineering',
-          position: 'Senior Engineer',
-          joined_date: '2024-01-15',
-          name: 'John Doe',
-          email: 'john.doe@company.com',
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=john'
-        },
-        {
-          id: 'm2',
-          team_id: '1',
-          user_id: 'u2',
-          role: 'Member',
-          department: 'Engineering',
-          position: 'Frontend Developer',
-          joined_date: '2024-01-20',
-          name: 'Jane Smith',
-          email: 'jane.smith@company.com',
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=jane'
-        }
-      ]
-    },
-    {
-      id: '2',
-      name: 'Marketing Team',
-      description: 'Strategic marketing and brand management',
-      team_type: 'department',
-      organization_id: 'org-1',
-      created_at: '2024-01-16T10:00:00Z',
-      updated_at: '2024-01-16T10:00:00Z',
-      members: [
-        {
-          id: 'm3',
-          team_id: '2',
-          user_id: 'u3',
-          role: 'Team Lead',
-          department: 'Marketing',
-          position: 'Marketing Manager',
-          joined_date: '2024-01-16',
-          name: 'Mike Johnson',
-          email: 'mike.johnson@company.com',
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=mike'
-        }
-      ]
-    }
-  ]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export interface CreateTeamData {
+  name: string;
+  description?: string;
+  team_type?: 'department' | 'project' | 'cross-functional';
+  organization_id?: string;
+}
 
-  const addTeam = (teamData: CreateTeamData) => {
-    const newTeam: Team = {
-      ...teamData,
-      id: `team-${Date.now()}`,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    
-    setTeams(prev => [...prev, newTeam]);
-    toast.success('Team created successfully');
+export interface CreateTeamMemberData {
+  team_id: string;
+  user_id: string;
+  role: string;
+  department?: string;
+  position?: string;
+}
+
+// Fetch all teams with members
+async function fetchTeams(): Promise<Team[]> {
+  const { data: teams, error } = await supabase
+    .from('teams')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  // Fetch members for each team
+  const teamsWithMembers = await Promise.all(
+    (teams || []).map(async (team) => {
+      const { data: members } = await supabase
+        .from('team_members')
+        .select(`
+          *,
+          profiles(name, email, avatar)
+        `)
+        .eq('team_id', team.id);
+
+      return {
+        ...team,
+        team_type: team.team_type as 'department' | 'project' | 'cross-functional',
+        members: (members || []).map(m => {
+          const profile = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
+          return {
+            id: m.id,
+            team_id: m.team_id,
+            user_id: m.user_id,
+            role: m.role,
+            department: m.department,
+            position: m.position,
+            joined_date: m.joined_date,
+            status: m.status,
+            name: profile?.name || 'Unknown',
+            email: profile?.email || '',
+            avatar: profile?.avatar,
+          };
+        })
+      };
+    })
+  );
+
+  return teamsWithMembers;
+}
+
+// Create a new team
+async function createTeam(data: CreateTeamData | OldCreateTeamData): Promise<Team> {
+  const { data: team, error } = await supabase
+    .from('teams')
+    .insert({
+      name: data.name,
+      description: data.description || null,
+      team_type: data.team_type || 'department',
+      organization_id: data.organization_id || null,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return { 
+    ...team, 
+    team_type: team.team_type as 'department' | 'project' | 'cross-functional',
+    members: [] 
   };
+}
 
-  const updateTeam = (id: string, updates: Partial<Team>) => {
-    setTeams(prev => prev.map(team => 
-      team.id === id ? { ...team, ...updates, updated_at: new Date().toISOString() } : team
-    ));
-    toast.success('Team updated successfully');
+// Update a team
+async function updateTeamById(id: string, updates: Partial<CreateTeamData>): Promise<Team> {
+  const { data: team, error } = await supabase
+    .from('teams')
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return {
+    ...team,
+    team_type: team.team_type as 'department' | 'project' | 'cross-functional',
+    members: []
   };
+}
 
-  const deleteTeam = (id: string) => {
-    setTeams(prev => prev.filter(team => team.id !== id));
-    toast.success('Team deleted successfully');
-  };
+// Delete a team
+async function deleteTeamById(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('teams')
+    .delete()
+    .eq('id', id);
 
-  const addMember = async (teamId: string, memberData: CreateTeamMemberData) => {
-    const newMember: TeamMember = {
-      id: `member-${Date.now()}`,
+  if (error) throw error;
+}
+
+// Add a member to a team (legacy signature support)
+interface LegacyMemberData {
+  name: string;
+  email: string;
+  role: string;
+  department?: string;
+  position?: string;
+  joinedDate?: string;
+}
+
+async function addTeamMemberLegacy(teamId: string, data: LegacyMemberData): Promise<TeamMember> {
+  // For legacy support, we need to find or create a user
+  // For now, we'll create a placeholder - in production you'd look up the user by email
+  const { data: member, error } = await supabase
+    .from('team_members')
+    .insert({
       team_id: teamId,
-      user_id: `user-${Date.now()}`,
-      role: memberData.role,
-      department: memberData.department,
-      position: memberData.position,
-      joined_date: memberData.joinedDate,
-      name: memberData.name,
-      email: memberData.email,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${memberData.email}`
-    };
+      user_id: crypto.randomUUID(), // This should be a real user ID in production
+      role: data.role,
+      department: data.department || null,
+      position: data.position || null,
+      joined_date: data.joinedDate || new Date().toISOString(),
+    })
+    .select()
+    .single();
 
-    setTeams(prev => prev.map(team => 
-      team.id === teamId 
-        ? { ...team, members: [...team.members, newMember] }
-        : team
-    ));
-    toast.success('Team member added successfully');
+  if (error) throw error;
+  return {
+    ...member,
+    name: data.name,
+    email: data.email,
+    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.email}`,
+  };
+}
+
+// Remove a member from a team
+async function removeTeamMemberById(memberId: string): Promise<void> {
+  const { error } = await supabase
+    .from('team_members')
+    .delete()
+    .eq('id', memberId);
+
+  if (error) throw error;
+}
+
+// Update team member (legacy signature support - teamId, memberId, updates)
+async function updateTeamMemberLegacy(teamId: string, memberId: string, updates: UpdateTeamMemberData): Promise<void> {
+  const { error } = await supabase
+    .from('team_members')
+    .update({
+      role: updates.role,
+      department: updates.department,
+      position: updates.position,
+    })
+    .eq('id', memberId);
+
+  if (error) throw error;
+}
+
+export const useTeams = () => {
+  const queryClient = useQueryClient();
+
+  const {
+    data: teams = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['teams'],
+    queryFn: fetchTeams,
+  });
+
+  const createTeamMutation = useMutation({
+    mutationFn: createTeam,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+      toast.success('Team created successfully');
+    },
+    onError: (error) => {
+      console.error('Error creating team:', error);
+      toast.error('Failed to create team');
+    },
+  });
+
+  const updateTeamMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<CreateTeamData> }) =>
+      updateTeamById(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+      toast.success('Team updated successfully');
+    },
+    onError: (error) => {
+      console.error('Error updating team:', error);
+      toast.error('Failed to update team');
+    },
+  });
+
+  const deleteTeamMutation = useMutation({
+    mutationFn: deleteTeamById,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+      toast.success('Team deleted successfully');
+    },
+    onError: (error) => {
+      console.error('Error deleting team:', error);
+      toast.error('Failed to delete team');
+    },
+  });
+
+  const addMemberMutation = useMutation({
+    mutationFn: ({ teamId, data }: { teamId: string; data: LegacyMemberData }) =>
+      addTeamMemberLegacy(teamId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+      toast.success('Team member added successfully');
+    },
+    onError: (error) => {
+      console.error('Error adding team member:', error);
+      toast.error('Failed to add team member');
+    },
+  });
+
+  const removeMemberMutation = useMutation({
+    mutationFn: removeTeamMemberById,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+      toast.success('Team member removed successfully');
+    },
+    onError: (error) => {
+      console.error('Error removing team member:', error);
+      toast.error('Failed to remove team member');
+    },
+  });
+
+  const updateMemberMutation = useMutation({
+    mutationFn: ({ teamId, memberId, updates }: { teamId: string; memberId: string; updates: UpdateTeamMemberData }) =>
+      updateTeamMemberLegacy(teamId, memberId, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+      toast.success('Team member updated successfully');
+    },
+    onError: (error) => {
+      console.error('Error updating team member:', error);
+      toast.error('Failed to update team member');
+    },
+  });
+
+  // Legacy-compatible API
+  const addMember = async (teamId: string, data: LegacyMemberData) => {
+    return addMemberMutation.mutateAsync({ teamId, data });
   };
 
   const updateMember = (teamId: string, memberId: string, updates: UpdateTeamMemberData) => {
-    setTeams(prev => prev.map(team => 
-      team.id === teamId 
-        ? {
-            ...team, 
-            members: team.members.map(member => 
-              member.id === memberId ? { ...member, ...updates } : member
-            )
-          }
-        : team
-    ));
-    toast.success('Team member updated successfully');
+    updateMemberMutation.mutate({ teamId, memberId, updates });
   };
 
   const removeMember = (teamId: string, memberId: string) => {
-    setTeams(prev => prev.map(team => 
-      team.id === teamId 
-        ? { ...team, members: team.members.filter(member => member.id !== memberId) }
-        : team
-    ));
-    toast.success('Team member removed successfully');
+    removeMemberMutation.mutate(memberId);
   };
 
-  const refreshTeams = async () => {
-    setIsLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsLoading(false);
+  // Support both old and new updateTeam signatures
+  const updateTeam = (idOrData: string | { id: string; updates: Partial<CreateTeamData> }, updates?: Partial<CreateTeamData>) => {
+    if (typeof idOrData === 'string' && updates) {
+      updateTeamMutation.mutate({ id: idOrData, updates });
+    } else if (typeof idOrData === 'object') {
+      updateTeamMutation.mutate(idOrData);
+    }
   };
 
-  useEffect(() => {
-    refreshTeams();
-  }, []);
-
-  const value: TeamsContextType = {
+  return {
     teams,
     isLoading,
     error,
-    addTeam,
+    refreshTeams: refetch,
+    addTeam: createTeamMutation.mutate,
     updateTeam,
-    deleteTeam,
+    deleteTeam: deleteTeamMutation.mutate,
     addMember,
-    updateMember,
     removeMember,
-    refreshTeams
+    updateMember,
+    isCreating: createTeamMutation.isPending,
+    isUpdating: updateTeamMutation.isPending,
+    isDeleting: deleteTeamMutation.isPending,
   };
-
-  return (
-    <TeamsContext.Provider value={value}>
-      {children}
-    </TeamsContext.Provider>
-  );
-};
-
-export const useTeams = () => {
-  const context = useContext(TeamsContext);
-  if (context === undefined) {
-    throw new Error('useTeams must be used within a TeamsProvider');
-  }
-  return context;
 };

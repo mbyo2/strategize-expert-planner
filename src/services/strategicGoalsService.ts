@@ -13,6 +13,12 @@ export interface StrategicGoal {
   start_date?: string;
   due_date?: string;
   user_id: string;
+  owner_id?: string;
+  priority?: 'low' | 'medium' | 'high';
+  category?: string;
+  risk_level?: string;
+  milestones?: any;
+  dependencies?: any;
   created_at: string;
   updated_at: string;
 }
