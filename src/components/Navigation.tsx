@@ -9,9 +9,15 @@ const Navigation = () => {
   const location = useLocation();
   const { hasRole } = useSimpleAuth();
 
+  // Filter nav items based on user role
+  const filteredNavItems = navItems.filter(item => {
+    if (!item.requiredRole) return true;
+    return hasRole(item.requiredRole);
+  });
+
   return (
     <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-      {navItems.map((item) => {
+      {filteredNavItems.map((item) => {
         const Icon = item.icon;
         const isActive = location.pathname === item.url;
         

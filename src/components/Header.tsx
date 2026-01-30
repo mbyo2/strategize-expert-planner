@@ -9,7 +9,13 @@ import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import UserMenu from './UserMenu';
 
 const Header = () => {
-  const { session } = useSimpleAuth();
+  const { session, hasRole } = useSimpleAuth();
+
+  // Filter nav items based on user role
+  const filteredNavItems = navItems.filter(item => {
+    if (!item.requiredRole) return true;
+    return hasRole(item.requiredRole);
+  });
 
   return (
     <header className="border-b">
@@ -23,7 +29,7 @@ const Header = () => {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex mx-6 flex-1">
           <ul className="flex space-x-6">
-            {navItems.map((item) => {
+            {filteredNavItems.slice(0, 6).map((item) => {
               const Icon = item.icon;
               return (
                 <li key={item.url}>
@@ -54,7 +60,7 @@ const Header = () => {
           </SheetTrigger>
           <SheetContent>
             <nav className="flex flex-col space-y-4">
-              {navItems.map((item) => {
+              {filteredNavItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link 
