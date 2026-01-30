@@ -8,10 +8,19 @@ import Header from '@/components/Header';
 import TestUserLogin from '@/components/TestUserLogin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Shield, Users, Database, Lock } from 'lucide-react';
+import { CheckCircle, Shield, Users, Database, Lock, Loader2 } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 
 const Index = () => {
-  const { isAuthenticated } = useSimpleAuth();
+  const { isAuthenticated, isLoading } = useSimpleAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
   
   if (isAuthenticated) {
     return (
