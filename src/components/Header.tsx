@@ -54,18 +54,12 @@ const Header = () => {
                     className={cn(
                       "relative flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
                       active 
-                        ? "text-primary bg-primary/10" 
+                        ? "text-primary-foreground bg-primary shadow-md shadow-primary/25" 
                         : "text-muted-foreground hover:text-foreground hover:bg-accent"
                     )}
                   >
-                    <Icon className={cn(
-                      "h-4 w-4 transition-colors",
-                      active && "text-primary"
-                    )} />
+                    <Icon className="h-4 w-4" />
                     <span>{item.title}</span>
-                    {active && (
-                      <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-primary rounded-full" />
-                    )}
                   </Link>
                 </li>
               );
