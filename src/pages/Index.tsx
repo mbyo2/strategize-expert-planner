@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Hero from '@/components/landing/Hero';
 import Features from '@/components/landing/Features';
@@ -8,18 +7,14 @@ import Header from '@/components/Header';
 import TestUserLogin from '@/components/TestUserLogin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Shield, Users, Database, Lock, Loader2 } from 'lucide-react';
-import { Navigate } from 'react-router-dom';
+import { CheckCircle, Shield, Users, Database, Lock } from 'lucide-react';
+import LoadingScreen from '@/components/ui/loading-screen';
 
 const Index = () => {
   const { isAuthenticated, isLoading } = useSimpleAuth();
   
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <LoadingScreen message="Initializing..." />;
   }
   
   if (isAuthenticated) {
