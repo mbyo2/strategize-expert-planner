@@ -54,11 +54,14 @@ const Header = () => {
                     className={cn(
                       "relative flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
                       active 
-                        ? "text-primary-foreground bg-primary shadow-md shadow-primary/25" 
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                        ? "text-foreground bg-accent border border-border" 
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                     )}
                   >
-                    <Icon className="h-4 w-4" />
+                    {active && (
+                      <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary" />
+                    )}
+                    <Icon className={cn("h-4 w-4", active && "ml-1")} />
                     <span>{item.title}</span>
                   </Link>
                 </li>
