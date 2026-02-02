@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import AccessDenied from '@/pages/AccessDenied';
+import LoadingScreen from '@/components/ui/loading-screen';
 
 interface SimpleAuthGuardProps {
   children: React.ReactNode;
@@ -13,11 +13,7 @@ const SimpleAuthGuard: React.FC<SimpleAuthGuardProps> = ({ children, requiredRol
   const { isAuthenticated, isLoading, hasRole } = useSimpleAuth();
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingScreen message="Authenticating..." />;
   }
 
   if (!isAuthenticated) {
