@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,44 +8,101 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, Settings, Bell, Shield, Camera, Mail, Phone, MapPin, Building } from 'lucide-react';
+import { User, Bell, Shield, Camera, Loader2 } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import { useProfile } from '@/hooks/useProfile';
+import { toast } from 'sonner';
 
 const Profile = () => {
   const { session } = useSimpleAuth();
+  const { profile, isLoading, updateProfile, isUpdating } = useProfile();
   const [isEditing, setIsEditing] = useState(false);
   
-  const [profile, setProfile] = useState({
-    name: session.user?.name || 'John Doe',
-    email: session.user?.email || 'john.doe@company.com',
-    jobTitle: 'Strategic Planning Manager',
-    department: 'Strategy',
-    company: 'Tech Corp',
-    bio: 'Experienced strategic planning professional with 8+ years in business development and market analysis.',
-    phone: '+1 (555) 123-4567',
-    location: 'San Francisco, CA',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=john'
+  const [localProfile, setLocalProfile] = useState({
+    name: '',
+    email: '',
+    job_title: '',
+    department: '',
+    company: '',
+    bio: '',
+    avatar: '',
   });
 
   const [notifications, setNotifications] = useState({
-    emailNotifications: true,
-    pushNotifications: true,
-    weeklyDigest: false,
-    goalReminders: true,
-    teamUpdates: true
+    email_notifications: true,
+    app_notifications: true,
+    weekly_digest: false,
   });
 
   const [security, setSecurity] = useState({
-    mfaEnabled: false,
-    sessionTimeout: 30,
-    ipRestrictions: false
+    mfa_enabled: false,
+    session_timeout_minutes: 30,
   });
 
-  const handleSaveProfile = () => {
-    setIsEditing(false);
-    // Here you would typically save to the backend
-    console.log('Saving profile:', profile);
+  // Sync local state with database profile
+  useEffect(() => {
+    if (profile) {
+      setLocalProfile({
+        name: profile.name || '',
+        email: profile.email || '',
+        job_title: profile.job_title || '',
+        department: profile.department || '',
+        company: profile.company || '',
+        bio: profile.bio || '',
+        avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`,
+      });
+      setNotifications({
+        email_notifications: profile.email_notifications ?? true,
+        app_notifications: profile.app_notifications ?? true,
+        weekly_digest: profile.weekly_digest ?? false,
+      });
+      setSecurity({
+        mfa_enabled: profile.mfa_enabled ?? false,
+        session_timeout_minutes: profile.session_timeout_minutes ?? 30,
+      });
+    }
+  }, [profile]);
+
+  const handleSaveProfile = async () => {
+    try {
+      await updateProfile({
+        name: localProfile.name,
+        job_title: localProfile.job_title,
+        department: localProfile.department,
+        company: localProfile.company,
+        bio: localProfile.bio,
+      });
+      setIsEditing(false);
+      toast.success('Profile saved successfully');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+    }
+  };
+
+  const handleSaveNotifications = async () => {
+    try {
+      await updateProfile({
+        email_notifications: notifications.email_notifications,
+        app_notifications: notifications.app_notifications,
+        weekly_digest: notifications.weekly_digest,
+      });
+      toast.success('Notification preferences saved');
+    } catch (error) {
+      console.error('Error saving notifications:', error);
+    }
+  };
+
+  const handleSaveSecurity = async () => {
+    try {
+      await updateProfile({
+        mfa_enabled: security.mfa_enabled,
+        session_timeout_minutes: security.session_timeout_minutes,
+      });
+      toast.success('Security settings saved');
+    } catch (error) {
+      console.error('Error saving security settings:', error);
+    }
   };
 
   const handleNotificationChange = (key: string, value: boolean) => {
@@ -56,6 +112,20 @@ const Profile = () => {
   const handleSecurityChange = (key: string, value: boolean | number) => {
     setSecurity(prev => ({ ...prev, [key]: value }));
   };
+
+  if (isLoading) {
+    return (
+      <PageLayout 
+        title="User Profile"
+        subtitle="Manage your account settings and preferences"
+        icon={<User className="h-6 w-6" />}
+      >
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout 
@@ -73,14 +143,13 @@ const Profile = () => {
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
-            {/* Profile Header */}
             <Card>
               <CardHeader>
                 <div className="flex items-center space-x-4">
                   <div className="relative">
                     <Avatar className="h-20 w-20">
-                      <AvatarImage src={profile.avatar} alt={profile.name} />
-                      <AvatarFallback>{profile.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      <AvatarImage src={localProfile.avatar} alt={localProfile.name} />
+                      <AvatarFallback>{localProfile.name?.split(' ').map(n => n[0]).join('') || 'U'}</AvatarFallback>
                     </Avatar>
                     <Button 
                       size="sm" 
@@ -91,24 +160,24 @@ const Profile = () => {
                     </Button>
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-2xl font-bold">{profile.name}</h2>
-                    <p className="text-muted-foreground">{profile.jobTitle}</p>
+                    <h2 className="text-2xl font-bold">{localProfile.name || 'User'}</h2>
+                    <p className="text-muted-foreground">{localProfile.job_title || 'No job title set'}</p>
                     <div className="flex items-center gap-2 mt-2">
-                      <Badge variant="outline">{profile.department}</Badge>
+                      <Badge variant="outline">{localProfile.department || 'No department'}</Badge>
                       <Badge variant="outline">{session.user?.role || 'User'}</Badge>
                     </div>
                   </div>
                   <Button 
-                    onClick={() => setIsEditing(!isEditing)}
-                    variant={isEditing ? "default" : "outline"}
+                    onClick={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
+                    disabled={isUpdating}
                   >
+                    {isUpdating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                     {isEditing ? 'Save Changes' : 'Edit Profile'}
                   </Button>
                 </div>
               </CardHeader>
             </Card>
 
-            {/* Profile Details */}
             <div className="grid gap-6 md:grid-cols-2">
               <Card>
                 <CardHeader>
@@ -120,8 +189,8 @@ const Profile = () => {
                     <Label htmlFor="name">Full Name</Label>
                     <Input
                       id="name"
-                      value={profile.name}
-                      onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
+                      value={localProfile.name}
+                      onChange={(e) => setLocalProfile(prev => ({ ...prev, name: e.target.value }))}
                       disabled={!isEditing}
                     />
                   </div>
@@ -131,30 +200,11 @@ const Profile = () => {
                     <Input
                       id="email"
                       type="email"
-                      value={profile.email}
-                      onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
-                      disabled={!isEditing}
+                      value={localProfile.email}
+                      disabled
+                      className="bg-muted"
                     />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      value={profile.phone}
-                      onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      value={profile.location}
-                      onChange={(e) => setProfile(prev => ({ ...prev, location: e.target.value }))}
-                      disabled={!isEditing}
-                    />
+                    <p className="text-xs text-muted-foreground">Email cannot be changed here</p>
                   </div>
                 </CardContent>
               </Card>
@@ -169,8 +219,8 @@ const Profile = () => {
                     <Label htmlFor="jobTitle">Job Title</Label>
                     <Input
                       id="jobTitle"
-                      value={profile.jobTitle}
-                      onChange={(e) => setProfile(prev => ({ ...prev, jobTitle: e.target.value }))}
+                      value={localProfile.job_title}
+                      onChange={(e) => setLocalProfile(prev => ({ ...prev, job_title: e.target.value }))}
                       disabled={!isEditing}
                     />
                   </div>
@@ -179,8 +229,8 @@ const Profile = () => {
                     <Label htmlFor="department">Department</Label>
                     <Input
                       id="department"
-                      value={profile.department}
-                      onChange={(e) => setProfile(prev => ({ ...prev, department: e.target.value }))}
+                      value={localProfile.department}
+                      onChange={(e) => setLocalProfile(prev => ({ ...prev, department: e.target.value }))}
                       disabled={!isEditing}
                     />
                   </div>
@@ -189,8 +239,8 @@ const Profile = () => {
                     <Label htmlFor="company">Company</Label>
                     <Input
                       id="company"
-                      value={profile.company}
-                      onChange={(e) => setProfile(prev => ({ ...prev, company: e.target.value }))}
+                      value={localProfile.company}
+                      onChange={(e) => setLocalProfile(prev => ({ ...prev, company: e.target.value }))}
                       disabled={!isEditing}
                     />
                   </div>
@@ -199,8 +249,8 @@ const Profile = () => {
                     <Label htmlFor="bio">Bio</Label>
                     <Textarea
                       id="bio"
-                      value={profile.bio}
-                      onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
+                      value={localProfile.bio}
+                      onChange={(e) => setLocalProfile(prev => ({ ...prev, bio: e.target.value }))}
                       disabled={!isEditing}
                       rows={3}
                     />
@@ -211,10 +261,11 @@ const Profile = () => {
 
             {isEditing && (
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsEditing(false)}>
+                <Button variant="outline" onClick={() => setIsEditing(false)} disabled={isUpdating}>
                   Cancel
                 </Button>
-                <Button onClick={handleSaveProfile}>
+                <Button onClick={handleSaveProfile} disabled={isUpdating}>
+                  {isUpdating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Save Changes
                 </Button>
               </div>
@@ -242,21 +293,21 @@ const Profile = () => {
                       </p>
                     </div>
                     <Switch
-                      checked={notifications.emailNotifications}
-                      onCheckedChange={(checked) => handleNotificationChange('emailNotifications', checked)}
+                      checked={notifications.email_notifications}
+                      onCheckedChange={(checked) => handleNotificationChange('email_notifications', checked)}
                     />
                   </div>
                   
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label>Push Notifications</Label>
+                      <Label>App Notifications</Label>
                       <p className="text-sm text-muted-foreground">
                         Receive push notifications in your browser
                       </p>
                     </div>
                     <Switch
-                      checked={notifications.pushNotifications}
-                      onCheckedChange={(checked) => handleNotificationChange('pushNotifications', checked)}
+                      checked={notifications.app_notifications}
+                      onCheckedChange={(checked) => handleNotificationChange('app_notifications', checked)}
                     />
                   </div>
                   
@@ -268,36 +319,17 @@ const Profile = () => {
                       </p>
                     </div>
                     <Switch
-                      checked={notifications.weeklyDigest}
-                      onCheckedChange={(checked) => handleNotificationChange('weeklyDigest', checked)}
+                      checked={notifications.weekly_digest}
+                      onCheckedChange={(checked) => handleNotificationChange('weekly_digest', checked)}
                     />
                   </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Goal Reminders</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Reminders for goal deadlines and milestones
-                      </p>
-                    </div>
-                    <Switch
-                      checked={notifications.goalReminders}
-                      onCheckedChange={(checked) => handleNotificationChange('goalReminders', checked)}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Team Updates</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Updates from your teams and collaborators
-                      </p>
-                    </div>
-                    <Switch
-                      checked={notifications.teamUpdates}
-                      onCheckedChange={(checked) => handleNotificationChange('teamUpdates', checked)}
-                    />
-                  </div>
+                </div>
+                
+                <div className="pt-4">
+                  <Button onClick={handleSaveNotifications} disabled={isUpdating}>
+                    {isUpdating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Save Preferences
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -324,21 +356,8 @@ const Profile = () => {
                       </p>
                     </div>
                     <Switch
-                      checked={security.mfaEnabled}
-                      onCheckedChange={(checked) => handleSecurityChange('mfaEnabled', checked)}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>IP Restrictions</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Restrict access from specific IP addresses
-                      </p>
-                    </div>
-                    <Switch
-                      checked={security.ipRestrictions}
-                      onCheckedChange={(checked) => handleSecurityChange('ipRestrictions', checked)}
+                      checked={security.mfa_enabled}
+                      onCheckedChange={(checked) => handleSecurityChange('mfa_enabled', checked)}
                     />
                   </div>
                   
@@ -347,8 +366,8 @@ const Profile = () => {
                     <Input
                       id="sessionTimeout"
                       type="number"
-                      value={security.sessionTimeout}
-                      onChange={(e) => handleSecurityChange('sessionTimeout', parseInt(e.target.value))}
+                      value={security.session_timeout_minutes}
+                      onChange={(e) => handleSecurityChange('session_timeout_minutes', parseInt(e.target.value))}
                       min="5"
                       max="480"
                     />
@@ -358,7 +377,11 @@ const Profile = () => {
                   </div>
                 </div>
                 
-                <div className="pt-4 border-t">
+                <div className="pt-4 border-t space-y-4">
+                  <Button onClick={handleSaveSecurity} disabled={isUpdating}>
+                    {isUpdating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Save Security Settings
+                  </Button>
                   <Button variant="outline" className="w-full">
                     Change Password
                   </Button>
@@ -374,42 +397,8 @@ const Profile = () => {
                 <CardDescription>Your recent actions and system events</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Profile updated</p>
-                      <p className="text-xs text-muted-foreground">Updated job title and department</p>
-                      <p className="text-xs text-muted-foreground">2 hours ago</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Goal progress updated</p>
-                      <p className="text-xs text-muted-foreground">Market expansion goal - 65% complete</p>
-                      <p className="text-xs text-muted-foreground">1 day ago</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Joined new team</p>
-                      <p className="text-xs text-muted-foreground">Added to Digital Transformation team</p>
-                      <p className="text-xs text-muted-foreground">3 days ago</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Login from new device</p>
-                      <p className="text-xs text-muted-foreground">Chrome on MacOS from San Francisco</p>
-                      <p className="text-xs text-muted-foreground">1 week ago</p>
-                    </div>
-                  </div>
+                <div className="text-center py-8 text-muted-foreground">
+                  Activity log will be displayed here
                 </div>
               </CardContent>
             </Card>

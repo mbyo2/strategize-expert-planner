@@ -1,79 +1,15 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Shield, Users, Database, Settings, Activity, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Shield, Users, Database, Settings, Activity, AlertTriangle, CheckCircle, Clock, Loader2 } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
+import { useAdminData } from '@/hooks/useAdminData';
 
 const Admin = () => {
-  const [users] = useState([
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      email: 'sarah@company.com',
-      role: 'Manager',
-      status: 'active',
-      lastLogin: '2024-06-13T10:30:00Z',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah'
-    },
-    {
-      id: 2,
-      name: 'Mike Chen',
-      email: 'mike@company.com',
-      role: 'Analyst',
-      status: 'active',
-      lastLogin: '2024-06-12T15:45:00Z',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=mike'
-    },
-    {
-      id: 3,
-      name: 'Lisa Park',
-      email: 'lisa@company.com',
-      role: 'Viewer',
-      status: 'inactive',
-      lastLogin: '2024-06-10T09:15:00Z',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=lisa'
-    }
-  ]);
-
-  const [auditLogs] = useState([
-    {
-      id: 1,
-      action: 'User Login',
-      user: 'sarah@company.com',
-      timestamp: '2024-06-13T10:30:00Z',
-      details: 'Successful login from 192.168.1.100',
-      severity: 'low'
-    },
-    {
-      id: 2,
-      action: 'Goal Updated',
-      user: 'mike@company.com',
-      timestamp: '2024-06-13T09:15:00Z',
-      details: 'Updated market expansion goal progress to 65%',
-      severity: 'medium'
-    },
-    {
-      id: 3,
-      action: 'Failed Login',
-      user: 'unknown@external.com',
-      timestamp: '2024-06-13T08:45:00Z',
-      details: 'Failed login attempt from 203.0.113.42',
-      severity: 'high'
-    }
-  ]);
-
-  const [systemStats] = useState({
-    totalUsers: 24,
-    activeUsers: 18,
-    totalGoals: 42,
-    activeGoals: 38,
-    totalTeams: 8,
-    systemUptime: '99.9%'
-  });
+  const { users, usersLoading, auditLogs, auditLogsLoading, systemStats, statsLoading } = useAdminData();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -89,14 +25,14 @@ const Admin = () => {
   };
 
   const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'Admin':
+    switch (role.toLowerCase()) {
+      case 'admin':
         return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
-      case 'Manager':
+      case 'manager':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'Analyst':
+      case 'analyst':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'Viewer':
+      case 'viewer':
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
@@ -131,10 +67,16 @@ const Admin = () => {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{systemStats.totalUsers}</div>
-              <p className="text-xs text-muted-foreground">
-                {systemStats.activeUsers} active users
-              </p>
+              {statsLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold">{systemStats.totalUsers}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {systemStats.activeUsers} active users
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -144,10 +86,16 @@ const Admin = () => {
               <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{systemStats.systemUptime}</div>
-              <p className="text-xs text-muted-foreground">
-                Uptime this month
-              </p>
+              {statsLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold text-green-600">{systemStats.systemUptime}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Uptime this month
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -157,10 +105,16 @@ const Admin = () => {
               <Database className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{systemStats.activeGoals}</div>
-              <p className="text-xs text-muted-foreground">
-                Out of {systemStats.totalGoals} total goals
-              </p>
+              {statsLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold">{systemStats.activeGoals}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Out of {systemStats.totalGoals} total goals
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -190,34 +144,41 @@ const Admin = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {users.map((user) => (
-                    <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={user.avatar} alt={user.name} />
-                          <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{user.name}</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Last login: {new Date(user.lastLogin).toLocaleDateString()}
-                          </p>
+                {usersLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : users.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No users found
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {users.map((user) => (
+                      <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center space-x-4">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={user.avatar} alt={user.name} />
+                            <AvatarFallback>{user.name?.split(' ').map(n => n[0]).join('') || 'U'}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{user.name || 'Unknown'}</p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge className={getRoleColor(user.role)}>
+                            {user.role}
+                          </Badge>
+                          <Badge className={getStatusColor(user.status)}>
+                            {user.status}
+                          </Badge>
+                          <Button variant="outline" size="sm">Edit</Button>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge className={getRoleColor(user.role)}>
-                          {user.role}
-                        </Badge>
-                        <Badge className={getStatusColor(user.status)}>
-                          {user.status}
-                        </Badge>
-                        <Button variant="outline" size="sm">Edit</Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -236,25 +197,35 @@ const Admin = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {auditLogs.map((log) => (
-                    <div key={log.id} className="flex items-start space-x-4 p-4 border rounded-lg">
-                      <div className="flex-shrink-0 mt-1">
-                        {getSeverityIcon(log.severity)}
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium">{log.action}</p>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(log.timestamp).toLocaleString()}
-                          </span>
+                {auditLogsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : auditLogs.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No audit logs found
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {auditLogs.slice(0, 10).map((log) => (
+                      <div key={log.id} className="flex items-start space-x-4 p-4 border rounded-lg">
+                        <div className="flex-shrink-0 mt-1">
+                          {getSeverityIcon(log.severity)}
                         </div>
-                        <p className="text-sm text-muted-foreground">User: {log.user}</p>
-                        <p className="text-sm">{log.details}</p>
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <p className="font-medium">{log.action}</p>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(log.timestamp).toLocaleString()}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">User: {log.user_email}</p>
+                          <p className="text-sm">Resource: {log.resource_type}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -331,7 +302,7 @@ const Admin = () => {
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Last backup:</span>
-                    <span className="text-sm text-muted-foreground">June 13, 2024 - 02:00 UTC</span>
+                    <span className="text-sm text-muted-foreground">Today - 02:00 UTC</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Status:</span>
@@ -339,7 +310,7 @@ const Admin = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Next backup:</span>
-                    <span className="text-sm text-muted-foreground">June 14, 2024 - 02:00 UTC</span>
+                    <span className="text-sm text-muted-foreground">Tomorrow - 02:00 UTC</span>
                   </div>
                 </CardContent>
               </Card>
