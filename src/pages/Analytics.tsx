@@ -1,36 +1,30 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart3, TrendingUp, PieChart, Activity, Download } from 'lucide-react';
+import { BarChart3, TrendingUp, PieChart, Activity, Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/PageLayout';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Cell, Pie } from 'recharts';
+import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 
 const Analytics = () => {
-  const goalProgressData = [
-    { name: 'Q1', completed: 65, target: 80 },
-    { name: 'Q2', completed: 72, target: 85 },
-    { name: 'Q3', completed: 68, target: 90 },
-    { name: 'Q4', completed: 45, target: 95 }
-  ];
+  const { analytics, isLoading } = useAnalyticsData();
 
-  const trendData = [
-    { month: 'Jan', performance: 65 },
-    { month: 'Feb', performance: 68 },
-    { month: 'Mar', performance: 72 },
-    { month: 'Apr', performance: 69 },
-    { month: 'May', performance: 74 },
-    { month: 'Jun', performance: 78 }
-  ];
+  if (isLoading || !analytics) {
+    return (
+      <PageLayout 
+        title="Analytics & Insights"
+        subtitle="Track performance and gain strategic insights"
+        icon={<BarChart3 className="h-6 w-6" />}
+      >
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </PageLayout>
+    );
+  }
 
-  const categoryData = [
-    { name: 'Growth', value: 35, color: '#0088FE' },
-    { name: 'Customer', value: 25, color: '#00C49F' },
-    { name: 'Technology', value: 20, color: '#FFBB28' },
-    { name: 'Operations', value: 20, color: '#FF8042' }
-  ];
-
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+  const COLORS = analytics.categoryData.map(c => c.color);
 
   return (
     <PageLayout 
@@ -60,9 +54,9 @@ const Analytics = () => {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">73%</div>
+              <div className="text-2xl font-bold">{analytics.goalCompletionRate}%</div>
               <p className="text-xs text-muted-foreground">
-                +12% from last quarter
+                Based on completed goals
               </p>
             </CardContent>
           </Card>
@@ -73,9 +67,9 @@ const Analytics = () => {
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">8.4/10</div>
+              <div className="text-2xl font-bold">{analytics.teamPerformance.toFixed(1)}/10</div>
               <p className="text-xs text-muted-foreground">
-                +0.8 from last month
+                Average goal progress
               </p>
             </CardContent>
           </Card>
@@ -86,9 +80,9 @@ const Analytics = () => {
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">12</div>
+              <div className="text-2xl font-bold">{analytics.activeInitiatives}</div>
               <p className="text-xs text-muted-foreground">
-                3 completed this month
+                {analytics.completedInitiatives} completed
               </p>
             </CardContent>
           </Card>
@@ -99,9 +93,9 @@ const Analytics = () => {
               <PieChart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">89%</div>
+              <div className="text-2xl font-bold">{analytics.strategyAlignment}%</div>
               <p className="text-xs text-muted-foreground">
-                +5% from last review
+                Goals with progress
               </p>
             </CardContent>
           </Card>
@@ -126,13 +120,13 @@ const Analytics = () => {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={goalProgressData}>
+                  <BarChart data={analytics.goalProgressData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="completed" fill="#8884d8" name="Completed" />
-                    <Bar dataKey="target" fill="#82ca9d" name="Target" />
+                    <Bar dataKey="completed" fill="hsl(var(--primary))" name="Completed" />
+                    <Bar dataKey="target" fill="hsl(var(--muted))" name="Target" />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -149,12 +143,12 @@ const Analytics = () => {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={trendData}>
+                  <LineChart data={analytics.trendData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip />
-                    <Line type="monotone" dataKey="performance" stroke="#8884d8" strokeWidth={2} />
+                    <Line type="monotone" dataKey="performance" stroke="hsl(var(--primary))" strokeWidth={2} />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -175,14 +169,14 @@ const Analytics = () => {
                     <RechartsPieChart>
                       <Tooltip />
                       <Pie
-                        data={categoryData}
+                        data={analytics.categoryData}
                         dataKey="value"
                         cx="50%"
                         cy="50%"
                         outerRadius={80}
                         fill="#8884d8"
                       >
-                        {categoryData.map((entry, index) => (
+                        {analytics.categoryData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
@@ -199,7 +193,7 @@ const Analytics = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {categoryData.map((category, index) => (
+                  {analytics.categoryData.map((category, index) => (
                     <div key={category.name} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div 
@@ -226,24 +220,26 @@ const Analytics = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="border-l-4 border-green-500 p-4 bg-green-50 dark:bg-green-900/20">
-                    <h4 className="font-semibold text-green-800 dark:text-green-200">Strong Performance</h4>
-                    <p className="text-sm text-green-700 dark:text-green-300">
-                      Technology initiatives are exceeding targets by 15%
-                    </p>
-                  </div>
-                  
-                  <div className="border-l-4 border-yellow-500 p-4 bg-yellow-50 dark:bg-yellow-900/20">
-                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-200">Attention Needed</h4>
-                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                      Customer satisfaction goals need additional focus
-                    </p>
-                  </div>
+                  {analytics.goalCompletionRate >= 50 ? (
+                    <div className="border-l-4 border-green-500 p-4 bg-green-50 dark:bg-green-900/20">
+                      <h4 className="font-semibold text-green-800 dark:text-green-200">Strong Performance</h4>
+                      <p className="text-sm text-green-700 dark:text-green-300">
+                        Goal completion rate is at {analytics.goalCompletionRate}%, indicating healthy progress
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="border-l-4 border-yellow-500 p-4 bg-yellow-50 dark:bg-yellow-900/20">
+                      <h4 className="font-semibold text-yellow-800 dark:text-yellow-200">Attention Needed</h4>
+                      <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                        Goal completion rate is at {analytics.goalCompletionRate}%, consider reviewing priorities
+                      </p>
+                    </div>
+                  )}
                   
                   <div className="border-l-4 border-blue-500 p-4 bg-blue-50 dark:bg-blue-900/20">
-                    <h4 className="font-semibold text-blue-800 dark:text-blue-200">Opportunity</h4>
+                    <h4 className="font-semibold text-blue-800 dark:text-blue-200">Active Initiatives</h4>
                     <p className="text-sm text-blue-700 dark:text-blue-300">
-                      Market expansion showing 23% growth potential
+                      {analytics.activeInitiatives} initiatives currently in progress
                     </p>
                   </div>
                 </CardContent>
@@ -258,23 +254,23 @@ const Analytics = () => {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="p-3 border rounded-lg">
-                    <h5 className="font-medium">Accelerate Digital Initiatives</h5>
+                    <h5 className="font-medium">Review Goal Progress</h5>
                     <p className="text-sm text-muted-foreground">
-                      Current momentum suggests early completion possible
+                      Ensure all active goals have recent progress updates
                     </p>
                   </div>
                   
                   <div className="p-3 border rounded-lg">
-                    <h5 className="font-medium">Review Customer Strategy</h5>
+                    <h5 className="font-medium">Balance Categories</h5>
                     <p className="text-sm text-muted-foreground">
-                      Consider additional resources for customer initiatives
+                      Consider distributing goals across different strategic areas
                     </p>
                   </div>
                   
                   <div className="p-3 border rounded-lg">
-                    <h5 className="font-medium">Expand Market Focus</h5>
+                    <h5 className="font-medium">Track Initiatives</h5>
                     <p className="text-sm text-muted-foreground">
-                      Favorable conditions for market expansion initiatives
+                      Keep initiative progress aligned with strategic goals
                     </p>
                   </div>
                 </CardContent>
