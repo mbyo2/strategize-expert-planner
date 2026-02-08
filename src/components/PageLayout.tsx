@@ -1,30 +1,35 @@
-
 import React from 'react';
-import Header from './Header';
 
 interface PageLayoutProps {
   title: string;
   subtitle?: string;
   icon?: React.ReactNode;
   children: React.ReactNode;
+  actions?: React.ReactNode;
 }
 
-const PageLayout: React.FC<PageLayoutProps> = ({ title, subtitle, icon, children }) => {
+const PageLayout: React.FC<PageLayoutProps> = ({ title, subtitle, icon, children, actions }) => {
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container mx-auto px-4 py-6">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            {icon}
-            <h1 className="text-3xl font-bold">{title}</h1>
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            {icon && (
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                {icon}
+              </div>
+            )}
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+              {subtitle && (
+                <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
+              )}
+            </div>
           </div>
-          {subtitle && (
-            <p className="text-muted-foreground text-lg">{subtitle}</p>
-          )}
         </div>
-        {children}
-      </main>
+        {actions && <div className="flex items-center gap-2">{actions}</div>}
+      </div>
+      {children}
     </div>
   );
 };

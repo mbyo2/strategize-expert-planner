@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
@@ -7,10 +6,19 @@ import { Toaster } from '@/components/ui/toaster';
 import QueryClient from './QueryClient';
 import SEO from './components/SEO';
 import SecureHeaders from './components/security/SecureHeaders';
+import SecurityBoundary from './components/SecurityBoundary';
+import SimpleAuthGuard from '@/components/SimpleAuthGuard';
+import AppLayout from '@/components/AppLayout';
+
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
+import SecurePasswordReset from '@/components/security/SecurePasswordReset';
+import AccessDenied from '@/pages/AccessDenied';
+import MfaVerify from '@/pages/MfaVerify';
+import NotFound from '@/pages/NotFound';
+
 import Dashboard from '@/pages/Dashboard';
 import Goals from '@/pages/Goals';
 import Planning from '@/pages/Planning';
@@ -19,6 +27,7 @@ import Analytics from '@/pages/Analytics';
 import Industry from '@/pages/Industry';
 import Organization from '@/pages/Organization';
 import OrganizationManagement from '@/pages/OrganizationManagement';
+import UserManagement from '@/pages/UserManagement';
 import Profile from '@/pages/Profile';
 import Settings from '@/pages/Settings';
 import Admin from '@/pages/Admin';
@@ -27,17 +36,10 @@ import Integrations from '@/pages/Integrations';
 import AIOperations from '@/pages/AIOperations';
 import DataFoundry from '@/pages/DataFoundry';
 import Infrastructure from '@/pages/Infrastructure';
-import TestSetup from '@/pages/TestSetup';
-import NotFound from '@/pages/NotFound';
-import SimpleAuthGuard from '@/components/SimpleAuthGuard';
-import AccessDenied from '@/pages/AccessDenied';
-import SecurityBoundary from '@/components/SecurityBoundary';
-import SecurePasswordReset from '@/components/security/SecurePasswordReset';
-import MfaVerify from '@/pages/MfaVerify';
 import TacticalMap from '@/pages/TacticalMap';
-import UserManagement from '@/pages/UserManagement';
 import Support from '@/pages/Support';
 import ERP from '@/pages/ERP';
+import TestSetup from '@/pages/TestSetup';
 
 function App() {
   return (
@@ -45,12 +47,11 @@ function App() {
       <BrowserRouter>
         <HelmetProvider>
           <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-              <Toaster />
-              <SEO />
-              <SecureHeaders />
-              <SecurityBoundary>
-              <div className="min-h-screen bg-background">
-                <Routes>
+            <Toaster />
+            <SEO />
+            <SecureHeaders />
+            <SecurityBoundary>
+              <Routes>
                 {/* Public routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
@@ -59,34 +60,35 @@ function App() {
                 <Route path="/auth/callback" element={<SecurePasswordReset />} />
                 <Route path="/access-denied" element={<AccessDenied />} />
                 <Route path="/mfa-verify" element={<MfaVerify />} />
-                
-                {/* Protected routes */}
-                <Route path="/" element={<SimpleAuthGuard><Dashboard /></SimpleAuthGuard>} />
-                <Route path="/tactical-map" element={<SimpleAuthGuard><TacticalMap /></SimpleAuthGuard>} />
-                <Route path="/goals" element={<SimpleAuthGuard><Goals /></SimpleAuthGuard>} />
-                <Route path="/planning" element={<SimpleAuthGuard><Planning /></SimpleAuthGuard>} />
-                <Route path="/teams" element={<SimpleAuthGuard><Teams /></SimpleAuthGuard>} />
-                <Route path="/analytics" element={<SimpleAuthGuard><Analytics /></SimpleAuthGuard>} />
-                <Route path="/industry" element={<SimpleAuthGuard><Industry /></SimpleAuthGuard>} />
-                <Route path="/organization" element={<SimpleAuthGuard><Organization /></SimpleAuthGuard>} />
-                <Route path="/organization-management" element={<SimpleAuthGuard><OrganizationManagement /></SimpleAuthGuard>} />
-                <Route path="/user-management" element={<SimpleAuthGuard><UserManagement /></SimpleAuthGuard>} />
-                <Route path="/profile" element={<SimpleAuthGuard><Profile /></SimpleAuthGuard>} />
-                <Route path="/settings" element={<SimpleAuthGuard><Settings /></SimpleAuthGuard>} />
-                <Route path="/admin" element={<SimpleAuthGuard><Admin /></SimpleAuthGuard>} />
-                <Route path="/resources" element={<SimpleAuthGuard><Resources /></SimpleAuthGuard>} />
-                <Route path="/integrations" element={<SimpleAuthGuard><Integrations /></SimpleAuthGuard>} />
-                <Route path="/ai-operations" element={<SimpleAuthGuard><AIOperations /></SimpleAuthGuard>} />
-                <Route path="/data-foundry" element={<SimpleAuthGuard><DataFoundry /></SimpleAuthGuard>} />
-                <Route path="/infrastructure" element={<SimpleAuthGuard><Infrastructure /></SimpleAuthGuard>} />
-                <Route path="/erp" element={<SimpleAuthGuard><ERP /></SimpleAuthGuard>} />
-                <Route path="/support" element={<SimpleAuthGuard><Support /></SimpleAuthGuard>} />
-                <Route path="/test-setup" element={<SimpleAuthGuard><TestSetup /></SimpleAuthGuard>} />
-                
-                {/* Catch all route */}
+
+                {/* Protected routes with sidebar layout */}
+                <Route element={<SimpleAuthGuard><AppLayout /></SimpleAuthGuard>}>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/goals" element={<Goals />} />
+                  <Route path="/planning" element={<Planning />} />
+                  <Route path="/teams" element={<Teams />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/industry" element={<Industry />} />
+                  <Route path="/organization" element={<Organization />} />
+                  <Route path="/organization-management" element={<OrganizationManagement />} />
+                  <Route path="/user-management" element={<UserManagement />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/resources" element={<Resources />} />
+                  <Route path="/integrations" element={<Integrations />} />
+                  <Route path="/ai-operations" element={<AIOperations />} />
+                  <Route path="/data-foundry" element={<DataFoundry />} />
+                  <Route path="/infrastructure" element={<Infrastructure />} />
+                  <Route path="/erp" element={<ERP />} />
+                  <Route path="/support" element={<Support />} />
+                  <Route path="/test-setup" element={<TestSetup />} />
+                  <Route path="/tactical-map" element={<TacticalMap />} />
+                </Route>
+
+                {/* Catch all */}
                 <Route path="*" element={<NotFound />} />
-                </Routes>
-              </div>
+              </Routes>
             </SecurityBoundary>
           </ThemeProvider>
         </HelmetProvider>

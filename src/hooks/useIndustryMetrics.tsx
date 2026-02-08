@@ -32,18 +32,18 @@ async function fetchIndustryData() {
   const { data: metrics } = await supabase
     .from('industry_metrics')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('updated_at', { ascending: false });
 
   const { data: changes } = await supabase
     .from('market_changes')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('date_identified', { ascending: false });
 
   const formattedMetrics: IndustryMetric[] = (metrics || []).map(m => ({
-    name: m.metric_name,
-    value: m.current_value || 0,
-    previous_value: m.previous_value,
-    trend: (m.current_value || 0) >= (m.previous_value || 0) ? 'up' : 'down',
+    name: m.name,
+    value: m.value ?? 0,
+    previous_value: m.previous_value ?? undefined,
+    trend: (m.value ?? 0) >= (m.previous_value ?? 0) ? 'up' as const : 'down' as const,
     category: m.category || 'General',
     source: m.source || 'Internal',
   }));
@@ -54,7 +54,7 @@ async function fetchIndustryData() {
     description: c.description || '',
     impact: (c.impact_level || 'medium') as 'high' | 'medium' | 'low',
     category: c.category || 'General',
-    dateIdentified: c.identified_date || c.created_at,
+    dateIdentified: c.date_identified,
     source: c.source || 'Internal',
   }));
 
@@ -67,7 +67,6 @@ export const useIndustryMetrics = () => {
     queryFn: fetchIndustryData,
   });
 
-  // Default competitors (would come from database in full implementation)
   const competitors: Competitor[] = [];
 
   return {
