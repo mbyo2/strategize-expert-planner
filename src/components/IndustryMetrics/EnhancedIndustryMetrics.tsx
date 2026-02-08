@@ -8,7 +8,7 @@ import { TrendingUp, TrendingDown, Minus, Search, Filter, RefreshCw } from "luci
 import { useIndustryMetrics } from '@/hooks/useIndustryMetrics';
 
 export default function EnhancedIndustryMetrics() {
-  const { metrics, loading, error, refreshMetrics } = useIndustryMetrics();
+  const { metrics, isLoading, error, refetch } = useIndustryMetrics();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [timeframe, setTimeframe] = useState<string>('30d');
@@ -22,18 +22,22 @@ export default function EnhancedIndustryMetrics() {
     return matchesSearch && matchesCategory;
   });
 
+  const getChangePercentage = (metric: typeof metrics[0]) => {
+    if (!metric.previous_value) return 0;
+    return ((metric.value - metric.previous_value) / metric.previous_value) * 100;
+  };
+
   const getTrendIcon = (trend?: string, changePercentage?: number) => {
     if (!trend || changePercentage === undefined) {
-      return <Minus className="h-4 w-4 text-gray-400" />;
+      return <Minus className="h-4 w-4 text-muted-foreground" />;
     }
-
     switch (trend) {
       case 'up':
-        return <TrendingUp className="h-4 w-4 text-green-500" />;
+        return <TrendingUp className="h-4 w-4 text-emerald-600" />;
       case 'down':
-        return <TrendingDown className="h-4 w-4 text-red-500" />;
+        return <TrendingDown className="h-4 w-4 text-red-600" />;
       default:
-        return <Minus className="h-4 w-4 text-gray-400" />;
+        return <Minus className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -41,14 +45,12 @@ export default function EnhancedIndustryMetrics() {
     if (!trend || changePercentage === undefined) {
       return <Badge variant="secondary">No Change</Badge>;
     }
-
     const absChange = Math.abs(changePercentage);
-    
     switch (trend) {
       case 'up':
-        return <Badge className="bg-green-100 text-green-800">+{absChange.toFixed(1)}%</Badge>;
+        return <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">+{absChange.toFixed(1)}%</Badge>;
       case 'down':
-        return <Badge className="bg-red-100 text-red-800">-{absChange.toFixed(1)}%</Badge>;
+        return <Badge className="bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400">-{absChange.toFixed(1)}%</Badge>;
       default:
         return <Badge variant="secondary">Stable</Badge>;
     }
@@ -64,7 +66,7 @@ export default function EnhancedIndustryMetrics() {
     return value.toLocaleString();
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -79,9 +81,9 @@ export default function EnhancedIndustryMetrics() {
             <Card key={i}>
               <CardContent className="p-6">
                 <div className="animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                  <div className="h-4 bg-muted rounded w-1/2 mb-2"></div>
+                  <div className="h-8 bg-muted rounded w-1/3 mb-2"></div>
+                  <div className="h-4 bg-muted rounded w-1/4"></div>
                 </div>
               </CardContent>
             </Card>
@@ -96,15 +98,15 @@ export default function EnhancedIndustryMetrics() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Industry Metrics</h2>
-          <Button onClick={refreshMetrics}>
+          <Button onClick={() => refetch()}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Retry
           </Button>
         </div>
         <Card>
           <CardContent className="p-12 text-center">
-            <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={refreshMetrics}>Try Again</Button>
+            <p className="text-destructive mb-4">{error instanceof Error ? error.message : 'Failed to load metrics'}</p>
+            <Button onClick={() => refetch()}>Try Again</Button>
           </CardContent>
         </Card>
       </div>
@@ -113,31 +115,22 @@ export default function EnhancedIndustryMetrics() {
 
   return (
     <div className="space-y-6">
-      {/* Header and Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">Industry Metrics</h2>
-          <p className="text-muted-foreground">
-            Real-time industry data and market indicators
-          </p>
+          <p className="text-muted-foreground">Real-time industry data and market indicators</p>
         </div>
-        <Button onClick={refreshMetrics}>
+        <Button onClick={() => refetch()}>
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
             <Search className="h-4 w-4 absolute left-3 top-3 text-muted-foreground" />
-            <Input
-              placeholder="Search metrics..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+            <Input placeholder="Search metrics..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
           </div>
         </div>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -166,68 +159,54 @@ export default function EnhancedIndustryMetrics() {
         </Select>
       </div>
 
-      {/* Metrics Grid */}
       {filteredMetrics.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <h3 className="text-lg font-semibold mb-2">No Metrics Found</h3>
             <p className="text-muted-foreground">
-              {searchTerm || selectedCategory !== 'all' 
-                ? 'Try adjusting your search or filter criteria.' 
+              {searchTerm || selectedCategory !== 'all'
+                ? 'Try adjusting your search or filter criteria.'
                 : 'No industry metrics available at this time.'}
             </p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredMetrics.map((metric) => (
-            <Card key={metric.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-base font-semibold mb-1">
-                      {metric.name}
-                    </CardTitle>
-                    <CardDescription className="text-sm">
-                      {metric.category}
-                    </CardDescription>
-                  </div>
-                  {getTrendIcon(metric.trend, metric.change_percentage)}
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-3">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-2xl font-bold">
-                      {formatValue(metric.value, metric.category)}
-                    </span>
-                    {getTrendBadge(metric.trend, metric.change_percentage)}
-                  </div>
-                  
-                  {metric.previous_value && (
-                    <div className="text-sm text-muted-foreground">
-                      Previous: {formatValue(metric.previous_value, metric.category)}
+          {filteredMetrics.map((metric, index) => {
+            const changePct = getChangePercentage(metric);
+            return (
+              <Card key={index} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-base font-semibold mb-1">{metric.name}</CardTitle>
+                      <CardDescription className="text-sm">{metric.category}</CardDescription>
                     </div>
-                  )}
-
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
-                      Updated: {new Date(metric.updated_at).toLocaleDateString()}
-                    </span>
-                    {metric.source && (
-                      <span>
-                        Source: {metric.source}
-                      </span>
-                    )}
+                    {getTrendIcon(metric.trend, changePct)}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-3">
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-2xl font-bold">{formatValue(metric.value, metric.category)}</span>
+                      {getTrendBadge(metric.trend, changePct)}
+                    </div>
+                    {metric.previous_value && (
+                      <div className="text-sm text-muted-foreground">
+                        Previous: {formatValue(metric.previous_value, metric.category)}
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      {metric.source && <span>Source: {metric.source}</span>}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
-      {/* Summary Stats */}
       {filteredMetrics.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
@@ -241,9 +220,7 @@ export default function EnhancedIndustryMetrics() {
           <Card>
             <CardContent className="p-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {filteredMetrics.filter(m => m.trend === 'up').length}
-                </div>
+                <div className="text-2xl font-bold text-emerald-600">{filteredMetrics.filter(m => m.trend === 'up').length}</div>
                 <div className="text-sm text-muted-foreground">Trending Up</div>
               </div>
             </CardContent>
@@ -251,9 +228,7 @@ export default function EnhancedIndustryMetrics() {
           <Card>
             <CardContent className="p-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
-                  {filteredMetrics.filter(m => m.trend === 'down').length}
-                </div>
+                <div className="text-2xl font-bold text-red-600">{filteredMetrics.filter(m => m.trend === 'down').length}</div>
                 <div className="text-sm text-muted-foreground">Trending Down</div>
               </div>
             </CardContent>
@@ -261,10 +236,8 @@ export default function EnhancedIndustryMetrics() {
           <Card>
             <CardContent className="p-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-600">
-                  {filteredMetrics.filter(m => m.trend === 'stable' || !m.trend).length}
-                </div>
-                <div className="text-sm text-muted-foreground">Stable</div>
+                <div className="text-2xl font-bold text-muted-foreground">{filteredMetrics.filter(m => !m.trend).length}</div>
+                <div className="text-sm text-muted-foreground">No Data</div>
               </div>
             </CardContent>
           </Card>

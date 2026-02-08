@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,285 +12,87 @@
   --primary: 221.2 83.2% 53.3%;
   --primary-foreground: 210 40% 98%;
   --secondary: 210 40% 96%;
-  --secondary-foreground: 222.2 84% 4.9%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
   --muted: 210 40% 96%;
   --muted-foreground: 215.4 16.3% 46.9%;
   --accent: 210 40% 96%;
-  --accent-foreground: 222.2 84% 4.9%;
+  --accent-foreground: 222.2 47.4% 11.2%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 210 40% 98%;
   --border: 214.3 31.8% 91.4%;
   --input: 214.3 31.8% 91.4%;
   --ring: 221.2 83.2% 53.3%;
-  --radius: 0.5rem;
-  --font-size-base: 16px;
-  --line-height: 1.6;
-  --touch-target-min: 44px;
-  --button-min-height: 44px;
-  --button-padding: 12px;
+  --radius: 0.75rem;
+
+  --sidebar-background: 222.2 47.4% 11.2%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 217.2 91.2% 59.8%;
+  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-accent: 217.2 32.6% 17.5%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 217.2 32.6% 17.5%;
+  --sidebar-ring: 221.2 83.2% 53.3%;
 }
 
 .dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
+  --background: 224 71.4% 4.1%;
+  --foreground: 210 20% 98%;
+  --card: 224 71.4% 4.1%;
+  --card-foreground: 210 20% 98%;
+  --popover: 224 71.4% 4.1%;
+  --popover-foreground: 210 20% 98%;
   --primary: 217.2 91.2% 59.8%;
-  --primary-foreground: 222.2 84% 4.9%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 215 27.9% 16.9%;
+  --secondary-foreground: 210 20% 98%;
+  --muted: 215 27.9% 16.9%;
+  --muted-foreground: 217.9 10.6% 64.9%;
+  --accent: 215 27.9% 16.9%;
+  --accent-foreground: 210 20% 98%;
   --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 224.3 76.3% 94.1%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 215 27.9% 16.9%;
+  --input: 215 27.9% 16.9%;
+  --ring: 216 12.2% 83.9%;
+
+  --sidebar-background: 224 71.4% 3%;
+  --sidebar-foreground: 210 20% 98%;
+  --sidebar-primary: 217.2 91.2% 59.8%;
+  --sidebar-primary-foreground: 210 20% 98%;
+  --sidebar-accent: 215 27.9% 12%;
+  --sidebar-accent-foreground: 210 20% 98%;
+  --sidebar-border: 215 27.9% 12%;
+  --sidebar-ring: 217.2 91.2% 59.8%;
 }
 
-/* Universal accessibility profiles */
-.profile-military {
-  --primary: 120 100% 40%; /* Military green */
-  --font-size-base: 18px;
-  --button-min-height: 48px;
-  --line-height: 1.8;
-}
-
-.profile-military.battlefield-mode {
-  --background: 0 0% 5%;
-  --foreground: 0 0% 95%;
-  --border: 0 0% 30%;
-}
-
-.profile-military.night-vision {
-  --background: 120 20% 5%;
-  --foreground: 120 100% 80%;
-}
-
-.profile-military.emergency-mode {
-  --primary: 0 100% 50%; /* Emergency red */
-  --destructive: 0 100% 70%;
-}
-
-.profile-visual {
-  --font-size-base: 20px;
-  --line-height: 1.8;
-  --button-min-height: 48px;
-}
-
-.profile-hearing {
-  /* Enhanced visual feedback */
-  --border-width: 2px;
-  --ring-width: 3px;
-}
-
-.profile-motor {
-  --touch-target-min: 48px;
-  --button-min-height: 56px;
-  --button-padding: 16px;
-  --font-size-base: 18px;
-}
-
-.profile-cognitive {
-  --font-size-base: 18px;
-  --line-height: 1.8;
-  --button-min-height: 52px;
-  /* Simplified color scheme */
-  --primary: 221.2 83.2% 53.3%;
-  --secondary: 210 40% 96%;
-}
-
-.profile-elderly {
-  --font-size-base: 22px;
-  --button-min-height: 56px;
-  --button-padding: 20px;
-  --line-height: 1.9;
-  --touch-target-min: 56px;
-}
-
-/* Enhanced base text color settings for better readability and high contrast */
 @layer base {
   * {
     @apply border-border;
   }
-  
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    font-size: var(--font-size-base);
-    line-height: var(--line-height);
-  }
-  
-  /* Universal button sizing */
-  button {
-    min-height: var(--button-min-height);
-    padding: var(--button-padding);
-    font-weight: 500;
-    min-width: var(--touch-target-min);
-  }
-  
-  /* Enhanced touch targets for motor accessibility */
-  .profile-motor button,
-  .profile-elderly button {
-    min-height: var(--button-min-height);
-    min-width: var(--touch-target-min);
-    padding: var(--button-padding);
-  }
-  
-  /* High contrast text utilities */
-  .text-high-contrast {
-    @apply text-slate-900 dark:text-slate-50;
-  }
-  
-  .text-medium-contrast {
-    @apply text-slate-800 dark:text-slate-200;
-  }
-  
-  .text-low-contrast {
-    @apply text-slate-600 dark:text-slate-400;
-  }
-
-  /* Enhanced contrast for different background combinations */
-  .bg-primary {
-    @apply text-white;
-  }
-  
-  .bg-secondary {
-    @apply text-slate-900 dark:text-slate-100;
-  }
-  
-  .bg-muted {
-    @apply text-slate-800 dark:text-slate-200;
-  }
-  
-  .bg-card {
-    @apply text-slate-900 dark:text-slate-100;
-  }
-  
-  .bg-popover {
-    @apply text-slate-900 dark:text-slate-100;
-  }
-  
-  /* Enhanced contrast for interactive elements */
-  button.bg-primary {
-    @apply text-white;
-  }
-  
-  button.bg-secondary {
-    @apply text-slate-900 dark:text-slate-100;
-  }
-  
-  button.bg-destructive {
-    @apply text-white;
-  }
-  
-  /* Enhanced contrast for links */
-  a:not(.no-contrast) {
-    @apply text-blue-700 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200;
-    text-decoration: underline;
-  }
-  
-  /* Better contrast for form elements */
-  input, textarea, select {
-    @apply text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600;
-    font-size: var(--font-size-base);
-    min-height: var(--touch-target-min);
-  }
-  
-  input::placeholder, textarea::placeholder {
-    @apply text-slate-500 dark:text-slate-400;
-  }
-  
-  /* Improved contrast for headings */
-  h1, h2, h3, h4, h5, h6 {
-    @apply text-slate-900 dark:text-slate-50 font-semibold;
-    font-size: calc(var(--font-size-base) * 1.2);
-  }
-  
-  /* Better contrast for labels */
-  label {
-    @apply text-slate-800 dark:text-slate-200 font-medium;
-    font-size: var(--font-size-base);
-  }
-  
-  /* Enhanced contrast for alerts and notifications */
-  .alert {
-    @apply text-slate-900 dark:text-slate-100;
-  }
-  
-  /* Ensure proper contrast for navigation elements */
-  nav a {
-    @apply text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100;
-    min-height: var(--touch-target-min);
-    display: inline-flex;
-    align-items: center;
-  }
-  
-  /* Better contrast for table elements */
-  table {
-    @apply text-slate-900 dark:text-slate-100;
-  }
-  
-  th {
-    @apply text-slate-900 dark:text-slate-100 font-semibold bg-slate-50 dark:bg-slate-800;
-  }
-  
-  td {
-    @apply text-slate-800 dark:text-slate-200;
-  }
-  
-  /* Enhanced card styling for better visual separation */
-  .card {
-    @apply bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm;
-  }
-  
-  /* Better button contrast variants */
-  .btn-primary {
-    @apply bg-blue-600 hover:bg-blue-700 text-white;
-  }
-  
-  .btn-secondary {
-    @apply bg-slate-200 hover:bg-slate-300 text-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-100;
-  }
-  
-  .btn-outline {
-    @apply border-2 border-slate-300 dark:border-slate-600 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Enhanced focus styles for better accessibility */
+/* Focus styles */
 *:focus-visible {
-  outline: 3px solid hsl(var(--ring));
+  outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
 }
 
-/* Military/battlefield specific styles */
-.battlefield-mode {
-  filter: contrast(1.5) brightness(1.2);
+html {
+  scroll-behavior: smooth;
 }
 
-.night-vision {
-  filter: hue-rotate(90deg) saturate(1.5) brightness(0.8);
+/* Remove tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
-.military-contrast {
-  filter: contrast(2) brightness(1.1);
-}
-
-.emergency-mode {
-  animation: emergency-pulse 2s infinite;
-}
-
-@keyframes emergency-pulse {
-  0%, 50% { opacity: 1; }
-  25%, 75% { opacity: 0.9; }
-}
-
-/* High contrast mode support */
+/* High contrast mode */
 @media (prefers-contrast: high) {
   :root {
     --foreground: 0 0% 0%;
@@ -299,114 +100,32 @@
     --muted-foreground: 0 0% 10%;
     --primary: 220 100% 30%;
   }
-  
   .dark {
     --foreground: 0 0% 100%;
     --background: 0 0% 0%;
     --muted-foreground: 0 0% 90%;
     --primary: 220 100% 70%;
   }
-  
-  /* Force high contrast in high contrast mode */
-  * {
-    border-color: currentColor !important;
-  }
-  
-  button, input, select, textarea {
-    border-width: 2px !important;
-  }
 }
 
-/* Reduced motion support */
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .profile-cognitive *,
-  .profile-elderly * {
-    animation-duration: 0.001ms !important;
-    transition-duration: 0.001ms !important;
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-/* Ensure text is always visible on colored backgrounds */
-.bg-blue-500, .bg-blue-600, .bg-blue-700 {
-  @apply text-white;
-}
-
-.bg-green-500, .bg-green-600, .bg-green-700 {
-  @apply text-white;
-}
-
-.bg-red-500, .bg-red-600, .bg-red-700 {
-  @apply text-white;
-}
-
-.bg-yellow-500, .bg-yellow-600 {
-  @apply text-slate-900;
-}
-
-.bg-purple-500, .bg-purple-600, .bg-purple-700 {
-  @apply text-white;
-}
-
-.bg-pink-500, .bg-pink-600, .bg-pink-700 {
-  @apply text-white;
-}
-
-.bg-indigo-500, .bg-indigo-600, .bg-indigo-700 {
-  @apply text-white;
-}
-
-/* Adding smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Improving readability with proper spacing */
-p, h1, h2, h3, h4, h5, h6 {
-  margin-bottom: 0.5rem;
-}
-
-/* Adding a print stylesheet for better printing */
+/* Print */
 @media print {
   .no-print {
     display: none !important;
   }
-  
   body {
     font-size: 12pt;
     color: #000 !important;
     background-color: #fff !important;
   }
-  
-  a::after {
-    content: " (" attr(href) ")";
-    font-size: 90%;
-    color: #333 !important;
-  }
-}
-
-/* Adding mobile-friendly improvements */
-@media (max-width: 640px) {
-  html {
-    font-size: var(--font-size-base);
-  }
-  
-  .hide-on-mobile {
-    display: none !important;
-  }
-  
-  /* Larger touch targets on mobile */
-  button, a, input, select {
-    min-height: var(--touch-target-min);
-    min-width: var(--touch-target-min);
-  }
-}
-
-/* Remove the ugly blue highlight on mobile taps */
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Ensure minimum contrast ratios */
-.contrast-enhanced {
-  @apply text-slate-900 dark:text-slate-100;
 }
