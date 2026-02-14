@@ -39,7 +39,21 @@ export const TEST_USERS: TestUser[] = [
     name: 'Victor Viewer',
     role: 'viewer',
     organization: 'Tech Corp'
-  }
+  },
+  {
+    email: 'ops@defensecommand.mil',
+    password: 'password123',
+    name: 'Colonel Ops',
+    role: 'admin',
+    organization: 'Defense Command'
+  },
+  {
+    email: 'intel@defensecommand.mil',
+    password: 'password123',
+    name: 'Major Intel',
+    role: 'manager',
+    organization: 'Defense Command'
+  },
 ];
 
 const createSampleData = async (userId: string, role: string) => {

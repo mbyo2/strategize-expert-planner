@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { LogIn, Loader2, Shield, BarChart3, User, Eye } from 'lucide-react';
+import { LogIn, Loader2, Shield, BarChart3, User, Eye, Crosshair, Radar } from 'lucide-react';
 import { TEST_USERS } from '@/services/testUserService';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { toast } from 'sonner';
@@ -70,20 +70,28 @@ const TestUserLogin = () => {
         </p>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {TEST_USERS.map((user) => {
             const IconComponent = getRoleIcon(user.role);
+            const isMilitary = user.organization === 'Defense Command';
             return (
-              <Card key={user.email} className="p-4 hover:shadow-md transition-shadow">
+              <Card key={user.email} className={`p-4 hover:shadow-md transition-shadow ${isMilitary ? 'border-amber-500/40 bg-amber-50/30 dark:bg-amber-950/10' : ''}`}>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <IconComponent className="h-4 w-4" />
+                      {isMilitary ? <Crosshair className="h-4 w-4 text-amber-600" /> : <IconComponent className="h-4 w-4" />}
                       <h4 className="font-medium">{user.name}</h4>
                     </div>
-                    <Badge className={getRoleBadgeColor(user.role)}>
-                      {user.role}
-                    </Badge>
+                    <div className="flex items-center gap-1">
+                      {isMilitary && (
+                        <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 text-[10px]">
+                          Military
+                        </Badge>
+                      )}
+                      <Badge className={getRoleBadgeColor(user.role)}>
+                        {user.role}
+                      </Badge>
+                    </div>
                   </div>
                   
                   <div className="space-y-1 text-sm text-muted-foreground">
@@ -94,6 +102,7 @@ const TestUserLogin = () => {
                   <Button 
                     size="sm" 
                     className="w-full"
+                    variant={isMilitary ? 'outline' : 'default'}
                     onClick={() => handleQuickLogin(user)}
                     disabled={isLoading}
                   >
@@ -102,7 +111,7 @@ const TestUserLogin = () => {
                     ) : (
                       <LogIn className="h-3 w-3 mr-2" />
                     )}
-                    Login as {user.role}
+                    Login as {user.name.split(' ')[0]}
                   </Button>
                 </div>
               </Card>
