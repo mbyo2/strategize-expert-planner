@@ -9,18 +9,17 @@ import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { toast } from 'sonner';
 
 const TestUserLogin = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingEmail, setLoadingEmail] = useState<string | null>(null);
   const { signIn, isAuthenticated } = useSimpleAuth();
 
   const handleQuickLogin = async (testUser: typeof TEST_USERS[0]) => {
-    setIsLoading(true);
+    setLoadingEmail(testUser.email);
     try {
       await signIn({ email: testUser.email, password: testUser.password });
-      toast.success(`Logged in as ${testUser.name}!`);
     } catch (error: any) {
-      toast.error(`Login error: ${error.message}`);
+      toast.error(`Login failed for ${testUser.name}. Have you created the test users first? Go to /test-setup to create them.`);
     } finally {
-      setIsLoading(false);
+      setLoadingEmail(null);
     }
   };
 
@@ -104,9 +103,9 @@ const TestUserLogin = () => {
                     className="w-full"
                     variant={isMilitary ? 'outline' : 'default'}
                     onClick={() => handleQuickLogin(user)}
-                    disabled={isLoading}
+                    disabled={loadingEmail !== null}
                   >
-                    {isLoading ? (
+                    {loadingEmail === user.email ? (
                       <Loader2 className="h-3 w-3 animate-spin mr-2" />
                     ) : (
                       <LogIn className="h-3 w-3 mr-2" />

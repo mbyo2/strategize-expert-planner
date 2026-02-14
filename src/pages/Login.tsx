@@ -58,7 +58,6 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormErrors({});
-    if (!consentChecked) { toast.error('Please accept the terms to continue.'); return; }
     if (!validateLoginForm()) return;
     setIsSubmitting(true);
     try {
@@ -73,7 +72,7 @@ const Login = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormErrors({});
-    if (!consentChecked) { toast.error('Please accept the terms to continue.'); return; }
+    if (!consentChecked) { toast.error('Please accept the Privacy Policy and Terms to continue.'); return; }
     if (!validateSignupForm()) return;
     setIsSubmitting(true);
     try {
@@ -197,7 +196,7 @@ const Login = () => {
                       {t('login.forgot')}
                     </Link>
                   </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting || !consentChecked}>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
                     {isSubmitting ? 'Signing in...' : t('login.signIn')}
                   </Button>
                 </form>
@@ -273,7 +272,11 @@ const Login = () => {
             <Card>
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg">{t('login.testUsers')}</CardTitle>
-                <CardDescription>Quick login with test accounts for demo purposes</CardDescription>
+                <CardDescription>
+                  Quick login with test accounts. If login fails, visit{' '}
+                  <Link to="/test-setup" className="text-primary hover:underline font-medium">/test-setup</Link>{' '}
+                  first to create the accounts.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <TestUserLogin />
