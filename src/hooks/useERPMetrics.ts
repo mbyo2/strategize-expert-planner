@@ -548,12 +548,148 @@ export const useOperationsMetrics = (organizationId: string): { metrics: Operati
         outOfStock,
         value: inventoryValue
       },
-      processes: [] // Would need process data
+      processes: []
     };
   }, [orders, inventory]);
 
   return {
     metrics,
     isLoading: ordersLoading || inventoryLoading
+  };
+};
+
+export interface ProjectMetrics {
+  activeProjects: number;
+  completedProjects: number;
+  totalBudget: number;
+  totalSpent: number;
+  avgCompletion: number;
+  onTimeRate: number;
+  projects: Array<{
+    id: string;
+    name: string;
+    manager: string;
+    status: string;
+    progress: number;
+    budget: number;
+    spent: number;
+    startDate: string;
+    endDate: string;
+    team: number;
+  }>;
+  milestones: Array<{
+    id: string;
+    project: string;
+    milestone: string;
+    dueDate: string;
+    status: string;
+  }>;
+  teamMembers: Array<{
+    id: string;
+    name: string;
+    role: string;
+    projects: number;
+    utilization: number;
+  }>;
+}
+
+export const useProjectMetrics = (organizationId: string): { metrics: ProjectMetrics; isLoading: boolean } => {
+  const { entities: projects, isLoading: projectsLoading } = useERPEntities(
+    organizationId,
+    'project',
+    'project'
+  );
+  const { entities: milestones, isLoading: milestonesLoading } = useERPEntities(
+    organizationId,
+    'project',
+    'milestone'
+  );
+  const { entities: members, isLoading: membersLoading } = useERPEntities(
+    organizationId,
+    'project',
+    'team_member'
+  );
+
+  const metrics = useMemo(() => {
+    const projectsList = projects.map((p: any) => ({
+      id: p.id,
+      name: extractEntityData(p).name || 'Untitled Project',
+      manager: extractEntityData(p).manager || 'Unassigned',
+      status: extractEntityData(p).status || 'active',
+      progress: extractEntityData(p).progress || 0,
+      budget: extractEntityData(p).budget || 0,
+      spent: extractEntityData(p).spent || 0,
+      startDate: extractEntityData(p).start_date || '',
+      endDate: extractEntityData(p).end_date || '',
+      team: extractEntityData(p).team_size || 0
+    }));
+
+    const activeProjects = projectsList.filter(p => p.status === 'active').length;
+    const completedProjects = projectsList.filter(p => p.status === 'completed').length;
+    const totalBudget = projectsList.reduce((sum, p) => sum + p.budget, 0);
+    const totalSpent = projectsList.reduce((sum, p) => sum + p.spent, 0);
+    const avgCompletion = projectsList.length > 0
+      ? Math.round(projectsList.reduce((sum, p) => sum + p.progress, 0) / projectsList.length)
+      : 0;
+    const onTimeProjects = projectsList.filter(p => {
+      if (!p.endDate) return true;
+      return p.status === 'completed' || new Date(p.endDate) >= new Date();
+    }).length;
+    const onTimeRate = projectsList.length > 0
+      ? Math.round((onTimeProjects / projectsList.length) * 100)
+      : 100;
+
+    const milestonesList = milestones.map((m: any) => ({
+      id: m.id,
+      project: extractEntityData(m).project || 'Unknown',
+      milestone: extractEntityData(m).title || 'Untitled',
+      dueDate: extractEntityData(m).due_date || '',
+      status: extractEntityData(m).status || 'pending'
+    }));
+
+    const membersList = members.map((m: any) => ({
+      id: m.id,
+      name: extractEntityData(m).name || 'Unknown',
+      role: extractEntityData(m).role || 'Member',
+      projects: extractEntityData(m).project_count || 0,
+      utilization: extractEntityData(m).utilization || 0
+    }));
+
+    return {
+      activeProjects,
+      completedProjects,
+      totalBudget,
+      totalSpent,
+      avgCompletion,
+      onTimeRate,
+      projects: projectsList,
+      milestones: milestonesList,
+      teamMembers: membersList
+    };
+  }, [projects, milestones, members]);
+
+  return {
+    metrics,
+    isLoading: projectsLoading || milestonesLoading || membersLoading
+  };
+};
+
+// Generic industry metrics hook for all industry modules
+export interface IndustryMetricsData {
+  entityCount: number;
+  entities: any[];
+  isLoading: boolean;
+}
+
+export const useIndustryEntities = (
+  organizationId: string,
+  moduleKey: string,
+  entityType?: string
+): IndustryMetricsData => {
+  const { entities, isLoading } = useERPEntities(organizationId, moduleKey, entityType);
+  return {
+    entityCount: entities.length,
+    entities,
+    isLoading
   };
 };

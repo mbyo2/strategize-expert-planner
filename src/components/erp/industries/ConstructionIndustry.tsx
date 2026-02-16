@@ -2,72 +2,51 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { HardHat, ClipboardList, Truck, ShieldCheck, Building2, Hammer, FileText } from 'lucide-react';
+import { useERPEntities } from '@/hooks/useERP';
+import { useOrganizations } from '@/hooks/useOrganizations';
 
 const ConstructionIndustry: React.FC = () => {
+  const { currentOrganization } = useOrganizations();
+  const orgId = currentOrganization?.id || '';
+  const { entities: projects, isLoading: p1 } = useERPEntities(orgId, 'construction', 'project');
+  const { entities: rfis, isLoading: p2 } = useERPEntities(orgId, 'construction', 'rfi');
+  const { entities: issues, isLoading: p3 } = useERPEntities(orgId, 'construction', 'issue');
+  const { entities: incidents, isLoading: p4 } = useERPEntities(orgId, 'construction', 'safety_incident');
+  const isLoading = p1 || p2 || p3 || p4;
+
   return (
     <section aria-labelledby="construction-erp-heading" className="space-y-6">
       <header className="flex items-center justify-between">
         <div>
           <h2 id="construction-erp-heading" className="text-2xl font-bold">Construction Suite</h2>
-          <p className="text-muted-foreground">
-            Plan and control projects, procurement, quality, and safety across sites
-          </p>
+          <p className="text-muted-foreground">Plan and control projects, procurement, quality, and safety across sites</p>
         </div>
-        <Button variant="default" size="sm">
-          <FileText className="mr-2 h-4 w-4" /> New RFI
-        </Button>
+        <Button variant="default" size="sm"><FileText className="mr-2 h-4 w-4" /> New RFI</Button>
       </header>
 
-      {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Active Projects</p>
-                <p className="text-2xl font-bold">12</p>
+        {[
+          { label: 'Active Projects', value: projects.length, icon: Building2 },
+          { label: 'Open RFIs', value: rfis.length, icon: ClipboardList },
+          { label: 'Open Issues', value: issues.length, icon: Hammer },
+          { label: 'Safety Incidents (30d)', value: incidents.length, icon: ShieldCheck },
+        ].map(({ label, value, icon: Icon }) => (
+          <Card key={label}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">{label}</p>
+                  {isLoading ? <Skeleton className="h-8 w-12" /> : <p className="text-2xl font-bold">{value}</p>}
+                </div>
+                <Icon className="h-8 w-8 text-primary" />
               </div>
-              <Building2 className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Open RFIs</p>
-                <p className="text-2xl font-bold">28</p>
-              </div>
-              <ClipboardList className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Open Issues</p>
-                <p className="text-2xl font-bold">7</p>
-              </div>
-              <Hammer className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Safety Incidents (30d)</p>
-                <p className="text-2xl font-bold">0</p>
-              </div>
-              <ShieldCheck className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Sections */}
       <Tabs defaultValue="projects">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="projects">Projects</TabsTrigger>
@@ -79,78 +58,34 @@ const ConstructionIndustry: React.FC = () => {
 
         <TabsContent value="projects">
           <Card>
-            <CardHeader>
-              <CardTitle>Project Management</CardTitle>
-              <CardDescription>Scheduling, tasks, and cost tracking</CardDescription>
-            </CardHeader>
+            <CardHeader><CardTitle>Project Management</CardTitle><CardDescription>Scheduling, tasks, and cost tracking</CardDescription></CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <h3 className="font-medium">Current Schedule</h3>
-                  <p className="text-sm text-muted-foreground">Gantt and milestones overview (demo data)</p>
+              {isLoading ? <Skeleton className="h-20 w-full" /> : projects.length === 0 ? (
+                <div className="text-center p-8 text-muted-foreground">
+                  <Building2 className="h-12 w-12 mx-auto mb-4" />
+                  <p>No construction projects found. Create entities to get started.</p>
                 </div>
-                <div className="space-y-2">
-                  <h3 className="font-medium">Cost Performance</h3>
-                  <p className="text-sm text-muted-foreground">Budget vs actuals with variance alerts</p>
+              ) : (
+                <div className="space-y-3">
+                  {projects.map((p: any) => {
+                    const d = p.entity_data || {};
+                    return (
+                      <div key={p.id} className="flex items-center justify-between p-3 border rounded">
+                        <div><div className="font-medium">{d.name || 'Untitled Project'}</div><div className="text-sm text-muted-foreground">{d.status || 'active'}</div></div>
+                        <div className="text-sm text-muted-foreground">{d.location || ''}</div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="procurement">
-          <Card>
-            <CardHeader>
-              <CardTitle>Procurement & Subcontractors</CardTitle>
-              <CardDescription>Purchase orders, quotes, and vendor compliance</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <div className="text-sm text-muted-foreground">Open POs</div>
-                  <div className="text-xl font-semibold">15</div>
-                </div>
-                <Truck className="h-8 w-8 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="equipment">
-          <Card>
-            <CardHeader>
-              <CardTitle>Equipment & Assets</CardTitle>
-              <CardDescription>Utilization and preventive maintenance</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Track rentals, allocation, and maintenance schedules.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="quality">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quality & Inspections</CardTitle>
-              <CardDescription>Checklists, NCRs, and material tests</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Record inspections and manage quality deviations.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="compliance">
-          <Card>
-            <CardHeader>
-              <CardTitle>Compliance & Safety</CardTitle>
-              <CardDescription>Permits, certifications, and jobsite safety</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Track permits, training, and incident logs.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <TabsContent value="procurement"><Card><CardHeader><CardTitle>Procurement & Subcontractors</CardTitle><CardDescription>Purchase orders, quotes, and vendor compliance</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div className="space-y-1"><div className="text-sm text-muted-foreground">Open POs</div>{isLoading ? <Skeleton className="h-8 w-12" /> : <div className="text-xl font-semibold">{rfis.filter((r: any) => r.entity_data?.type === 'po').length}</div>}</div><Truck className="h-8 w-8 text-primary" /></div></CardContent></Card></TabsContent>
+        <TabsContent value="equipment"><Card><CardHeader><CardTitle>Equipment & Assets</CardTitle><CardDescription>Utilization and preventive maintenance</CardDescription></CardHeader><CardContent><p className="text-sm text-muted-foreground">Track rentals, allocation, and maintenance schedules.</p></CardContent></Card></TabsContent>
+        <TabsContent value="quality"><Card><CardHeader><CardTitle>Quality & Inspections</CardTitle><CardDescription>Checklists, NCRs, and material tests</CardDescription></CardHeader><CardContent><p className="text-sm text-muted-foreground">Record inspections and manage quality deviations.</p></CardContent></Card></TabsContent>
+        <TabsContent value="compliance"><Card><CardHeader><CardTitle>Compliance & Safety</CardTitle><CardDescription>Permits, certifications, and jobsite safety</CardDescription></CardHeader><CardContent><p className="text-sm text-muted-foreground">Track permits, training, and incident logs.</p></CardContent></Card></TabsContent>
       </Tabs>
     </section>
   );
