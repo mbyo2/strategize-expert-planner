@@ -9,21 +9,27 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Search, UserPlus, MoreHorizontal, Shield, Activity } from 'lucide-react';
+import { Users, Search, UserPlus, MoreHorizontal, Shield, Activity, Mail, Clock, X } from 'lucide-react';
 import { UserManagementService, UserWithDetails, ActivityLog } from '@/services/userManagementService';
+import { InvitationService, Invitation } from '@/services/invitationService';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import { useOrganization } from '@/contexts/OrganizationContext';
 import { toast } from 'sonner';
 import PageLayout from '@/components/PageLayout';
 
 const UserManagement = () => {
   const { hasRole } = useSimpleAuth();
+  const { organizationId } = useOrganization();
   const [users, setUsers] = useState<UserWithDetails[]>([]);
   const [activities, setActivities] = useState<ActivityLog[]>([]);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [inviting, setInviting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserWithDetails | null>(null);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('viewer');
   const [pagination, setPagination] = useState({
     page: 1,
     totalPages: 1,
@@ -33,7 +39,8 @@ const UserManagement = () => {
   useEffect(() => {
     loadUsers();
     loadActivityLogs();
-  }, [pagination.page]);
+    loadInvitations();
+  }, [pagination.page, organizationId]);
 
   const loadUsers = async () => {
     try {
@@ -50,6 +57,49 @@ const UserManagement = () => {
       console.error('Error loading users:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadInvitations = async () => {
+    if (!organizationId) return;
+    try {
+      const result = await InvitationService.getPendingInvitations(organizationId);
+      setInvitations(result);
+    } catch (error) {
+      console.error('Error loading invitations:', error);
+    }
+  };
+
+  const handleSendInvitation = async () => {
+    if (!inviteEmail || !organizationId) return;
+    try {
+      setInviting(true);
+      await InvitationService.createInvitation(organizationId, inviteEmail, inviteRole);
+      await UserManagementService.logActivity(
+        'invitation_sent',
+        'invitation',
+        `Invitation sent to ${inviteEmail} with role ${inviteRole}`,
+        {}
+      );
+      toast.success(`Invitation sent to ${inviteEmail}`);
+      setIsInviteDialogOpen(false);
+      setInviteEmail('');
+      setInviteRole('viewer');
+      loadInvitations();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send invitation');
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleRevokeInvitation = async (id: string) => {
+    try {
+      await InvitationService.revokeInvitation(id);
+      toast.success('Invitation revoked');
+      loadInvitations();
+    } catch {
+      toast.error('Failed to revoke invitation');
     }
   };
 
@@ -160,17 +210,27 @@ const UserManagement = () => {
                     onChange={(e) => setInviteEmail(e.target.value)}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="invite-role">Role</Label>
+                  <Select value={inviteRole} onValueChange={setInviteRole}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="viewer">Viewer</SelectItem>
+                      <SelectItem value="analyst">Analyst</SelectItem>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => {
-                      // TODO: Implement user invitation
-                      toast.success('User invitation sent!');
-                      setIsInviteDialogOpen(false);
-                      setInviteEmail('');
-                    }}
+                    onClick={handleSendInvitation}
                     className="flex-1"
+                    disabled={!inviteEmail || inviting}
                   >
-                    Send Invitation
+                    {inviting ? 'Sending...' : 'Send Invitation'}
                   </Button>
                   <Button
                     variant="outline"
@@ -188,6 +248,9 @@ const UserManagement = () => {
         <Tabs defaultValue="users" className="w-full">
           <TabsList>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="invitations">
+              Invitations {invitations.length > 0 && <Badge variant="secondary" className="ml-1">{invitations.length}</Badge>}
+            </TabsTrigger>
             <TabsTrigger value="activity">Activity Logs</TabsTrigger>
           </TabsList>
 
@@ -328,6 +391,66 @@ const UserManagement = () => {
                       </Button>
                     </div>
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="invitations" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Pending Invitations
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {invitations.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Mail className="h-12 w-12 mx-auto mb-4" />
+                    <p>No pending invitations</p>
+                    <p className="text-sm">Invite users to join your organization</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Expires</TableHead>
+                        <TableHead>Sent</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {invitations.map((inv) => (
+                        <TableRow key={inv.id}>
+                          <TableCell className="font-medium">{inv.email}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="capitalize">{inv.role}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              {new Date(inv.expires_at).toLocaleDateString()}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {inv.created_at ? new Date(inv.created_at).toLocaleDateString() : '—'}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRevokeInvitation(inv.id)}
+                            >
+                              <X className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 )}
               </CardContent>
             </Card>

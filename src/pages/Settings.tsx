@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,10 +7,22 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings as SettingsIcon, Globe, Palette, Database, Shield, Users } from 'lucide-react';
+import { Settings as SettingsIcon, Globe, Palette, Database, Shield, Users, Loader2 } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import { useOrganization } from '@/contexts/OrganizationContext';
+import { fetchUserProfile, updateUserProfile } from '@/services/profileService';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const Settings = () => {
+  const { session } = useSimpleAuth();
+  const { organizationId } = useOrganization();
+  const userId = session?.user?.id;
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
   const [appSettings, setAppSettings] = useState({
     theme: 'system',
     language: 'english',
@@ -20,11 +32,10 @@ const Settings = () => {
   });
 
   const [organizationSettings, setOrganizationSettings] = useState({
-    companyName: 'Tech Corp',
+    companyName: '',
     industry: 'Technology',
     employeeCount: '50-100',
     fiscalYearStart: 'January',
-    workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
   });
 
   const [integrationSettings, setIntegrationSettings] = useState({
@@ -41,6 +52,116 @@ const Settings = () => {
     anonymizeData: false
   });
 
+  // Load settings from DB on mount
+  useEffect(() => {
+    if (!userId) return;
+    const load = async () => {
+      setLoading(true);
+      try {
+        // Load user profile settings
+        const profile = await fetchUserProfile(userId);
+        if (profile) {
+          setAppSettings(prev => ({
+            ...prev,
+            theme: profile.theme || 'system',
+            language: profile.language || 'english',
+            timezone: profile.timezone || 'UTC',
+            dateFormat: profile.date_format || 'MM/DD/YYYY',
+          }));
+        }
+
+        // Load org settings
+        if (organizationId) {
+          const { data: org } = await supabase
+            .from('organizations')
+            .select('name, industry, size, settings')
+            .eq('id', organizationId)
+            .single();
+
+          if (org) {
+            setOrganizationSettings(prev => ({
+              ...prev,
+              companyName: org.name || '',
+              industry: org.industry || 'Technology',
+              employeeCount: org.size || '50-100',
+            }));
+            const s = (typeof org.settings === 'object' && org.settings) ? org.settings as any : {};
+            setIntegrationSettings({
+              emailIntegration: s.emailIntegration ?? true,
+              calendarSync: s.calendarSync ?? false,
+              slackNotifications: s.slackNotifications ?? true,
+              apiAccess: s.apiAccess ?? false,
+            });
+            setDataSettings({
+              dataRetention: s.data_retention_days ?? 90,
+              autoBackup: s.autoBackup ?? true,
+              exportFormat: s.exportFormat ?? 'CSV',
+              anonymizeData: s.anonymizeData ?? false,
+            });
+            if (s.fiscalYearStart) {
+              setOrganizationSettings(prev => ({ ...prev, fiscalYearStart: s.fiscalYearStart }));
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load settings:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [userId, organizationId]);
+
+  const handleSaveAll = async () => {
+    if (!userId) return;
+    setSaving(true);
+    try {
+      // Save user profile settings
+      await updateUserProfile(userId, {
+        theme: appSettings.theme,
+        language: appSettings.language,
+        timezone: appSettings.timezone,
+        date_format: appSettings.dateFormat,
+      });
+
+      // Save org settings
+      if (organizationId) {
+        const settingsPayload = {
+          emailIntegration: integrationSettings.emailIntegration,
+          calendarSync: integrationSettings.calendarSync,
+          slackNotifications: integrationSettings.slackNotifications,
+          apiAccess: integrationSettings.apiAccess,
+          data_retention_days: dataSettings.dataRetention,
+          autoBackup: dataSettings.autoBackup,
+          exportFormat: dataSettings.exportFormat,
+          anonymizeData: dataSettings.anonymizeData,
+          fiscalYearStart: organizationSettings.fiscalYearStart,
+          currency: appSettings.currency,
+        };
+
+        const { error } = await supabase
+          .from('organizations')
+          .update({
+            name: organizationSettings.companyName,
+            industry: organizationSettings.industry,
+            size: organizationSettings.employeeCount,
+            settings: settingsPayload,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', organizationId);
+
+        if (error) throw error;
+      }
+
+      toast.success('Settings saved successfully');
+    } catch (e) {
+      console.error('Failed to save settings:', e);
+      toast.error('Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleAppSettingChange = (key: string, value: string) => {
     setAppSettings(prev => ({ ...prev, [key]: value }));
   };
@@ -56,6 +177,16 @@ const Settings = () => {
   const handleDataSettingChange = (key: string, value: any) => {
     setDataSettings(prev => ({ ...prev, [key]: value }));
   };
+
+  if (loading) {
+    return (
+      <PageLayout title="Settings" icon={<SettingsIcon className="h-6 w-6" />}>
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout 
@@ -80,17 +211,13 @@ const Settings = () => {
                   <Palette className="h-5 w-5" />
                   Appearance
                 </CardTitle>
-                <CardDescription>
-                  Customize the look and feel of your application
-                </CardDescription>
+                <CardDescription>Customize the look and feel of your application</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="theme">Theme</Label>
-                  <Select value={appSettings.theme} onValueChange={(value) => handleAppSettingChange('theme', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select theme" />
-                    </SelectTrigger>
+                  <Select value={appSettings.theme} onValueChange={(v) => handleAppSettingChange('theme', v)}>
+                    <SelectTrigger><SelectValue placeholder="Select theme" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="light">Light</SelectItem>
                       <SelectItem value="dark">Dark</SelectItem>
@@ -107,18 +234,14 @@ const Settings = () => {
                   <Globe className="h-5 w-5" />
                   Localization
                 </CardTitle>
-                <CardDescription>
-                  Configure language, timezone, and regional settings
-                </CardDescription>
+                <CardDescription>Configure language, timezone, and regional settings</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="language">Language</Label>
-                    <Select value={appSettings.language} onValueChange={(value) => handleAppSettingChange('language', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select language" />
-                      </SelectTrigger>
+                    <Label>Language</Label>
+                    <Select value={appSettings.language} onValueChange={(v) => handleAppSettingChange('language', v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="english">English</SelectItem>
                         <SelectItem value="spanish">Spanish</SelectItem>
@@ -127,13 +250,10 @@ const Settings = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="timezone">Timezone</Label>
-                    <Select value={appSettings.timezone} onValueChange={(value) => handleAppSettingChange('timezone', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select timezone" />
-                      </SelectTrigger>
+                    <Label>Timezone</Label>
+                    <Select value={appSettings.timezone} onValueChange={(v) => handleAppSettingChange('timezone', v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="UTC">UTC</SelectItem>
                         <SelectItem value="America/New_York">Eastern Time</SelectItem>
@@ -143,13 +263,10 @@ const Settings = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="dateFormat">Date Format</Label>
-                    <Select value={appSettings.dateFormat} onValueChange={(value) => handleAppSettingChange('dateFormat', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select date format" />
-                      </SelectTrigger>
+                    <Label>Date Format</Label>
+                    <Select value={appSettings.dateFormat} onValueChange={(v) => handleAppSettingChange('dateFormat', v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
                         <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
@@ -157,13 +274,10 @@ const Settings = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="currency">Currency</Label>
-                    <Select value={appSettings.currency} onValueChange={(value) => handleAppSettingChange('currency', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select currency" />
-                      </SelectTrigger>
+                    <Label>Currency</Label>
+                    <Select value={appSettings.currency} onValueChange={(v) => handleAppSettingChange('currency', v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="USD">USD ($)</SelectItem>
                         <SelectItem value="EUR">EUR (€)</SelectItem>
@@ -184,27 +298,18 @@ const Settings = () => {
                   <Users className="h-5 w-5" />
                   Organization Details
                 </CardTitle>
-                <CardDescription>
-                  Basic information about your organization
-                </CardDescription>
+                <CardDescription>Basic information about your organization</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="companyName">Company Name</Label>
-                    <Input
-                      id="companyName"
-                      value={organizationSettings.companyName}
-                      onChange={(e) => handleOrgSettingChange('companyName', e.target.value)}
-                    />
+                    <Label>Company Name</Label>
+                    <Input value={organizationSettings.companyName} onChange={(e) => handleOrgSettingChange('companyName', e.target.value)} />
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="industry">Industry</Label>
-                    <Select value={organizationSettings.industry} onValueChange={(value) => handleOrgSettingChange('industry', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select industry" />
-                      </SelectTrigger>
+                    <Label>Industry</Label>
+                    <Select value={organizationSettings.industry} onValueChange={(v) => handleOrgSettingChange('industry', v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Technology">Technology</SelectItem>
                         <SelectItem value="Healthcare">Healthcare</SelectItem>
@@ -215,13 +320,10 @@ const Settings = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="employeeCount">Employee Count</Label>
-                    <Select value={organizationSettings.employeeCount} onValueChange={(value) => handleOrgSettingChange('employeeCount', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select employee count" />
-                      </SelectTrigger>
+                    <Label>Employee Count</Label>
+                    <Select value={organizationSettings.employeeCount} onValueChange={(v) => handleOrgSettingChange('employeeCount', v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="1-10">1-10</SelectItem>
                         <SelectItem value="11-50">11-50</SelectItem>
@@ -231,13 +333,10 @@ const Settings = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="fiscalYear">Fiscal Year Start</Label>
-                    <Select value={organizationSettings.fiscalYearStart} onValueChange={(value) => handleOrgSettingChange('fiscalYearStart', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select month" />
-                      </SelectTrigger>
+                    <Label>Fiscal Year Start</Label>
+                    <Select value={organizationSettings.fiscalYearStart} onValueChange={(v) => handleOrgSettingChange('fiscalYearStart', v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="January">January</SelectItem>
                         <SelectItem value="April">April</SelectItem>
@@ -255,63 +354,27 @@ const Settings = () => {
             <Card>
               <CardHeader>
                 <CardTitle>External Integrations</CardTitle>
-                <CardDescription>
-                  Connect with external services and tools
-                </CardDescription>
+                <CardDescription>Connect with external services and tools</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Email Integration</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Send notifications and reports via email
-                      </p>
+                  {[
+                    { key: 'emailIntegration', label: 'Email Integration', desc: 'Send notifications and reports via email' },
+                    { key: 'calendarSync', label: 'Calendar Sync', desc: 'Sync strategy reviews with your calendar' },
+                    { key: 'slackNotifications', label: 'Slack Notifications', desc: 'Send updates to Slack channels' },
+                    { key: 'apiAccess', label: 'API Access', desc: 'Allow third-party API access to your data' },
+                  ].map(({ key, label, desc }) => (
+                    <div key={key} className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label>{label}</Label>
+                        <p className="text-sm text-muted-foreground">{desc}</p>
+                      </div>
+                      <Switch
+                        checked={(integrationSettings as any)[key]}
+                        onCheckedChange={(checked) => handleIntegrationChange(key, checked)}
+                      />
                     </div>
-                    <Switch
-                      checked={integrationSettings.emailIntegration}
-                      onCheckedChange={(checked) => handleIntegrationChange('emailIntegration', checked)}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Calendar Sync</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Sync strategy reviews with your calendar
-                      </p>
-                    </div>
-                    <Switch
-                      checked={integrationSettings.calendarSync}
-                      onCheckedChange={(checked) => handleIntegrationChange('calendarSync', checked)}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Slack Notifications</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Send updates to Slack channels
-                      </p>
-                    </div>
-                    <Switch
-                      checked={integrationSettings.slackNotifications}
-                      onCheckedChange={(checked) => handleIntegrationChange('slackNotifications', checked)}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>API Access</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Allow third-party API access to your data
-                      </p>
-                    </div>
-                    <Switch
-                      checked={integrationSettings.apiAccess}
-                      onCheckedChange={(checked) => handleIntegrationChange('apiAccess', checked)}
-                    />
-                  </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -324,46 +387,26 @@ const Settings = () => {
                   <Database className="h-5 w-5" />
                   Data Management
                 </CardTitle>
-                <CardDescription>
-                  Configure data retention, backup, and privacy settings
-                </CardDescription>
+                <CardDescription>Configure data retention, backup, and privacy settings</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="dataRetention">Data Retention (days)</Label>
-                    <Input
-                      id="dataRetention"
-                      type="number"
-                      value={dataSettings.dataRetention}
-                      onChange={(e) => handleDataSettingChange('dataRetention', parseInt(e.target.value))}
-                      min="30"
-                      max="365"
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      How long to keep historical data before automatic cleanup
-                    </p>
+                    <Label>Data Retention (days)</Label>
+                    <Input type="number" value={dataSettings.dataRetention} onChange={(e) => handleDataSettingChange('dataRetention', parseInt(e.target.value))} min="30" max="365" />
+                    <p className="text-sm text-muted-foreground">How long to keep historical data before automatic cleanup</p>
                   </div>
-                  
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label>Automatic Backup</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Automatically backup your data daily
-                      </p>
+                      <p className="text-sm text-muted-foreground">Automatically backup your data daily</p>
                     </div>
-                    <Switch
-                      checked={dataSettings.autoBackup}
-                      onCheckedChange={(checked) => handleDataSettingChange('autoBackup', checked)}
-                    />
+                    <Switch checked={dataSettings.autoBackup} onCheckedChange={(checked) => handleDataSettingChange('autoBackup', checked)} />
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="exportFormat">Default Export Format</Label>
-                    <Select value={dataSettings.exportFormat} onValueChange={(value) => handleDataSettingChange('exportFormat', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select format" />
-                      </SelectTrigger>
+                    <Label>Default Export Format</Label>
+                    <Select value={dataSettings.exportFormat} onValueChange={(v) => handleDataSettingChange('exportFormat', v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="CSV">CSV</SelectItem>
                         <SelectItem value="Excel">Excel</SelectItem>
@@ -372,18 +415,12 @@ const Settings = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label>Anonymize Data</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Remove personal identifiers from exported data
-                      </p>
+                      <p className="text-sm text-muted-foreground">Remove personal identifiers from exported data</p>
                     </div>
-                    <Switch
-                      checked={dataSettings.anonymizeData}
-                      onCheckedChange={(checked) => handleDataSettingChange('anonymizeData', checked)}
-                    />
+                    <Switch checked={dataSettings.anonymizeData} onCheckedChange={(checked) => handleDataSettingChange('anonymizeData', checked)} />
                   </div>
                 </div>
               </CardContent>
@@ -397,9 +434,7 @@ const Settings = () => {
                   <Shield className="h-5 w-5" />
                   Advanced Settings
                 </CardTitle>
-                <CardDescription>
-                  Advanced configuration options for power users
-                </CardDescription>
+                <CardDescription>Advanced configuration options for power users</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-2">
@@ -409,21 +444,18 @@ const Settings = () => {
                       <div className="text-sm text-muted-foreground">Manage API access keys</div>
                     </div>
                   </Button>
-                  
                   <Button variant="outline" className="h-auto p-4">
                     <div className="text-left">
                       <div className="font-medium">Audit Logs</div>
                       <div className="text-sm text-muted-foreground">View system audit logs</div>
                     </div>
                   </Button>
-                  
                   <Button variant="outline" className="h-auto p-4">
                     <div className="text-left">
                       <div className="font-medium">Import/Export</div>
                       <div className="text-sm text-muted-foreground">Bulk data operations</div>
                     </div>
                   </Button>
-                  
                   <Button variant="outline" className="h-auto p-4">
                     <div className="text-left">
                       <div className="font-medium">System Health</div>
@@ -431,17 +463,12 @@ const Settings = () => {
                     </div>
                   </Button>
                 </div>
-                
                 <div className="pt-4 border-t">
                   <div className="space-y-2">
-                    <Label className="text-red-600">Danger Zone</Label>
+                    <Label className="text-destructive">Danger Zone</Label>
                     <div className="space-y-2">
-                      <Button variant="outline" className="w-full text-red-600 border-red-600">
-                        Export All Data
-                      </Button>
-                      <Button variant="outline" className="w-full text-red-600 border-red-600">
-                        Delete Organization
-                      </Button>
+                      <Button variant="outline" className="w-full text-destructive border-destructive">Export All Data</Button>
+                      <Button variant="outline" className="w-full text-destructive border-destructive">Delete Organization</Button>
                     </div>
                   </div>
                 </div>
@@ -450,10 +477,12 @@ const Settings = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Save Actions */}
         <div className="flex justify-end gap-2">
           <Button variant="outline">Cancel</Button>
-          <Button>Save All Changes</Button>
+          <Button onClick={handleSaveAll} disabled={saving}>
+            {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {saving ? 'Saving...' : 'Save All Changes'}
+          </Button>
         </div>
       </div>
     </PageLayout>
