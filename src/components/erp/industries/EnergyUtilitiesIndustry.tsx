@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Zap, Droplet, Wind, Wrench, Building2 } from 'lucide-react';
 import { useERPEntities } from '@/hooks/useERP';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 const EnergyUtilitiesIndustry: React.FC = () => {
-  const { currentOrganization } = useOrganizations();
-  const orgId = currentOrganization?.id || '';
+  const { organizationId } = useOrganization();
+  const orgId = organizationId || '';
   const { entities: outages, isLoading: l1 } = useERPEntities(orgId, 'energy', 'outage');
   const { entities: assets, isLoading: l2 } = useERPEntities(orgId, 'energy', 'asset');
   const { entities: workOrders, isLoading: l3 } = useERPEntities(orgId, 'energy', 'work_order');

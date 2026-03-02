@@ -15,11 +15,11 @@ import {
 } from 'lucide-react';
 import { useHRMetrics } from '@/hooks/useERPMetrics';
 import { useERPEntities } from '@/hooks/useERP';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 export const HRModule: React.FC = () => {
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id || '';
+  const { organizationId: orgId } = useOrganization();
+  const organizationId = orgId || '';
   const { metrics, isLoading: metricsLoading } = useHRMetrics(organizationId);
   const { entities: employees, isLoading: employeesLoading } = useERPEntities(
     organizationId,

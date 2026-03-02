@@ -6,11 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FolderKanban, Timer, Users, FileText, Wrench } from 'lucide-react';
 import { useERPEntities } from '@/hooks/useERP';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 export const ServicesIndustry: React.FC = () => {
-  const { currentOrganization } = useOrganizations();
-  const orgId = currentOrganization?.id || '';
+  const { organizationId } = useOrganization();
+  const orgId = organizationId || '';
   const { entities: projects, isLoading: l1 } = useERPEntities(orgId, 'services', 'project');
   const { entities: timeEntries, isLoading: l2 } = useERPEntities(orgId, 'services', 'time_entry');
   const { entities: resources, isLoading: l3 } = useERPEntities(orgId, 'services', 'resource');

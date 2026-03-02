@@ -6,11 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ShoppingCart, Store, Layers, BarChart3, Users, ScanBarcode } from 'lucide-react';
 import { useERPEntities } from '@/hooks/useERP';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 export const RetailIndustry: React.FC = () => {
-  const { currentOrganization } = useOrganizations();
-  const orgId = currentOrganization?.id || '';
+  const { organizationId } = useOrganization();
+  const orgId = organizationId || '';
   const { entities: stores, isLoading: l1 } = useERPEntities(orgId, 'retail', 'store');
   const { entities: products, isLoading: l2 } = useERPEntities(orgId, 'retail', 'product');
   const { entities: channels, isLoading: l3 } = useERPEntities(orgId, 'retail', 'channel');

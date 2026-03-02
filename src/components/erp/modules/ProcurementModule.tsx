@@ -18,11 +18,11 @@ import {
   FileText
 } from 'lucide-react';
 import { useProcurementMetrics } from '@/hooks/useERPMetrics';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 export const ProcurementModule: React.FC = () => {
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id || '';
+  const { organizationId: orgId } = useOrganization();
+  const organizationId = orgId || '';
   const { metrics, isLoading } = useProcurementMetrics(organizationId);
 
   const hasData = metrics.purchaseOrders.length > 0 || metrics.suppliers.length > 0;

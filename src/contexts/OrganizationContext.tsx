@@ -65,7 +65,7 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
           .select('organization_id')
           .eq('user_id', userId)
           .limit(1)
-          .single();
+          .maybeSingle();
 
         if (!memberError && membership) {
           setOrgId(membership.organization_id);

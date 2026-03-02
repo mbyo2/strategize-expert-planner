@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Bed, ClipboardList, CalendarCheck, Building2 } from 'lucide-react';
 import { useERPEntities } from '@/hooks/useERP';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 const HospitalityIndustry: React.FC = () => {
-  const { currentOrganization } = useOrganizations();
-  const orgId = currentOrganization?.id || '';
+  const { organizationId } = useOrganization();
+  const orgId = organizationId || '';
   const { entities: rooms, isLoading: l1 } = useERPEntities(orgId, 'hospitality', 'room');
   const { entities: reservations, isLoading: l2 } = useERPEntities(orgId, 'hospitality', 'reservation');
   const { entities: events, isLoading: l3 } = useERPEntities(orgId, 'hospitality', 'event');

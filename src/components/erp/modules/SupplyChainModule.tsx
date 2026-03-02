@@ -15,11 +15,11 @@ import {
   Zap
 } from 'lucide-react';
 import { useSupplyChainMetrics } from '@/hooks/useERPMetrics';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 export const SupplyChainModule: React.FC = () => {
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id || '';
+  const { organizationId: orgId } = useOrganization();
+  const organizationId = orgId || '';
   const { metrics, isLoading } = useSupplyChainMetrics(organizationId);
 
   const hasData = metrics.shipments.length > 0 || metrics.warehouses.length > 0;
