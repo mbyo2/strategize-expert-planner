@@ -16,11 +16,11 @@ import {
   Factory
 } from 'lucide-react';
 import { useManufacturingMetrics } from '@/hooks/useERPMetrics';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 export const ManufacturingModule: React.FC = () => {
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id || '';
+  const { organizationId: orgId } = useOrganization();
+  const organizationId = orgId || '';
   const { metrics, isLoading } = useManufacturingMetrics(organizationId);
 
   const hasData = metrics.productionLines.length > 0 || metrics.workOrders.length > 0;

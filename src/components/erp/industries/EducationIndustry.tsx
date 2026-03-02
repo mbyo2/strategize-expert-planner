@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ClipboardList, Banknote, Building2, User } from 'lucide-react';
 import { useERPEntities } from '@/hooks/useERP';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 export const EducationIndustry: React.FC = () => {
-  const { currentOrganization } = useOrganizations();
-  const orgId = currentOrganization?.id || '';
+  const { organizationId } = useOrganization();
+  const orgId = organizationId || '';
   const { entities: students, isLoading: l1 } = useERPEntities(orgId, 'education', 'student');
   const { entities: courses, isLoading: l2 } = useERPEntities(orgId, 'education', 'course');
   const { entities: faculty, isLoading: l3 } = useERPEntities(orgId, 'education', 'faculty');

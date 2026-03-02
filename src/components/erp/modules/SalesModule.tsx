@@ -16,11 +16,11 @@ import {
   Star
 } from 'lucide-react';
 import { useSalesMetrics } from '@/hooks/useERPMetrics';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 export const SalesModule: React.FC = () => {
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id || '';
+  const { organizationId: orgId } = useOrganization();
+  const organizationId = orgId || '';
   const { metrics, isLoading } = useSalesMetrics(organizationId);
 
   const hasData = metrics.activeCustomers > 0 || metrics.salesPipeline.some(s => s.count > 0);

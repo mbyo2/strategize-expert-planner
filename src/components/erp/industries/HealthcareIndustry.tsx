@@ -6,11 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Stethoscope, Pill, Shield, FileText, Calendar } from 'lucide-react';
 import { useERPEntities } from '@/hooks/useERP';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 export const HealthcareIndustry: React.FC = () => {
-  const { currentOrganization } = useOrganizations();
-  const orgId = currentOrganization?.id || '';
+  const { organizationId } = useOrganization();
+  const orgId = organizationId || '';
   const { entities: patients, isLoading: l1 } = useERPEntities(orgId, 'healthcare', 'patient');
   const { entities: appointments, isLoading: l2 } = useERPEntities(orgId, 'healthcare', 'appointment');
   const { entities: labOrders, isLoading: l3 } = useERPEntities(orgId, 'healthcare', 'lab_order');

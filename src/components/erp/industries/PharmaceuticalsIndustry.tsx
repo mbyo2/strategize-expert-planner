@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FlaskConical, ClipboardCheck, ShieldCheck, Package } from 'lucide-react';
 import { useERPEntities } from '@/hooks/useERP';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 const PharmaceuticalsIndustry: React.FC = () => {
-  const { currentOrganization } = useOrganizations();
-  const orgId = currentOrganization?.id || '';
+  const { organizationId } = useOrganization();
+  const orgId = organizationId || '';
   const { entities: trials, isLoading: l1 } = useERPEntities(orgId, 'pharma', 'trial');
   const { entities: batches, isLoading: l2 } = useERPEntities(orgId, 'pharma', 'batch');
   const { entities: qaRecords, isLoading: l3 } = useERPEntities(orgId, 'pharma', 'qa_record');

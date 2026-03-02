@@ -7,11 +7,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ShieldAlert, Landmark, LineChart, FileText } from 'lucide-react';
 import { useFinancialMetrics } from '@/hooks/useERPMetrics';
 import { useERPEntities } from '@/hooks/useERP';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 export const FinancialServicesIndustry: React.FC = () => {
-  const { currentOrganization } = useOrganizations();
-  const orgId = currentOrganization?.id || '';
+  const { organizationId } = useOrganization();
+  const orgId = organizationId || '';
   const { metrics, isLoading: metricsLoading } = useFinancialMetrics(orgId);
   const { entities: riskAlerts, isLoading: l1 } = useERPEntities(orgId, 'financial_services', 'risk_alert');
   const isLoading = metricsLoading || l1;

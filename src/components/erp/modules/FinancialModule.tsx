@@ -14,11 +14,11 @@ import {
 } from 'lucide-react';
 import { useFinancialMetrics } from '@/hooks/useERPMetrics';
 import { useERPEntities } from '@/hooks/useERP';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 export const FinancialModule: React.FC = () => {
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id || '';
+  const { organizationId: orgId } = useOrganization();
+  const organizationId = orgId || '';
   const { metrics, isLoading: metricsLoading } = useFinancialMetrics(organizationId);
   const { entities: transactions, isLoading: transactionsLoading } = useERPEntities(
     organizationId,

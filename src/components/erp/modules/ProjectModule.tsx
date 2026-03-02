@@ -18,11 +18,11 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { useProjectMetrics } from '@/hooks/useERPMetrics';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 export const ProjectModule: React.FC = () => {
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id || '';
+  const { organizationId: orgId } = useOrganization();
+  const organizationId = orgId || '';
   const { metrics, isLoading } = useProjectMetrics(organizationId);
 
   const hasData = metrics.projects.length > 0;

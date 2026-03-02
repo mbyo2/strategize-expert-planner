@@ -6,11 +6,11 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Factory, ClipboardList, CheckCircle, Wrench, Boxes, Binary, BarChart3 } from 'lucide-react';
 import { useManufacturingMetrics } from '@/hooks/useERPMetrics';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 export const ManufacturingIndustry: React.FC = () => {
-  const { currentOrganization } = useOrganizations();
-  const orgId = currentOrganization?.id || '';
+  const { organizationId } = useOrganization();
+  const orgId = organizationId || '';
   const { metrics, isLoading } = useManufacturingMetrics(orgId);
 
   return (
