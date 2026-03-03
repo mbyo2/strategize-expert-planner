@@ -82,7 +82,7 @@ function App() {
                   <Route path="/infrastructure" element={<Infrastructure />} />
                   <Route path="/erp" element={<ERP />} />
                   <Route path="/support" element={<Support />} />
-                  <Route path="/test-setup" element={<TestSetup />} />
+                  {/* test-setup removed for production launch */}
                   <Route path="/tactical-map" element={<TacticalMap />} />
                 </Route>
 
