@@ -34,7 +34,7 @@ export class ERPService {
       .from('organization_erp_config')
       .select('*')
       .eq('organization_id', organizationId)
-      .single();
+      .maybeSingle();
 
     if (error && error.code !== 'PGRST116') throw error;
     return data as OrganizationERPConfig | null;
