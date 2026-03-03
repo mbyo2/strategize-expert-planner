@@ -6,10 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Eye, EyeOff, LogIn, UserPlus, TestTube, Sparkles, AlertCircle, Globe } from 'lucide-react';
+import { Eye, EyeOff, LogIn, UserPlus, Sparkles, AlertCircle, Globe } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { toast } from 'sonner';
-import TestUserLogin from '@/components/TestUserLogin';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
 import { useLanguage } from '@/i18n/LanguageProvider';
 
@@ -135,7 +134,7 @@ const Login = () => {
         )}
 
         <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setFormErrors({}); }}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login" className="gap-1.5">
               <LogIn className="h-3.5 w-3.5" />
               {t('login.signIn')}
@@ -143,10 +142,6 @@ const Login = () => {
             <TabsTrigger value="signup" className="gap-1.5">
               <UserPlus className="h-3.5 w-3.5" />
               {t('login.signup')}
-            </TabsTrigger>
-            <TabsTrigger value="test" className="gap-1.5">
-              <TestTube className="h-3.5 w-3.5" />
-              {t('login.testUsers')}
             </TabsTrigger>
           </TabsList>
 
@@ -264,22 +259,6 @@ const Login = () => {
                     {isSubmitting ? 'Creating account...' : t('login.createAccount')}
                   </Button>
                 </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="test">
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg">{t('login.testUsers')}</CardTitle>
-                <CardDescription>
-                  Quick login with test accounts. If login fails, visit{' '}
-                  <Link to="/test-setup" className="text-primary hover:underline font-medium">/test-setup</Link>{' '}
-                  first to create the accounts.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <TestUserLogin />
               </CardContent>
             </Card>
           </TabsContent>

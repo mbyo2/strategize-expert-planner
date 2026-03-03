@@ -33,10 +33,10 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
         .from('organizations')
         .select('*')
         .eq('id', orgId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      setOrganization(data);
+      setOrganization(data || null);
     } catch (error) {
       console.error('Error fetching organization:', error);
       toast.error('Failed to load organization details');
@@ -51,7 +51,7 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
         .from('profiles')
         .select('organization_id')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
 
