@@ -3,8 +3,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import ERPModuleSelector from '@/components/erp/ERPModuleSelector';
 import ERPStrategicIntegration from '@/components/erp/ERPStrategicIntegration';
+import ERPOnboardingWizard from '@/components/erp/ERPOnboardingWizard';
 import { FinancialModule } from '@/components/erp/modules/FinancialModule';
 import { HRModule } from '@/components/erp/modules/HRModule';
 import { OperationsModule } from '@/components/erp/modules/OperationsModule';
@@ -20,7 +22,7 @@ import {
   Package, Link2, BarChart3, Building2, 
   DollarSign, Users, Cog, ShoppingCart, 
   Truck, Factory, FolderKanban, Layers,
-  ArrowUpRight, Activity, TrendingUp
+  ArrowUpRight, Activity, Settings
 } from 'lucide-react';
 import ManufacturingIndustry from '@/components/erp/industries/ManufacturingIndustry';
 import RetailIndustry from '@/components/erp/industries/RetailIndustry';
@@ -37,9 +39,9 @@ import SEO from '@/components/SEO';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const StatCard = ({ 
-  label, value, icon: Icon, trend, subtitle 
+  label, value, icon: Icon, subtitle 
 }: { 
-  label: string; value: string | number; icon: React.ElementType; trend?: string; subtitle?: string 
+  label: string; value: string | number; icon: React.ElementType; subtitle?: string 
 }) => (
   <Card className="relative overflow-hidden">
     <CardContent className="p-5">
@@ -47,15 +49,7 @@ const StatCard = ({
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
           <p className="text-2xl font-bold tracking-tight">{value}</p>
-          {subtitle && (
-            <p className="text-xs text-muted-foreground">{subtitle}</p>
-          )}
-          {trend && (
-            <div className="flex items-center gap-1 text-xs font-medium text-primary">
-              <ArrowUpRight className="h-3 w-3" />
-              {trend}
-            </div>
-          )}
+          {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
         </div>
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
           <Icon className="h-5 w-5 text-primary" />
@@ -69,11 +63,13 @@ const ERPPage: React.FC = () => {
   const { session } = useSimpleAuth();
   const { organizationId } = useOrganization();
   const [activeTab, setActiveTab] = useState('overview');
+  const [showSetup, setShowSetup] = useState(false);
   
   const { config, isLoading } = useOrganizationERP(organizationId || '');
   const { analytics } = useERPAnalytics(organizationId || '');
 
   const activeModules = config?.active_modules || [];
+  const hasModules = activeModules.length > 0;
 
   if (isLoading) {
     return (
@@ -90,6 +86,28 @@ const ERPPage: React.FC = () => {
     );
   }
 
+  // Show onboarding wizard if no modules active and not manually showing setup
+  if (!hasModules && !showSetup) {
+    return (
+      <div className="space-y-6">
+        <SEO title="ERP Setup" description="Configure your Enterprise Resource Planning modules" />
+        <div className="flex flex-col items-center gap-2 pt-8">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 mb-2">
+            <Layers className="h-7 w-7 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-center">Set Up Your ERP</h1>
+          <p className="text-muted-foreground text-center max-w-lg">
+            Configure your enterprise modules in 3 simple steps. Choose your industry, pick the modules you need, and start managing your business.
+          </p>
+        </div>
+        <ERPOnboardingWizard 
+          organizationId={organizationId || ''} 
+          onComplete={() => setShowSetup(false)} 
+        />
+      </div>
+    );
+  }
+
   const integrationHealth = analytics && analytics.totalEntities > 0 
     ? Math.round((analytics.totalStrategicLinks / analytics.totalEntities) * 100)
     : 0;
@@ -99,7 +117,7 @@ const ERPPage: React.FC = () => {
       <SEO title="ERP Integration" description="Enterprise Resource Planning modules integrated with strategic planning" />
       
       {/* Header */}
-      <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
             <Layers className="h-5 w-5 text-primary" />
@@ -107,38 +125,21 @@ const ERPPage: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">ERP Integration</h1>
             <p className="text-sm text-muted-foreground">
-              Enterprise modules connected to your strategic planning workflow
+              {activeModules.length} module{activeModules.length !== 1 ? 's' : ''} active
             </p>
           </div>
         </div>
+        <Button variant="outline" size="sm" onClick={() => setActiveTab('setup')}>
+          <Settings className="h-4 w-4 mr-1" /> Manage Modules
+        </Button>
       </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard 
-          label="Active Modules" 
-          value={activeModules.length} 
-          icon={Package}
-          subtitle={`${activeModules.length > 0 ? 'Configured' : 'Set up modules to begin'}`}
-        />
-        <StatCard 
-          label="ERP Entities" 
-          value={analytics?.totalEntities || 0} 
-          icon={Building2}
-          subtitle="Total records"
-        />
-        <StatCard 
-          label="Strategic Links" 
-          value={analytics?.totalStrategicLinks || 0} 
-          icon={Link2}
-          subtitle="Goal connections"
-        />
-        <StatCard 
-          label="Integration Health" 
-          value={`${integrationHealth}%`} 
-          icon={Activity}
-          subtitle={integrationHealth > 70 ? 'Strong alignment' : integrationHealth > 30 ? 'Moderate' : 'Needs attention'}
-        />
+        <StatCard label="Active Modules" value={activeModules.length} icon={Package} subtitle="Configured" />
+        <StatCard label="ERP Entities" value={analytics?.totalEntities || 0} icon={Building2} subtitle="Total records" />
+        <StatCard label="Strategic Links" value={analytics?.totalStrategicLinks || 0} icon={Link2} subtitle="Goal connections" />
+        <StatCard label="Integration" value={`${integrationHealth}%`} icon={Activity} subtitle={integrationHealth > 70 ? 'Strong' : integrationHealth > 30 ? 'Moderate' : 'Needs attention'} />
       </div>
 
       {/* Main Navigation */}
@@ -149,31 +150,35 @@ const ERPPage: React.FC = () => {
               { value: 'overview', label: 'Overview', icon: BarChart3 },
               { value: 'financial', label: 'Financial', icon: DollarSign },
               { value: 'sales', label: 'Sales & CRM', icon: ShoppingCart },
+              { value: 'hr', label: 'HR', icon: Users },
               { value: 'operations', label: 'Operations', icon: Cog },
-              { value: 'integration', label: 'Strategy Link', icon: Link2 },
-              { value: 'industries', label: 'Industries', icon: Factory },
+              { value: 'manufacturing', label: 'Manufacturing', icon: Factory },
+              { value: 'supply', label: 'Supply Chain', icon: Truck },
+              { value: 'projects', label: 'Projects', icon: FolderKanban },
+              { value: 'integration', label: 'Strategy', icon: Link2 },
+              { value: 'industries', label: 'Industries', icon: Building2 },
               { value: 'setup', label: 'Setup', icon: Package },
             ].map(tab => (
               <TabsTrigger 
                 key={tab.value} 
                 value={tab.value}
-                className="relative rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium text-muted-foreground transition-none data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none hover:text-foreground"
+                className="relative rounded-none border-b-2 border-transparent px-3 py-2.5 text-xs font-medium text-muted-foreground transition-none data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none hover:text-foreground"
               >
-                <tab.icon className="mr-2 h-4 w-4" />
+                <tab.icon className="mr-1.5 h-3.5 w-3.5" />
                 {tab.label}
               </TabsTrigger>
             ))}
           </TabsList>
         </div>
 
-        {/* Overview Tab */}
+        {/* Overview */}
         <TabsContent value="overview" className="space-y-6 pt-4">
           {analytics && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Module Usage</CardTitle>
-                  <CardDescription>Entity distribution across active modules</CardDescription>
+                  <CardDescription>Entity distribution across modules</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {analytics.entitiesByModule && Object.keys(analytics.entitiesByModule).length > 0 ? (
@@ -185,16 +190,11 @@ const ERPPage: React.FC = () => {
                           return (
                             <div key={moduleKey} className="space-y-1.5">
                               <div className="flex items-center justify-between text-sm">
-                                <span className="font-medium capitalize">
-                                  {moduleKey.replace(/_/g, ' ')}
-                                </span>
+                                <span className="font-medium capitalize">{moduleKey.replace(/_/g, ' ')}</span>
                                 <span className="text-muted-foreground tabular-nums">{count as number}</span>
                               </div>
                               <div className="h-2 w-full rounded-full bg-secondary">
-                                <div 
-                                  className="h-2 rounded-full bg-primary transition-all" 
-                                  style={{ width: `${((count as number) / maxCount) * 100}%` }}
-                                />
+                                <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${((count as number) / maxCount) * 100}%` }} />
                               </div>
                             </div>
                           );
@@ -205,8 +205,8 @@ const ERPPage: React.FC = () => {
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
                         <BarChart3 className="h-6 w-6 text-muted-foreground" />
                       </div>
-                      <p className="text-sm font-medium">No module data yet</p>
-                      <p className="text-xs text-muted-foreground mt-1">Create ERP entities to see usage analytics</p>
+                      <p className="text-sm font-medium">No data yet</p>
+                      <p className="text-xs text-muted-foreground mt-1">Create entities in any module to see analytics</p>
                     </div>
                   )}
                 </CardContent>
@@ -214,91 +214,45 @@ const ERPPage: React.FC = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Strategic Integration</CardTitle>
-                  <CardDescription>ERP data connections to strategic planning</CardDescription>
+                  <CardTitle className="text-base">Active Modules</CardTitle>
+                  <CardDescription>{activeModules.length} module(s) enabled</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {analytics.linksByType && Object.keys(analytics.linksByType).length > 0 ? (
-                    <div className="grid grid-cols-2 gap-4">
-                      {Object.entries(analytics.linksByType).map(([linkType, count]) => (
-                        <div key={linkType} className="rounded-lg border p-4 text-center">
-                          <div className="text-2xl font-bold tabular-nums">{count as number}</div>
-                          <div className="text-xs font-medium text-muted-foreground capitalize mt-1">
-                            {linkType.replace(/_/g, ' ')}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
-                        <Link2 className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                      <p className="text-sm font-medium">No strategic links yet</p>
-                      <p className="text-xs text-muted-foreground mt-1">Connect ERP data to goals & initiatives</p>
-                    </div>
-                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {activeModules.map(mod => (
+                      <Badge key={mod} variant="secondary" className="px-3 py-1.5 text-sm capitalize">
+                        {mod.replace(/_/g, ' ')}
+                      </Badge>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </div>
           )}
-
-          {/* Active Modules Grid */}
-          {activeModules.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Active Modules</CardTitle>
-                <CardDescription>{activeModules.length} module(s) currently enabled</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {activeModules.map(mod => (
-                    <Badge key={mod} variant="secondary" className="px-3 py-1.5 text-sm capitalize">
-                      {mod.replace(/_/g, ' ')}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </TabsContent>
 
-        {/* Financial Tab */}
-        <TabsContent value="financial" className="pt-4">
-          <FinancialModule />
-        </TabsContent>
-
-        {/* Sales Tab */}
-        <TabsContent value="sales" className="pt-4">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <SalesModule />
+        <TabsContent value="financial" className="pt-4"><FinancialModule /></TabsContent>
+        <TabsContent value="sales" className="pt-4"><SalesModule /></TabsContent>
+        <TabsContent value="hr" className="pt-4"><HRModule /></TabsContent>
+        
+        <TabsContent value="operations" className="pt-4"><OperationsModule /></TabsContent>
+        <TabsContent value="manufacturing" className="pt-4"><ManufacturingModule /></TabsContent>
+        
+        <TabsContent value="supply" className="pt-4">
+          <div className="space-y-8">
+            <SupplyChainModule />
+            <Separator />
             <ProcurementModule />
           </div>
         </TabsContent>
 
-        {/* Operations Tab */}
-        <TabsContent value="operations" className="pt-4">
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <HRModule />
-              <OperationsModule />
-            </div>
-            <Separator />
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <SupplyChainModule />
-              <ManufacturingModule />
-            </div>
-            <Separator />
-            <ProjectModule />
-          </div>
-        </TabsContent>
+        <TabsContent value="projects" className="pt-4"><ProjectModule /></TabsContent>
 
-        {/* Integration Tab */}
         <TabsContent value="integration" className="pt-4">
           <ERPStrategicIntegration organizationId={organizationId || ''} />
         </TabsContent>
 
-        {/* Industries Tab */}
+        {/* Industries */}
         <TabsContent value="industries" className="pt-4">
           <Tabs defaultValue="construction">
             <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
@@ -334,12 +288,8 @@ const ERPPage: React.FC = () => {
           </Tabs>
         </TabsContent>
 
-        {/* Setup Tab */}
         <TabsContent value="setup" className="pt-4">
-          <ERPModuleSelector 
-            organizationId={organizationId || ''}
-            onConfigurationChange={() => {}}
-          />
+          <ERPModuleSelector organizationId={organizationId || ''} onConfigurationChange={() => {}} />
         </TabsContent>
       </Tabs>
     </div>

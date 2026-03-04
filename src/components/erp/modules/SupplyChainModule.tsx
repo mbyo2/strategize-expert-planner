@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import ERPEntityDialog, { ENTITY_FIELDS } from '../ERPEntityDialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ export const SupplyChainModule: React.FC = () => {
   const { organizationId: orgId } = useOrganization();
   const organizationId = orgId || '';
   const { metrics, isLoading } = useSupplyChainMetrics(organizationId);
+  const [showDialog, setShowDialog] = useState(false);
 
   const hasData = metrics.shipments.length > 0 || metrics.warehouses.length > 0;
 
@@ -326,6 +328,8 @@ export const SupplyChainModule: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <ERPEntityDialog open={showDialog} onOpenChange={setShowDialog} moduleKey="supply_chain" entityType="shipment" title="Add Shipment" fields={ENTITY_FIELDS.shipment} />
     </div>
   );
 };
