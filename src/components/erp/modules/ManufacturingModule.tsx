@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import ERPEntityDialog, { ENTITY_FIELDS } from '../ERPEntityDialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ export const ManufacturingModule: React.FC = () => {
   const { organizationId: orgId } = useOrganization();
   const organizationId = orgId || '';
   const { metrics, isLoading } = useManufacturingMetrics(organizationId);
+  const [showDialog, setShowDialog] = useState(false);
 
   const hasData = metrics.productionLines.length > 0 || metrics.workOrders.length > 0;
 
@@ -349,6 +351,8 @@ export const ManufacturingModule: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <ERPEntityDialog open={showDialog} onOpenChange={setShowDialog} moduleKey="manufacturing" entityType="work_order" title="Create Work Order" fields={ENTITY_FIELDS.work_order} />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -19,11 +19,13 @@ import {
 } from 'lucide-react';
 import { useProcurementMetrics } from '@/hooks/useERPMetrics';
 import { useOrganization } from '@/contexts/OrganizationContext';
+import ERPEntityDialog, { ENTITY_FIELDS } from '../ERPEntityDialog';
 
 export const ProcurementModule: React.FC = () => {
   const { organizationId: orgId } = useOrganization();
   const organizationId = orgId || '';
   const { metrics, isLoading } = useProcurementMetrics(organizationId);
+  const [dialogType, setDialogType] = useState<'purchase_order' | 'supplier' | null>(null);
 
   const hasData = metrics.purchaseOrders.length > 0 || metrics.suppliers.length > 0;
 
@@ -55,10 +57,10 @@ export const ProcurementModule: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Procurement Management</h2>
-        <Button>
-          <Plus className="w-4 h-4 mr-2" />
-          Create Purchase Order
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setDialogType('supplier')}><Plus className="w-4 h-4 mr-1" /> Supplier</Button>
+          <Button size="sm" onClick={() => setDialogType('purchase_order')}><Plus className="w-4 h-4 mr-1" /> Purchase Order</Button>
+        </div>
       </div>
 
       {/* Key Metrics */}
@@ -300,6 +302,9 @@ export const ProcurementModule: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <ERPEntityDialog open={dialogType === 'purchase_order'} onOpenChange={o => !o && setDialogType(null)} moduleKey="procurement" entityType="purchase_order" title="Create Purchase Order" fields={ENTITY_FIELDS.purchase_order} />
+      <ERPEntityDialog open={dialogType === 'supplier'} onOpenChange={o => !o && setDialogType(null)} moduleKey="procurement" entityType="supplier" title="Add Supplier" fields={ENTITY_FIELDS.supplier} />
     </div>
   );
 };
