@@ -215,6 +215,51 @@ export type Database = {
         }
         Relationships: []
       }
+      competitors: {
+        Row: {
+          change_percentage: number | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          industry: string | null
+          market_share: number | null
+          name: string
+          strengths: string[] | null
+          threats: string[] | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          change_percentage?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          industry?: string | null
+          market_share?: number | null
+          name: string
+          strengths?: string[] | null
+          threats?: string[] | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          change_percentage?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          industry?: string | null
+          market_share?: number | null
+          name?: string
+          strengths?: string[] | null
+          threats?: string[] | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       data_imports: {
         Row: {
           completed_at: string | null
