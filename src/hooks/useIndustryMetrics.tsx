@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface IndustryMetric {
+  id: string;
   name: string;
   value: number;
   previous_value?: number;
@@ -21,25 +22,26 @@ export interface MarketChange {
 }
 
 export interface Competitor {
+  id: string;
   name: string;
-  marketShare: number;
-  changePercentage: number;
+  description: string | null;
+  market_share: number;
+  change_percentage: number;
   strengths: string[];
   threats: string[];
+  website: string | null;
+  industry: string | null;
 }
 
 async function fetchIndustryData() {
-  const { data: metrics } = await supabase
-    .from('industry_metrics')
-    .select('*')
-    .order('updated_at', { ascending: false });
+  const [metricsRes, changesRes, competitorsRes] = await Promise.all([
+    supabase.from('industry_metrics').select('*').order('updated_at', { ascending: false }),
+    supabase.from('market_changes').select('*').order('date_identified', { ascending: false }),
+    supabase.from('competitors').select('*').order('market_share', { ascending: false }),
+  ]);
 
-  const { data: changes } = await supabase
-    .from('market_changes')
-    .select('*')
-    .order('date_identified', { ascending: false });
-
-  const formattedMetrics: IndustryMetric[] = (metrics || []).map(m => ({
+  const formattedMetrics: IndustryMetric[] = (metricsRes.data || []).map(m => ({
+    id: m.id,
     name: m.name,
     value: m.value ?? 0,
     previous_value: m.previous_value ?? undefined,
@@ -48,7 +50,7 @@ async function fetchIndustryData() {
     source: m.source || 'Internal',
   }));
 
-  const formattedChanges: MarketChange[] = (changes || []).map(c => ({
+  const formattedChanges: MarketChange[] = (changesRes.data || []).map(c => ({
     id: c.id,
     title: c.title,
     description: c.description || '',
@@ -58,7 +60,19 @@ async function fetchIndustryData() {
     source: c.source || 'Internal',
   }));
 
-  return { metrics: formattedMetrics, marketChanges: formattedChanges };
+  const formattedCompetitors: Competitor[] = (competitorsRes.data || []).map((c: any) => ({
+    id: c.id,
+    name: c.name,
+    description: c.description,
+    market_share: c.market_share ?? 0,
+    change_percentage: c.change_percentage ?? 0,
+    strengths: c.strengths || [],
+    threats: c.threats || [],
+    website: c.website,
+    industry: c.industry,
+  }));
+
+  return { metrics: formattedMetrics, marketChanges: formattedChanges, competitors: formattedCompetitors };
 }
 
 export const useIndustryMetrics = () => {
@@ -67,12 +81,10 @@ export const useIndustryMetrics = () => {
     queryFn: fetchIndustryData,
   });
 
-  const competitors: Competitor[] = [];
-
   return {
     metrics: data?.metrics || [],
     marketChanges: data?.marketChanges || [],
-    competitors,
+    competitors: data?.competitors || [],
     isLoading,
     error,
     refetch,
