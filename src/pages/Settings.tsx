@@ -76,7 +76,7 @@ const Settings = () => {
             .from('organizations')
             .select('name, industry, size, settings')
             .eq('id', organizationId)
-            .single();
+            .maybeSingle();
 
           if (org) {
             setOrganizationSettings(prev => ({

@@ -91,7 +91,7 @@ export const OrganizationsProvider: React.FC<{ children: ReactNode }> = ({ child
               .from('profiles')
               .select('organization_id')
               .eq('id', user?.id)
-              .single();
+              .maybeSingle();
             
             if (profile && profile.organization_id) {
               const primaryOrg = processedOrgs.find(org => org.id === profile.organization_id);

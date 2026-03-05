@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ERPService } from '@/services/erpService';
 import { toast } from 'sonner';
-import { useAuth } from './useAuth';
+
 
 export const useERPModules = () => {
   const { data: modules = [], isLoading, error } = useQuery({
