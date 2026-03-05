@@ -5,11 +5,12 @@ import { Building, Users, BarChart3, Settings, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { useOrganization } from '@/contexts/OrganizationContext';
 import { useTeams } from '@/hooks/useTeams';
+import { supabase } from '@/integrations/supabase/client';
 
 const Organization = () => {
-  const { currentOrganization, isLoading: orgsLoading } = useOrganizations();
+  const { organization, isLoading: orgsLoading } = useOrganization();
   const { teams, isLoading: teamsLoading } = useTeams();
 
   const isLoading = orgsLoading || teamsLoading;
@@ -80,9 +81,9 @@ const Organization = () => {
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold truncate">{currentOrganization?.name || 'Not Set'}</div>
+                <div className="text-2xl font-bold truncate">{organization?.name || 'Not Set'}</div>
                 <p className="text-xs text-muted-foreground">
-                  {currentOrganization?.industry || 'No industry set'}
+                  {organization?.settings ? (organization.settings as any)?.industry || 'No industry set' : 'No industry set'}
                 </p>
               </CardContent>
             </Card>

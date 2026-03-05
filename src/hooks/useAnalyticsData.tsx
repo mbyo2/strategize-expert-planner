@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 
 export interface AnalyticsData {
   goalCompletionRate: number;
@@ -12,13 +13,14 @@ export interface AnalyticsData {
   categoryData: { name: string; value: number; color: string }[];
 }
 
-async function fetchAnalyticsData(): Promise<AnalyticsData> {
-  // Fetch goals data
+async function fetchAnalyticsData(userId: string): Promise<AnalyticsData> {
+  // Fetch goals data scoped to user
   const { data: goals } = await supabase
     .from('strategic_goals')
-    .select('*');
+    .select('*')
+    .eq('user_id', userId);
 
-  // Fetch initiatives data
+  // Fetch initiatives data (RLS handles access)
   const { data: initiatives } = await supabase
     .from('planning_initiatives')
     .select('*');
@@ -118,14 +120,18 @@ async function fetchAnalyticsData(): Promise<AnalyticsData> {
 }
 
 export const useAnalyticsData = () => {
+  const { session } = useSimpleAuth();
+  const userId = session?.user?.id;
+
   const {
     data: analytics,
     isLoading,
     error,
     refetch
   } = useQuery({
-    queryKey: ['analytics-data'],
-    queryFn: fetchAnalyticsData,
+    queryKey: ['analytics-data', userId],
+    queryFn: () => fetchAnalyticsData(userId!),
+    enabled: !!userId,
   });
 
   return {

@@ -52,12 +52,11 @@ export const useDashboardData = () => {
           .from('team_members')
           .select('*', { count: 'exact', head: true });
 
-        // Fetch planning initiatives count (uses owner_id, not user_id)
+        // Fetch planning initiatives count (RLS handles access, count all active)
         const { count: initiativesCount } = await supabase
           .from('planning_initiatives')
           .select('*', { count: 'exact', head: true })
-          .eq('owner_id', session.user.id)
-          .eq('status', 'active');
+          .in('status', ['active', 'in-progress', 'planning']);
 
         // Fetch upcoming reviews count (strategy_reviews has no user field - show all upcoming)
         const { count: reviewsCount } = await supabase
