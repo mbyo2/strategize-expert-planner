@@ -224,14 +224,107 @@ const Planning = () => {
           </TabsContent>
 
           <TabsContent value="roadmap" className="space-y-6">
-            <div className="text-center py-12">
-              <Briefcase className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Strategic Roadmap</h3>
-              <p className="text-muted-foreground mb-4">
-                Visual timeline of your strategic initiatives coming soon
-              </p>
-              <Button variant="outline">Request Feature</Button>
+            <div className="space-y-1 mb-4">
+              <h2 className="text-2xl font-bold">Strategic Roadmap</h2>
+              <p className="text-muted-foreground">Visual timeline of your strategic initiatives</p>
             </div>
+
+            {initiativesLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : initiatives.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No Initiatives to Display</h3>
+                  <p className="text-muted-foreground mb-4">Create initiatives to see them on the roadmap</p>
+                  <Button onClick={handleCreateInitiative}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Initiative
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {/* Timeline */}
+                <div className="relative">
+                  {/* Vertical line */}
+                  <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
+
+                  <div className="space-y-6">
+                    {[...initiatives]
+                      .sort((a, b) => {
+                        const dateA = a.start_date ? new Date(a.start_date).getTime() : 0;
+                        const dateB = b.start_date ? new Date(b.start_date).getTime() : 0;
+                        return dateA - dateB;
+                      })
+                      .map((initiative) => {
+                        const startDate = initiative.start_date ? new Date(initiative.start_date) : null;
+                        const endDate = initiative.end_date ? new Date(initiative.end_date) : null;
+                        const now = new Date();
+                        const isOverdue = endDate && endDate < now && initiative.status !== 'completed';
+                        const isActive = initiative.status === 'in-progress';
+
+                        return (
+                          <div key={initiative.id} className="relative pl-10">
+                            {/* Dot on timeline */}
+                            <div className={`absolute left-2.5 top-1.5 h-3 w-3 rounded-full border-2 border-background ${
+                              initiative.status === 'completed' ? 'bg-emerald-500' :
+                              isOverdue ? 'bg-destructive' :
+                              isActive ? 'bg-primary' : 'bg-muted-foreground'
+                            }`} />
+
+                            <Card className={`transition-shadow hover:shadow-md ${isActive ? 'border-primary/30' : ''}`}>
+                              <CardHeader className="pb-2">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="space-y-1 flex-1">
+                                    <CardTitle className="text-base">{initiative.name}</CardTitle>
+                                    {initiative.description && (
+                                      <CardDescription className="line-clamp-2">{initiative.description}</CardDescription>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <Badge className={getStatusColor(initiative.status)}>
+                                      {initiative.status.replace('-', ' ')}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </CardHeader>
+                              <CardContent className="space-y-3">
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                  {startDate && (
+                                    <div className="flex items-center gap-1">
+                                      <Calendar className="h-3.5 w-3.5" />
+                                      <span>{startDate.toLocaleDateString()}</span>
+                                    </div>
+                                  )}
+                                  {endDate && (
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="h-3.5 w-3.5" />
+                                      <span className={isOverdue ? 'text-destructive font-medium' : ''}>
+                                        {isOverdue ? 'Overdue: ' : 'Due: '}{endDate.toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="space-y-1.5">
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Progress</span>
+                                    <span className="font-medium">{initiative.progress}%</span>
+                                  </div>
+                                  <Progress value={initiative.progress} className="h-1.5" />
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
