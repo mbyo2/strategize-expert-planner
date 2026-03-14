@@ -230,33 +230,7 @@ const Organization = () => {
         </TabsContent>
         
         <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Organization Settings</CardTitle>
-              <CardDescription>Configure your organization preferences and policies</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-sm font-medium mb-2">General Settings</h4>
-                  <div className="space-y-2">
-                    <Button variant="outline" className="w-full justify-start">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Organization Profile
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start">
-                      <Users className="h-4 w-4 mr-2" />
-                      Employee Policies
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start">
-                      <Building className="h-4 w-4 mr-2" />
-                      Department Structure
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <OrgSettingsTab organization={organization} />
         </TabsContent>
       </Tabs>
     </PageLayout>
