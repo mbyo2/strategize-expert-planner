@@ -1,13 +1,119 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PageLayout from '@/components/PageLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Building, Users, BarChart3, Settings, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { useTeams } from '@/hooks/useTeams';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+const OrgSettingsTab = ({ organization }: { organization: any }) => {
+  const { refreshOrganization } = useOrganization();
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    name: organization?.name || '',
+    industry: (organization?.settings as any)?.industry || organization?.industry || '',
+    size: organization?.size || '',
+    website: organization?.website || '',
+    description: organization?.description || '',
+  });
+
+  const handleSave = async () => {
+    if (!organization?.id) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update({
+          name: form.name,
+          industry: form.industry,
+          size: form.size,
+          website: form.website,
+          description: form.description,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', organization.id);
+      if (error) throw error;
+      await refreshOrganization();
+      toast.success('Organization settings saved');
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!organization) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center text-muted-foreground">
+          <Building className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>No organization linked to your account</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Organization Settings</CardTitle>
+        <CardDescription>Configure your organization preferences</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Organization Name</Label>
+            <Input value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} />
+          </div>
+          <div className="space-y-2">
+            <Label>Industry</Label>
+            <Select value={form.industry} onValueChange={(v) => setForm(p => ({ ...p, industry: v }))}>
+              <SelectTrigger><SelectValue placeholder="Select industry" /></SelectTrigger>
+              <SelectContent>
+                {['Technology', 'Healthcare', 'Finance', 'Education', 'Manufacturing', 'Retail', 'Services', 'Construction', 'Energy'].map(i => (
+                  <SelectItem key={i} value={i}>{i}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Company Size</Label>
+            <Select value={form.size || ''} onValueChange={(v) => setForm(p => ({ ...p, size: v }))}>
+              <SelectTrigger><SelectValue placeholder="Select size" /></SelectTrigger>
+              <SelectContent>
+                {['1-10', '11-50', '51-100', '101-500', '500+'].map(s => (
+                  <SelectItem key={s} value={s}>{s} employees</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Website</Label>
+            <Input value={form.website} onChange={(e) => setForm(p => ({ ...p, website: e.target.value }))} placeholder="https://..." />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>Description</Label>
+          <Input value={form.description} onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Brief description of your organization" />
+        </div>
+        <div className="flex justify-end pt-2">
+          <Button onClick={handleSave} disabled={saving}>
+            {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Save Settings
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const Organization = () => {
   const { organization, isLoading: orgsLoading } = useOrganization();

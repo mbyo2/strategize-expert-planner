@@ -8,11 +8,79 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, Bell, Shield, Camera, Loader2 } from 'lucide-react';
+import { User, Bell, Shield, Camera, Loader2, Clock } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { format } from 'date-fns';
+
+const ProfileActivityTab = ({ userId }: { userId?: string }) => {
+  const { data: logs = [], isLoading } = useQuery({
+    queryKey: ['audit-logs', userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .eq('user_id', userId!)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!userId,
+  });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Recent Activity</CardTitle>
+        <CardDescription>Your recent actions and system events</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {logs.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Clock className="h-10 w-10 mx-auto mb-3 opacity-50" />
+            <p className="font-medium">No activity yet</p>
+            <p className="text-sm">Your actions will appear here as you use the platform</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {logs.map((log) => (
+              <div key={log.id} className="flex items-start gap-3 py-2.5 border-b border-border/50 last:border-0">
+                <div className="mt-2 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium capitalize">{log.action.replace(/_/g, ' ')}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {log.resource_type}{log.resource_id ? ` #${log.resource_id.slice(0, 8)}` : ''}
+                  </p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">
+                    {format(new Date(log.created_at), 'MMM d, yyyy h:mm a')}
+                  </p>
+                </div>
+                <Badge variant="outline" className="text-xs shrink-0 capitalize">
+                  {log.resource_type.replace(/_/g, ' ')}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
 const Profile = () => {
   const { session } = useSimpleAuth();

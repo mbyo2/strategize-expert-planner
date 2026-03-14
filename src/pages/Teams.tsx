@@ -267,7 +267,15 @@ const Teams = () => {
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAddMemberTeamId(team.id);
+                        setAddMemberOpen(true);
+                      }}
+                    >
                       <Plus className="h-4 w-4 mr-1" />
                       Add Member
                     </Button>
