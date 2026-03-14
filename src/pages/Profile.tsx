@@ -391,17 +391,7 @@ const Profile = () => {
           </TabsContent>
 
           <TabsContent value="activity" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Your recent actions and system events</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  Activity log will be displayed here
-                </div>
-              </CardContent>
-            </Card>
+            <ProfileActivityTab userId={session?.user?.id} />
           </TabsContent>
         </Tabs>
       </div>
