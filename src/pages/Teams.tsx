@@ -419,6 +419,84 @@ const Teams = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Add Member Dialog */}
+      <Dialog open={addMemberOpen} onOpenChange={setAddMemberOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Team Member</DialogTitle>
+            <DialogDescription>
+              Add a new member to {teams.find(t => t.id === addMemberTeamId)?.name || 'the team'}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="memberName">Name</Label>
+              <Input
+                id="memberName"
+                value={memberForm.name}
+                onChange={(e) => setMemberForm(p => ({ ...p, name: e.target.value }))}
+                placeholder="Full name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="memberEmail">Email</Label>
+              <Input
+                id="memberEmail"
+                type="email"
+                value={memberForm.email}
+                onChange={(e) => setMemberForm(p => ({ ...p, email: e.target.value }))}
+                placeholder="user@example.com"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="memberRole">Role</Label>
+                <Select value={memberForm.role} onValueChange={(v) => setMemberForm(p => ({ ...p, role: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="member">Member</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="memberPosition">Position</Label>
+                <Input
+                  id="memberPosition"
+                  value={memberForm.position}
+                  onChange={(e) => setMemberForm(p => ({ ...p, position: e.target.value }))}
+                  placeholder="e.g., Developer"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddMemberOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!memberForm.name.trim() || !memberForm.email.trim()}
+              onClick={async () => {
+                if (!addMemberTeamId) return;
+                try {
+                  await addMember(addMemberTeamId, {
+                    name: memberForm.name,
+                    email: memberForm.email,
+                    role: memberForm.role,
+                    position: memberForm.position || undefined,
+                  });
+                  setAddMemberOpen(false);
+                  setMemberForm({ name: '', email: '', role: 'member', position: '' });
+                } catch (e) {
+                  // error handled by hook
+                }
+              }}
+            >
+              Add Member
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageLayout>
   );
 };
