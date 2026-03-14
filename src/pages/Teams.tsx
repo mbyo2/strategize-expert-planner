@@ -37,10 +37,13 @@ import {
 } from '@/components/ui/select';
 
 const Teams = () => {
-  const { teams, isLoading, addTeam, updateTeam, deleteTeam, isCreating, isDeleting } = useTeams();
+  const { teams, isLoading, addTeam, updateTeam, deleteTeam, addMember, isCreating, isDeleting } = useTeams();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<any>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [addMemberTeamId, setAddMemberTeamId] = useState<string | null>(null);
+  const [memberForm, setMemberForm] = useState({ name: '', email: '', role: 'member', position: '' });
   const [formData, setFormData] = useState<CreateTeamData>({
     name: '',
     description: '',
