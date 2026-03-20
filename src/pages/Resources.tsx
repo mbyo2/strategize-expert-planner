@@ -163,13 +163,12 @@ const Resources = () => {
   const featuredResources = mockResources.filter(resource => resource.featured);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <PageLayout 
-        title="Resource Library" 
-        subtitle="Access strategic planning tools, templates, and educational materials"
-      >
-        <div className="space-y-6">
+    <PageLayout 
+      title="Resource Library" 
+      subtitle="Access strategic planning tools, templates, and educational materials"
+      icon={<BookOpen className="h-6 w-6" />}
+    >
+      <div className="space-y-6">
           {/* Search and Filters */}
           <Card>
             <CardHeader>
