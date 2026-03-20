@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, BookOpen, FileText, Video, ExternalLink, Download, Filter, Star, Clock } from 'lucide-react';
+import { Search, BookOpen, FileText, Video, ExternalLink, Download, Star, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import PageLayout from '@/components/PageLayout';
-import Header from '@/components/Header';
+
 
 interface Resource {
   id: string;
@@ -163,13 +163,12 @@ const Resources = () => {
   const featuredResources = mockResources.filter(resource => resource.featured);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <PageLayout 
-        title="Resource Library" 
-        subtitle="Access strategic planning tools, templates, and educational materials"
-      >
-        <div className="space-y-6">
+    <PageLayout 
+      title="Resource Library" 
+      subtitle="Access strategic planning tools, templates, and educational materials"
+      icon={<BookOpen className="h-6 w-6" />}
+    >
+      <div className="space-y-6">
           {/* Search and Filters */}
           <Card>
             <CardHeader>
@@ -370,9 +369,8 @@ const Resources = () => {
               </div>
             </TabsContent>
           </Tabs>
-        </div>
-      </PageLayout>
-    </div>
+      </div>
+    </PageLayout>
   );
 };
 
