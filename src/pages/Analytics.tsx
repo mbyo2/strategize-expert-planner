@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart3, TrendingUp, PieChart, Activity, Download, Loader2 } from 'lucide-react';
@@ -6,9 +6,46 @@ import { Button } from '@/components/ui/button';
 import PageLayout from '@/components/PageLayout';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart as RechartsPieChart, Cell, Pie } from 'recharts';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
+import { toast } from 'sonner';
 
 const Analytics = () => {
   const { analytics, isLoading } = useAnalyticsData();
+  const [dateRange, setDateRange] = useState('30d');
+
+  const handleExportReport = () => {
+    if (!analytics) return;
+
+    const reportLines = [
+      'Strategic Analytics Report',
+      `Generated: ${new Date().toLocaleDateString()}`,
+      `Date Range: ${dateRange === '30d' ? 'Last 30 Days' : dateRange === 'quarter' ? 'Last Quarter' : 'Last Year'}`,
+      '',
+      'Key Metrics',
+      `Goal Completion Rate,${analytics.goalCompletionRate}%`,
+      `Team Performance,${analytics.teamPerformance.toFixed(1)}/10`,
+      `Active Initiatives,${analytics.activeInitiatives}`,
+      `Completed Initiatives,${analytics.completedInitiatives}`,
+      `Strategy Alignment,${analytics.strategyAlignment}%`,
+      '',
+      'Goal Progress by Quarter',
+      'Quarter,Completed,Target',
+      ...analytics.goalProgressData.map(q => `${q.name},${q.completed},${q.target}`),
+      '',
+      'Category Distribution',
+      'Category,Percentage',
+      ...analytics.categoryData.map(c => `${c.name},${c.value}%`),
+    ];
+
+    const csvContent = reportLines.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `analytics-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('Report exported successfully');
+  };
 
   if (isLoading || !analytics) {
     return (
@@ -36,11 +73,11 @@ const Analytics = () => {
         {/* Header Actions */}
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">Last 30 Days</Button>
-            <Button variant="ghost" size="sm">Last Quarter</Button>
-            <Button variant="ghost" size="sm">Last Year</Button>
+            <Button variant={dateRange === '30d' ? 'outline' : 'ghost'} size="sm" onClick={() => setDateRange('30d')}>Last 30 Days</Button>
+            <Button variant={dateRange === 'quarter' ? 'outline' : 'ghost'} size="sm" onClick={() => setDateRange('quarter')}>Last Quarter</Button>
+            <Button variant={dateRange === 'year' ? 'outline' : 'ghost'} size="sm" onClick={() => setDateRange('year')}>Last Year</Button>
           </div>
-          <Button className="flex items-center gap-2">
+          <Button onClick={handleExportReport} className="flex items-center gap-2">
             <Download className="h-4 w-4" />
             Export Report
           </Button>
@@ -55,9 +92,7 @@ const Analytics = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{analytics.goalCompletionRate}%</div>
-              <p className="text-xs text-muted-foreground">
-                Based on completed goals
-              </p>
+              <p className="text-xs text-muted-foreground">Based on completed goals</p>
             </CardContent>
           </Card>
 
@@ -68,9 +103,7 @@ const Analytics = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{analytics.teamPerformance.toFixed(1)}/10</div>
-              <p className="text-xs text-muted-foreground">
-                Average goal progress
-              </p>
+              <p className="text-xs text-muted-foreground">Average goal progress</p>
             </CardContent>
           </Card>
 
@@ -81,9 +114,7 @@ const Analytics = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{analytics.activeInitiatives}</div>
-              <p className="text-xs text-muted-foreground">
-                {analytics.completedInitiatives} completed
-              </p>
+              <p className="text-xs text-muted-foreground">{analytics.completedInitiatives} completed</p>
             </CardContent>
           </Card>
 
@@ -94,9 +125,7 @@ const Analytics = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{analytics.strategyAlignment}%</div>
-              <p className="text-xs text-muted-foreground">
-                Goals with progress
-              </p>
+              <p className="text-xs text-muted-foreground">Goals with progress</p>
             </CardContent>
           </Card>
         </div>
@@ -114,9 +143,7 @@ const Analytics = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Goal Progress vs Target</CardTitle>
-                <CardDescription>
-                  Quarterly performance comparison
-                </CardDescription>
+                <CardDescription>Quarterly performance comparison</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -137,9 +164,7 @@ const Analytics = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Performance Trends</CardTitle>
-                <CardDescription>
-                  Monthly performance over time
-                </CardDescription>
+                <CardDescription>Monthly performance over time</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -160,22 +185,13 @@ const Analytics = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Goals by Category</CardTitle>
-                  <CardDescription>
-                    Distribution of strategic goals
-                  </CardDescription>
+                  <CardDescription>Distribution of strategic goals</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={250}>
                     <RechartsPieChart>
                       <Tooltip />
-                      <Pie
-                        data={analytics.categoryData}
-                        dataKey="value"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        fill="#8884d8"
-                      >
+                      <Pie data={analytics.categoryData} dataKey="value" cx="50%" cy="50%" outerRadius={80} fill="#8884d8">
                         {analytics.categoryData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
@@ -188,18 +204,13 @@ const Analytics = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Category Performance</CardTitle>
-                  <CardDescription>
-                    Performance breakdown by category
-                  </CardDescription>
+                  <CardDescription>Performance breakdown by category</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {analytics.categoryData.map((category, index) => (
+                  {analytics.categoryData.map((category) => (
                     <div key={category.name} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: category.color }}
-                        ></div>
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: category.color }} />
                         <span className="font-medium">{category.name}</span>
                       </div>
                       <span className="text-sm text-muted-foreground">{category.value}%</span>
@@ -215,30 +226,28 @@ const Analytics = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Key Insights</CardTitle>
-                  <CardDescription>
-                    AI-powered strategic insights
-                  </CardDescription>
+                  <CardDescription>Data-driven strategic insights</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {analytics.goalCompletionRate >= 50 ? (
-                    <div className="border-l-4 border-green-500 p-4 bg-green-50 dark:bg-green-900/20">
-                      <h4 className="font-semibold text-green-800 dark:text-green-200">Strong Performance</h4>
-                      <p className="text-sm text-green-700 dark:text-green-300">
+                    <div className="border-l-4 border-emerald-500 p-4 bg-emerald-50 dark:bg-emerald-950/20 rounded-r-lg">
+                      <h4 className="font-semibold text-emerald-800 dark:text-emerald-200">Strong Performance</h4>
+                      <p className="text-sm text-emerald-700 dark:text-emerald-300">
                         Goal completion rate is at {analytics.goalCompletionRate}%, indicating healthy progress
                       </p>
                     </div>
                   ) : (
-                    <div className="border-l-4 border-yellow-500 p-4 bg-yellow-50 dark:bg-yellow-900/20">
-                      <h4 className="font-semibold text-yellow-800 dark:text-yellow-200">Attention Needed</h4>
-                      <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    <div className="border-l-4 border-amber-500 p-4 bg-amber-50 dark:bg-amber-950/20 rounded-r-lg">
+                      <h4 className="font-semibold text-amber-800 dark:text-amber-200">Attention Needed</h4>
+                      <p className="text-sm text-amber-700 dark:text-amber-300">
                         Goal completion rate is at {analytics.goalCompletionRate}%, consider reviewing priorities
                       </p>
                     </div>
                   )}
                   
-                  <div className="border-l-4 border-blue-500 p-4 bg-blue-50 dark:bg-blue-900/20">
-                    <h4 className="font-semibold text-blue-800 dark:text-blue-200">Active Initiatives</h4>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                  <div className="border-l-4 border-sky-500 p-4 bg-sky-50 dark:bg-sky-950/20 rounded-r-lg">
+                    <h4 className="font-semibold text-sky-800 dark:text-sky-200">Active Initiatives</h4>
+                    <p className="text-sm text-sky-700 dark:text-sky-300">
                       {analytics.activeInitiatives} initiatives currently in progress
                     </p>
                   </div>
@@ -248,30 +257,20 @@ const Analytics = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Recommendations</CardTitle>
-                  <CardDescription>
-                    Strategic recommendations based on data
-                  </CardDescription>
+                  <CardDescription>Strategic recommendations based on data</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="p-3 border rounded-lg">
                     <h5 className="font-medium">Review Goal Progress</h5>
-                    <p className="text-sm text-muted-foreground">
-                      Ensure all active goals have recent progress updates
-                    </p>
+                    <p className="text-sm text-muted-foreground">Ensure all active goals have recent progress updates</p>
                   </div>
-                  
                   <div className="p-3 border rounded-lg">
                     <h5 className="font-medium">Balance Categories</h5>
-                    <p className="text-sm text-muted-foreground">
-                      Consider distributing goals across different strategic areas
-                    </p>
+                    <p className="text-sm text-muted-foreground">Consider distributing goals across different strategic areas</p>
                   </div>
-                  
                   <div className="p-3 border rounded-lg">
                     <h5 className="font-medium">Track Initiatives</h5>
-                    <p className="text-sm text-muted-foreground">
-                      Keep initiative progress aligned with strategic goals
-                    </p>
+                    <p className="text-sm text-muted-foreground">Keep initiative progress aligned with strategic goals</p>
                   </div>
                 </CardContent>
               </Card>
