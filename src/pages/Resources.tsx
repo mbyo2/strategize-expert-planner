@@ -369,9 +369,8 @@ const Resources = () => {
               </div>
             </TabsContent>
           </Tabs>
-        </div>
-      </PageLayout>
-    </div>
+      </div>
+    </PageLayout>
   );
 };
 
