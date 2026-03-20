@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, BookOpen, FileText, Video, ExternalLink, Download, Filter, Star, Clock } from 'lucide-react';
+import { Search, BookOpen, FileText, Video, ExternalLink, Download, Star, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
