@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Building2, Factory, ShoppingCart, Briefcase, Stethoscope, 
   CreditCard, GraduationCap, HardHat, Truck, Zap, 
-  Pill, Hotel, ChevronRight, ChevronLeft, Check,
+  Pill, Hotel, Sprout, Cpu, HeartHandshake, ChevronRight, ChevronLeft, Check,
   Package, DollarSign, Users, Cog, FolderKanban,
   ShoppingBag, Wrench, BarChart3, Layers
 } from 'lucide-react';
@@ -29,6 +29,9 @@ const INDUSTRIES = [
   { key: 'energy', label: 'Energy & Utilities', icon: Zap, description: 'Asset management, metering, regulatory compliance' },
   { key: 'pharma', label: 'Pharmaceuticals', icon: Pill, description: 'R&D tracking, quality assurance, regulatory' },
   { key: 'hospitality', label: 'Hospitality', icon: Hotel, description: 'Reservations, guest management, F&B operations' },
+  { key: 'agriculture', label: 'Agriculture', icon: Sprout, description: 'Fields, crop cycles, livestock, equipment, harvest planning' },
+  { key: 'technology', label: 'Technology / SaaS', icon: Cpu, description: 'Products, sprints, releases, incidents, customer success' },
+  { key: 'nonprofit', label: 'Non-Profit', icon: HeartHandshake, description: 'Donors, grants, programs, volunteers, campaigns' },
 ];
 
 const CORE_MODULES = [

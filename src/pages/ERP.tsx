@@ -35,6 +35,9 @@ import LogisticsIndustry from '@/components/erp/industries/LogisticsIndustry';
 import EnergyUtilitiesIndustry from '@/components/erp/industries/EnergyUtilitiesIndustry';
 import PharmaceuticalsIndustry from '@/components/erp/industries/PharmaceuticalsIndustry';
 import HospitalityIndustry from '@/components/erp/industries/HospitalityIndustry';
+import AgricultureIndustry from '@/components/erp/industries/AgricultureIndustry';
+import TechnologyIndustry from '@/components/erp/industries/TechnologyIndustry';
+import NonProfitIndustry from '@/components/erp/industries/NonProfitIndustry';
 import SEO from '@/components/SEO';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -268,6 +271,9 @@ const ERPPage: React.FC = () => {
                 { value: 'healthcare', label: 'Healthcare' },
                 { value: 'financial', label: 'Financial Svcs' },
                 { value: 'education', label: 'Education' },
+                { value: 'agriculture', label: 'Agriculture' },
+                { value: 'technology', label: 'Technology' },
+                { value: 'nonprofit', label: 'Non-Profit' },
               ].map(tab => (
                 <TabsTrigger key={tab.value} value={tab.value} className="text-xs px-3 py-1.5">
                   {tab.label}
@@ -285,6 +291,9 @@ const ERPPage: React.FC = () => {
             <TabsContent value="healthcare" className="mt-4"><HealthcareIndustry /></TabsContent>
             <TabsContent value="financial" className="mt-4"><FinancialServicesIndustry /></TabsContent>
             <TabsContent value="education" className="mt-4"><EducationIndustry /></TabsContent>
+            <TabsContent value="agriculture" className="mt-4"><AgricultureIndustry /></TabsContent>
+            <TabsContent value="technology" className="mt-4"><TechnologyIndustry /></TabsContent>
+            <TabsContent value="nonprofit" className="mt-4"><NonProfitIndustry /></TabsContent>
           </Tabs>
         </TabsContent>
 
