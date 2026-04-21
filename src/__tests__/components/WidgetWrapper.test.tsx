@@ -42,7 +42,8 @@ describe('WidgetWrapper', () => {
     const onResize = vi.fn();
     renderWithDnd(vi.fn(), onResize);
     const buttons = screen.getAllByRole('button');
-    fireEvent.click(buttons[0]);
+    // Resize button is the second-to-last (remove is last)
+    fireEvent.click(buttons[buttons.length - 2]);
     // medium -> large
     expect(onResize).toHaveBeenCalledWith('w1', 'large');
   });
