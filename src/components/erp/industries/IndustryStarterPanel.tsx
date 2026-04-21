@@ -5,11 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Sparkles, Workflow, Loader2 } from 'lucide-react';
 import { useERPEntities } from '@/hooks/useERP';
 import { useOrganization } from '@/contexts/OrganizationContext';
-import { INDUSTRY_TEMPLATES } from './industryTemplates';
+import { INDUSTRY_TEMPLATES, type IndustryKey } from './industryTemplates';
 import { toast } from 'sonner';
 
 interface IndustryStarterPanelProps {
-  industryKey: 'agriculture' | 'technology' | 'nonprofit';
+  industryKey: IndustryKey;
 }
 
 /**

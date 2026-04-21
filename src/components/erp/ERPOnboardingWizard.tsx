@@ -7,7 +7,9 @@ import {
   CreditCard, GraduationCap, HardHat, Truck, Zap, 
   Pill, Hotel, Sprout, Cpu, HeartHandshake, ChevronRight, ChevronLeft, Check,
   Package, DollarSign, Users, Cog, FolderKanban,
-  ShoppingBag, Wrench, BarChart3, Layers
+  ShoppingBag, Wrench, BarChart3, Layers, Home, Film, Radio, Landmark,
+  Shield, Scale, Car, Plane, Pickaxe, UtensilsCrossed, Trophy, Megaphone,
+  Bus, Leaf
 } from 'lucide-react';
 import { useOrganizationERP } from '@/hooks/useERP';
 import { toast } from 'sonner';
@@ -32,6 +34,20 @@ const INDUSTRIES = [
   { key: 'agriculture', label: 'Agriculture', icon: Sprout, description: 'Fields, crop cycles, livestock, equipment, harvest planning' },
   { key: 'technology', label: 'Technology / SaaS', icon: Cpu, description: 'Products, sprints, releases, incidents, customer success' },
   { key: 'nonprofit', label: 'Non-Profit', icon: HeartHandshake, description: 'Donors, grants, programs, volunteers, campaigns' },
+  { key: 'real_estate', label: 'Real Estate', icon: Home, description: 'Properties, listings, leases, tenants, maintenance' },
+  { key: 'media', label: 'Media & Entertainment', icon: Film, description: 'Productions, channels, audience, rights, licensing' },
+  { key: 'telecom', label: 'Telecommunications', icon: Radio, description: 'Plans, subscribers, network ops, SLAs, sites' },
+  { key: 'government', label: 'Government / Public Sector', icon: Landmark, description: 'Citizen services, permits, tenders, programs' },
+  { key: 'insurance', label: 'Insurance', icon: Shield, description: 'Policies, claims, underwriting, agents, risk' },
+  { key: 'legal', label: 'Legal Services', icon: Scale, description: 'Matters, documents, time entries, deadlines' },
+  { key: 'automotive', label: 'Automotive', icon: Car, description: 'Vehicles, dealers, inventory, service, recalls' },
+  { key: 'aerospace', label: 'Aerospace & Defense', icon: Plane, description: 'Programs, MRO, suppliers, certifications' },
+  { key: 'mining', label: 'Mining & Metals', icon: Pickaxe, description: 'Sites, equipment, production, safety, environment' },
+  { key: 'food_beverage', label: 'Food & Beverage', icon: UtensilsCrossed, description: 'Menu, recipes, suppliers, inventory, HACCP' },
+  { key: 'sports_recreation', label: 'Sports & Recreation', icon: Trophy, description: 'Memberships, events, teams, facilities, classes' },
+  { key: 'marketing', label: 'Marketing / Creative Agency', icon: Megaphone, description: 'Clients, campaigns, creative, projects, leads' },
+  { key: 'transportation', label: 'Transportation & Mobility', icon: Bus, description: 'Routes, fleet, drivers, trips, maintenance' },
+  { key: 'environmental', label: 'Environmental & ESG', icon: Leaf, description: 'Emissions, projects, audits, KPIs, ESG reporting' },
 ];
 
 const CORE_MODULES = [
