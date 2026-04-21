@@ -38,6 +38,7 @@ import HospitalityIndustry from '@/components/erp/industries/HospitalityIndustry
 import AgricultureIndustry from '@/components/erp/industries/AgricultureIndustry';
 import TechnologyIndustry from '@/components/erp/industries/TechnologyIndustry';
 import NonProfitIndustry from '@/components/erp/industries/NonProfitIndustry';
+import IndustryStarterPanel from '@/components/erp/industries/IndustryStarterPanel';
 import SEO from '@/components/SEO';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -274,6 +275,20 @@ const ERPPage: React.FC = () => {
                 { value: 'agriculture', label: 'Agriculture' },
                 { value: 'technology', label: 'Technology' },
                 { value: 'nonprofit', label: 'Non-Profit' },
+                { value: 'real_estate', label: 'Real Estate' },
+                { value: 'media', label: 'Media' },
+                { value: 'telecom', label: 'Telecom' },
+                { value: 'government', label: 'Government' },
+                { value: 'insurance', label: 'Insurance' },
+                { value: 'legal', label: 'Legal' },
+                { value: 'automotive', label: 'Automotive' },
+                { value: 'aerospace', label: 'Aerospace' },
+                { value: 'mining', label: 'Mining' },
+                { value: 'food_beverage', label: 'Food & Bev' },
+                { value: 'sports_recreation', label: 'Sports & Rec' },
+                { value: 'marketing', label: 'Marketing' },
+                { value: 'transportation', label: 'Transportation' },
+                { value: 'environmental', label: 'Environmental' },
               ].map(tab => (
                 <TabsTrigger key={tab.value} value={tab.value} className="text-xs px-3 py-1.5">
                   {tab.label}
@@ -294,6 +309,20 @@ const ERPPage: React.FC = () => {
             <TabsContent value="agriculture" className="mt-4"><AgricultureIndustry /></TabsContent>
             <TabsContent value="technology" className="mt-4"><TechnologyIndustry /></TabsContent>
             <TabsContent value="nonprofit" className="mt-4"><NonProfitIndustry /></TabsContent>
+            <TabsContent value="real_estate" className="mt-4"><IndustryStarterPanel industryKey="real_estate" /></TabsContent>
+            <TabsContent value="media" className="mt-4"><IndustryStarterPanel industryKey="media" /></TabsContent>
+            <TabsContent value="telecom" className="mt-4"><IndustryStarterPanel industryKey="telecom" /></TabsContent>
+            <TabsContent value="government" className="mt-4"><IndustryStarterPanel industryKey="government" /></TabsContent>
+            <TabsContent value="insurance" className="mt-4"><IndustryStarterPanel industryKey="insurance" /></TabsContent>
+            <TabsContent value="legal" className="mt-4"><IndustryStarterPanel industryKey="legal" /></TabsContent>
+            <TabsContent value="automotive" className="mt-4"><IndustryStarterPanel industryKey="automotive" /></TabsContent>
+            <TabsContent value="aerospace" className="mt-4"><IndustryStarterPanel industryKey="aerospace" /></TabsContent>
+            <TabsContent value="mining" className="mt-4"><IndustryStarterPanel industryKey="mining" /></TabsContent>
+            <TabsContent value="food_beverage" className="mt-4"><IndustryStarterPanel industryKey="food_beverage" /></TabsContent>
+            <TabsContent value="sports_recreation" className="mt-4"><IndustryStarterPanel industryKey="sports_recreation" /></TabsContent>
+            <TabsContent value="marketing" className="mt-4"><IndustryStarterPanel industryKey="marketing" /></TabsContent>
+            <TabsContent value="transportation" className="mt-4"><IndustryStarterPanel industryKey="transportation" /></TabsContent>
+            <TabsContent value="environmental" className="mt-4"><IndustryStarterPanel industryKey="environmental" /></TabsContent>
           </Tabs>
         </TabsContent>
 
