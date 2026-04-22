@@ -11,7 +11,8 @@ import {
   Shield, Scale, Car, Plane, Pickaxe, UtensilsCrossed, Trophy, Megaphone,
   Bus, Leaf
 } from 'lucide-react';
-import { useOrganizationERP } from '@/hooks/useERP';
+import { useOrganizationERP, useERPEntities } from '@/hooks/useERP';
+import { INDUSTRY_TEMPLATES, type IndustryKey } from './industries/industryTemplates';
 import { toast } from 'sonner';
 
 interface ERPOnboardingWizardProps {
@@ -66,12 +67,32 @@ const ERPOnboardingWizard: React.FC<ERPOnboardingWizardProps> = ({ organizationI
   const [selectedIndustry, setSelectedIndustry] = useState<string | null>(null);
   const [selectedModules, setSelectedModules] = useState<string[]>(['financial_management', 'human_resources', 'crm']);
   
-  const { activateModules, isActivating } = useOrganizationERP(organizationId);
+  const { activateModules, isActivating, updateConfig } = useOrganizationERP(organizationId);
+  const { createEntity } = useERPEntities(organizationId, selectedIndustry || undefined);
 
   const toggleModule = (key: string) => {
     setSelectedModules(prev => 
       prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
     );
+  };
+
+  const seedIndustryTemplate = async (industryKey: string) => {
+    const template = INDUSTRY_TEMPLATES[industryKey as IndustryKey];
+    if (!template) return;
+    for (const entity of template.entities) {
+      await new Promise<void>((resolve) => {
+        createEntity(
+          {
+            organization_id: organizationId,
+            module_key: entity.module_key,
+            entity_type: entity.entity_type,
+            entity_data: entity.entity_data,
+            metadata: { ...(entity.metadata || {}), source: 'starter_template' },
+          } as any,
+          { onSuccess: () => resolve(), onError: () => resolve() } as any
+        );
+      });
+    }
   };
 
   const handleComplete = () => {
@@ -80,7 +101,16 @@ const ERPOnboardingWizard: React.FC<ERPOnboardingWizardProps> = ({ organizationI
       allModules.push(selectedIndustry);
     }
     activateModules(allModules, {
-      onSuccess: () => {
+      onSuccess: async () => {
+        // Persist chosen industry in module_settings so the ERP can tailor itself
+        if (selectedIndustry) {
+          updateConfig({ module_settings: { industry: selectedIndustry } } as any);
+          // Auto-seed starter template for industries that have one
+          if (INDUSTRY_TEMPLATES[selectedIndustry as IndustryKey]) {
+            toast.info('Loading industry starter templates…');
+            await seedIndustryTemplate(selectedIndustry);
+          }
+        }
         toast.success('ERP modules activated! Your workspace is ready.');
         onComplete();
       },
