@@ -64,11 +64,17 @@ const CORE_MODULES = [
 
 const ERPOnboardingWizard: React.FC<ERPOnboardingWizardProps> = ({ organizationId, onComplete }) => {
   const [step, setStep] = useState(1);
-  const [selectedIndustry, setSelectedIndustry] = useState<string | null>(null);
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedModules, setSelectedModules] = useState<string[]>(['financial_management', 'human_resources', 'crm']);
   
   const { activateModules, isActivating, updateConfig } = useOrganizationERP(organizationId);
-  const { createEntity } = useERPEntities(organizationId, selectedIndustry || undefined);
+  const { createEntity } = useERPEntities(organizationId);
+
+  const toggleIndustry = (key: string) => {
+    setSelectedIndustries(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    );
+  };
 
   const toggleModule = (key: string) => {
     setSelectedModules(prev => 
@@ -97,18 +103,24 @@ const ERPOnboardingWizard: React.FC<ERPOnboardingWizardProps> = ({ organizationI
 
   const handleComplete = () => {
     const allModules = [...selectedModules];
-    if (selectedIndustry && !allModules.includes(selectedIndustry)) {
-      allModules.push(selectedIndustry);
-    }
+    selectedIndustries.forEach(ind => {
+      if (!allModules.includes(ind)) allModules.push(ind);
+    });
     activateModules(allModules, {
       onSuccess: async () => {
-        // Persist chosen industry in module_settings so the ERP can tailor itself
-        if (selectedIndustry) {
-          updateConfig({ module_settings: { industry: selectedIndustry } } as any);
-          // Auto-seed starter template for industries that have one
-          if (INDUSTRY_TEMPLATES[selectedIndustry as IndustryKey]) {
-            toast.info('Loading industry starter templates…');
-            await seedIndustryTemplate(selectedIndustry);
+        if (selectedIndustries.length > 0) {
+          updateConfig({
+            module_settings: {
+              industry: selectedIndustries[0],
+              industries: selectedIndustries,
+            },
+          } as any);
+          const seedable = selectedIndustries.filter(k => INDUSTRY_TEMPLATES[k as IndustryKey]);
+          if (seedable.length > 0) {
+            toast.info(`Loading starter templates for ${seedable.length} industr${seedable.length === 1 ? 'y' : 'ies'}…`);
+            for (const ind of seedable) {
+              await seedIndustryTemplate(ind);
+            }
           }
         }
         toast.success('ERP modules activated! Your workspace is ready.');
@@ -142,43 +154,51 @@ const ERPOnboardingWizard: React.FC<ERPOnboardingWizardProps> = ({ organizationI
       {step === 1 && (
         <div className="space-y-6">
           <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold tracking-tight">What industry are you in?</h2>
+            <h2 className="text-2xl font-bold tracking-tight">What industries are you in?</h2>
             <p className="text-muted-foreground">
-              We'll tailor your ERP experience with industry-specific features
+              Select one or more — many companies operate across multiple sectors
             </p>
+            {selectedIndustries.length > 0 && (
+              <Badge variant="secondary" className="mt-1">
+                {selectedIndustries.length} selected
+              </Badge>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {INDUSTRIES.map(ind => (
-              <button
-                key={ind.key}
-                onClick={() => setSelectedIndustry(ind.key)}
-                className={`group relative flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all hover:shadow-md ${
-                  selectedIndustry === ind.key 
-                    ? 'border-primary bg-primary/5 shadow-sm' 
-                    : 'border-border hover:border-primary/40'
-                }`}
-              >
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                  selectedIndustry === ind.key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'
-                }`}>
-                  <ind.icon className="h-5 w-5" />
-                </div>
-                <div className="min-w-0">
-                  <div className="font-semibold text-sm">{ind.label}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{ind.description}</div>
-                </div>
-                {selectedIndustry === ind.key && (
-                  <div className="absolute top-2 right-2">
-                    <Check className="h-4 w-4 text-primary" />
+            {INDUSTRIES.map(ind => {
+              const isSelected = selectedIndustries.includes(ind.key);
+              return (
+                <button
+                  key={ind.key}
+                  onClick={() => toggleIndustry(ind.key)}
+                  className={`group relative flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all hover:shadow-md ${
+                    isSelected
+                      ? 'border-primary bg-primary/5 shadow-sm'
+                      : 'border-border hover:border-primary/40'
+                  }`}
+                >
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                    isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary'
+                  }`}>
+                    <ind.icon className="h-5 w-5" />
                   </div>
-                )}
-              </button>
-            ))}
+                  <div className="min-w-0">
+                    <div className="font-semibold text-sm">{ind.label}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{ind.description}</div>
+                  </div>
+                  {isSelected && (
+                    <div className="absolute top-2 right-2">
+                      <Check className="h-4 w-4 text-primary" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={() => setStep(2)} disabled={!selectedIndustry} size="lg">
+            <Button onClick={() => setStep(2)} disabled={selectedIndustries.length === 0} size="lg">
               Continue <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -259,18 +279,20 @@ const ERPOnboardingWizard: React.FC<ERPOnboardingWizardProps> = ({ organizationI
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <div className="text-sm font-medium text-muted-foreground mb-2">Industry</div>
-                <div className="flex items-center gap-2">
-                  {(() => {
-                    const ind = INDUSTRIES.find(i => i.key === selectedIndustry);
+                <div className="text-sm font-medium text-muted-foreground mb-2">
+                  Industries ({selectedIndustries.length})
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {selectedIndustries.map(key => {
+                    const ind = INDUSTRIES.find(i => i.key === key);
                     if (!ind) return null;
                     return (
-                      <>
-                        <ind.icon className="h-5 w-5 text-primary" />
-                        <span className="font-medium">{ind.label}</span>
-                      </>
+                      <Badge key={key} variant="secondary" className="px-3 py-1.5 text-sm gap-1.5">
+                        <ind.icon className="h-3.5 w-3.5" />
+                        {ind.label}
+                      </Badge>
                     );
-                  })()}
+                  })}
                 </div>
               </div>
 
