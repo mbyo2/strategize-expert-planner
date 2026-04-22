@@ -177,6 +177,43 @@ const ERPPage: React.FC = () => {
 
         {/* Overview */}
         <TabsContent value="overview" className="space-y-6 pt-4">
+          {(() => {
+            const chosenIndustry = (config?.module_settings as any)?.industry as string | undefined;
+            if (!chosenIndustry) return null;
+            const industryLabels: Record<string, string> = {
+              manufacturing: 'Manufacturing', retail: 'Retail & E-commerce', services: 'Professional Services',
+              healthcare: 'Healthcare', financial_services: 'Financial Services', education: 'Education',
+              construction: 'Construction', logistics: 'Logistics & Transport', energy: 'Energy & Utilities',
+              pharma: 'Pharmaceuticals', hospitality: 'Hospitality', agriculture: 'Agriculture',
+              technology: 'Technology / SaaS', nonprofit: 'Non-Profit', real_estate: 'Real Estate',
+              media: 'Media & Entertainment', telecom: 'Telecommunications', government: 'Government',
+              insurance: 'Insurance', legal: 'Legal Services', automotive: 'Automotive',
+              aerospace: 'Aerospace & Defense', mining: 'Mining & Metals', food_beverage: 'Food & Beverage',
+              sports_recreation: 'Sports & Recreation', marketing: 'Marketing Agency',
+              transportation: 'Transportation & Mobility', environmental: 'Environmental & ESG',
+            };
+            const tabValue = chosenIndustry === 'financial_services' ? 'financial' : chosenIndustry;
+            return (
+              <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+                <CardHeader>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-primary" />
+                        Your Industry Suite: {industryLabels[chosenIndustry] || chosenIndustry}
+                      </CardTitle>
+                      <CardDescription>
+                        Tailored modules, KPIs, and workflows for your business
+                      </CardDescription>
+                    </div>
+                    <Button size="sm" onClick={() => setActiveTab('industries')}>
+                      Open suite <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </CardHeader>
+              </Card>
+            );
+          })()}
           {analytics && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
