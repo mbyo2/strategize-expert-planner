@@ -178,8 +178,11 @@ const ERPPage: React.FC = () => {
         {/* Overview */}
         <TabsContent value="overview" className="space-y-6 pt-4">
           {(() => {
-            const chosenIndustry = (config?.module_settings as any)?.industry as string | undefined;
-            if (!chosenIndustry) return null;
+            const settings = (config?.module_settings as any) || {};
+            const chosenIndustries: string[] = Array.isArray(settings.industries) && settings.industries.length > 0
+              ? settings.industries
+              : settings.industry ? [settings.industry] : [];
+            if (chosenIndustries.length === 0) return null;
             const industryLabels: Record<string, string> = {
               manufacturing: 'Manufacturing', retail: 'Retail & E-commerce', services: 'Professional Services',
               healthcare: 'Healthcare', financial_services: 'Financial Services', education: 'Education',
@@ -192,22 +195,28 @@ const ERPPage: React.FC = () => {
               sports_recreation: 'Sports & Recreation', marketing: 'Marketing Agency',
               transportation: 'Transportation & Mobility', environmental: 'Environmental & ESG',
             };
-            const tabValue = chosenIndustry === 'financial_services' ? 'financial' : chosenIndustry;
             return (
               <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
                 <CardHeader>
                   <div className="flex items-start justify-between gap-4">
-                    <div>
+                    <div className="space-y-2">
                       <CardTitle className="text-base flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-primary" />
-                        Your Industry Suite: {industryLabels[chosenIndustry] || chosenIndustry}
+                        Your Industry Suite{chosenIndustries.length > 1 ? 's' : ''}
                       </CardTitle>
                       <CardDescription>
-                        Tailored modules, KPIs, and workflows for your business
+                        Tailored modules, KPIs, and workflows across {chosenIndustries.length} sector{chosenIndustries.length > 1 ? 's' : ''}
                       </CardDescription>
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {chosenIndustries.map(key => (
+                          <Badge key={key} variant="secondary" className="text-xs">
+                            {industryLabels[key] || key.replace(/_/g, ' ')}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                     <Button size="sm" onClick={() => setActiveTab('industries')}>
-                      Open suite <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
+                      Open suite{chosenIndustries.length > 1 ? 's' : ''} <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </CardHeader>
