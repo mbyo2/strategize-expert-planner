@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useStrategyERPBindings, BindingAggregation } from '@/hooks/useStrategyERPBindings';
-import { useERP } from '@/hooks/useERP';
+import { useERPEntities } from '@/hooks/useERP';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { Link2, RefreshCw, Trash2, Zap } from 'lucide-react';
 
 interface Props {
@@ -18,7 +19,8 @@ const aggregations: BindingAggregation[] = ['value', 'sum', 'avg', 'count', 'max
 
 const StrategyErpBindingPanel: React.FC<Props> = ({ goalId, goalName }) => {
   const { bindings, create, remove, sync } = useStrategyERPBindings(goalId);
-  const { entities } = useERP() as any;
+  const { currentOrganization } = useOrganizations();
+  const { entities } = useERPEntities(currentOrganization?.id ?? '');
 
   const [entityId, setEntityId] = useState<string>('');
   const [field, setField] = useState('');
