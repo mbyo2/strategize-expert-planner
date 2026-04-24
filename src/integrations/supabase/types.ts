@@ -1192,6 +1192,175 @@ export type Database = {
         }
         Relationships: []
       }
+      site_ai_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          messages: Json
+          site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          messages?: Json
+          site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          messages?: Json
+          site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_ai_conversations_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_blocks: {
+        Row: {
+          block_type: string
+          created_at: string
+          id: string
+          page_id: string
+          parent_block_id: string | null
+          position: number
+          props: Json
+          updated_at: string
+        }
+        Insert: {
+          block_type: string
+          created_at?: string
+          id?: string
+          page_id: string
+          parent_block_id?: string | null
+          position?: number
+          props?: Json
+          updated_at?: string
+        }
+        Update: {
+          block_type?: string
+          created_at?: string
+          id?: string
+          page_id?: string
+          parent_block_id?: string | null
+          position?: number
+          props?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_blocks_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "site_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_blocks_parent_block_id_fkey"
+            columns: ["parent_block_id"]
+            isOneToOne: false
+            referencedRelation: "site_blocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_pages: {
+        Row: {
+          created_at: string
+          id: string
+          is_home: boolean
+          position: number
+          seo: Json
+          site_id: string
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_home?: boolean
+          position?: number
+          seo?: Json
+          site_id: string
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_home?: boolean
+          position?: number
+          seo?: Json
+          site_id?: string
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_pages_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sites: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_published: boolean
+          name: string
+          organization_id: string
+          published_at: string | null
+          slug: string
+          theme: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          name: string
+          organization_id: string
+          published_at?: string | null
+          slug: string
+          theme?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          name?: string
+          organization_id?: string
+          published_at?: string | null
+          slug?: string
+          theme?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       strategic_goals: {
         Row: {
           category: string | null
@@ -1974,7 +2143,11 @@ export type Database = {
       }
     }
     Functions: {
+      can_manage_page: { Args: { _page_id: string }; Returns: boolean }
+      can_manage_site: { Args: { _site_id: string }; Returns: boolean }
+      can_view_page: { Args: { _page_id: string }; Returns: boolean }
       can_view_profile: { Args: { target_user_id: string }; Returns: boolean }
+      can_view_site: { Args: { _site_id: string }; Returns: boolean }
       cleanup_expired_sessions: { Args: never; Returns: undefined }
       create_activity_log: {
         Args: {
