@@ -191,6 +191,60 @@ export type Database = {
         }
         Relationships: []
       }
+      board_packs: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          organization_id: string
+          period_end: string | null
+          period_label: string | null
+          period_start: string | null
+          published_at: string | null
+          published_by: string | null
+          share_slug: string | null
+          snapshot: Json
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          organization_id: string
+          period_end?: string | null
+          period_label?: string | null
+          period_start?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          share_slug?: string | null
+          snapshot?: Json
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          period_end?: string | null
+          period_label?: string | null
+          period_start?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          share_slug?: string | null
+          snapshot?: Json
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       company_strategy: {
         Row: {
           id: string
@@ -304,6 +358,167 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      decision_log_options: {
+        Row: {
+          cons: string | null
+          created_at: string
+          decision_id: string
+          description: string | null
+          estimated_impact: string | null
+          id: string
+          is_chosen: boolean
+          label: string
+          position: number
+          pros: string | null
+          updated_at: string
+        }
+        Insert: {
+          cons?: string | null
+          created_at?: string
+          decision_id: string
+          description?: string | null
+          estimated_impact?: string | null
+          id?: string
+          is_chosen?: boolean
+          label: string
+          position?: number
+          pros?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cons?: string | null
+          created_at?: string
+          decision_id?: string
+          description?: string | null
+          estimated_impact?: string | null
+          id?: string
+          is_chosen?: boolean
+          label?: string
+          position?: number
+          pros?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_log_options_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decision_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      decision_log_signoffs: {
+        Row: {
+          comment: string | null
+          decision_id: string
+          id: string
+          signed_at: string
+          signer_id: string
+          signer_role: string | null
+          stance: string
+        }
+        Insert: {
+          comment?: string | null
+          decision_id: string
+          id?: string
+          signed_at?: string
+          signer_id: string
+          signer_role?: string | null
+          stance?: string
+        }
+        Update: {
+          comment?: string | null
+          decision_id?: string
+          id?: string
+          signed_at?: string
+          signer_id?: string
+          signer_role?: string | null
+          stance?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_log_signoffs_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decision_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      decision_logs: {
+        Row: {
+          context: string | null
+          created_at: string
+          created_by: string
+          decided_at: string | null
+          decided_by: string | null
+          final_rationale: string | null
+          id: string
+          organization_id: string
+          related_goal_id: string | null
+          related_initiative_id: string | null
+          status: string
+          superseded_by: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          context?: string | null
+          created_at?: string
+          created_by: string
+          decided_at?: string | null
+          decided_by?: string | null
+          final_rationale?: string | null
+          id?: string
+          organization_id: string
+          related_goal_id?: string | null
+          related_initiative_id?: string | null
+          status?: string
+          superseded_by?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          context?: string | null
+          created_at?: string
+          created_by?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          final_rationale?: string | null
+          id?: string
+          organization_id?: string
+          related_goal_id?: string | null
+          related_initiative_id?: string | null
+          status?: string
+          superseded_by?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_logs_related_goal_id_fkey"
+            columns: ["related_goal_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decision_logs_related_initiative_id_fkey"
+            columns: ["related_initiative_id"]
+            isOneToOne: false
+            referencedRelation: "planning_initiatives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decision_logs_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "decision_logs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       drones: {
         Row: {
@@ -1454,6 +1669,69 @@ export type Database = {
         }
         Relationships: []
       }
+      strategy_erp_bindings: {
+        Row: {
+          aggregation: string
+          created_at: string
+          created_by: string
+          erp_entity_id: string
+          goal_id: string
+          id: string
+          is_active: boolean
+          last_synced_at: string | null
+          last_synced_value: number | null
+          multiplier: number
+          organization_id: string
+          source_field: string
+          updated_at: string
+        }
+        Insert: {
+          aggregation?: string
+          created_at?: string
+          created_by: string
+          erp_entity_id: string
+          goal_id: string
+          id?: string
+          is_active?: boolean
+          last_synced_at?: string | null
+          last_synced_value?: number | null
+          multiplier?: number
+          organization_id: string
+          source_field: string
+          updated_at?: string
+        }
+        Update: {
+          aggregation?: string
+          created_at?: string
+          created_by?: string
+          erp_entity_id?: string
+          goal_id?: string
+          id?: string
+          is_active?: boolean
+          last_synced_at?: string | null
+          last_synced_value?: number | null
+          multiplier?: number
+          organization_id?: string
+          source_field?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategy_erp_bindings_erp_entity_id_fkey"
+            columns: ["erp_entity_id"]
+            isOneToOne: false
+            referencedRelation: "erp_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategy_erp_bindings_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       strategy_reviews: {
         Row: {
           created_at: string
@@ -2143,8 +2421,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_manage_decision: { Args: { _decision_id: string }; Returns: boolean }
       can_manage_page: { Args: { _page_id: string }; Returns: boolean }
       can_manage_site: { Args: { _site_id: string }; Returns: boolean }
+      can_view_decision: { Args: { _decision_id: string }; Returns: boolean }
       can_view_page: { Args: { _page_id: string }; Returns: boolean }
       can_view_profile: { Args: { target_user_id: string }; Returns: boolean }
       can_view_site: { Args: { _site_id: string }; Returns: boolean }

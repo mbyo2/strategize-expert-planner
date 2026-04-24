@@ -24,6 +24,10 @@ const navGroups = [
     items: ['Dashboard', 'Strategic Goals', 'Planning'],
   },
   {
+    label: 'Strategy OS',
+    items: ['Decision Log', 'Board Packs'],
+  },
+  {
     label: 'Intelligence',
     items: ['Analytics', 'Industry', 'Tactical Map'],
   },
