@@ -39,6 +39,9 @@ import Infrastructure from '@/pages/Infrastructure';
 import TacticalMap from '@/pages/TacticalMap';
 import Support from '@/pages/Support';
 import ERP from '@/pages/ERP';
+import Decisions from '@/pages/Decisions';
+import BoardPacks from '@/pages/BoardPacks';
+import PublicStrategy from '@/pages/PublicStrategy';
 import TestSetup from '@/pages/TestSetup';
 
 function App() {
@@ -60,6 +63,7 @@ function App() {
                 <Route path="/auth/callback" element={<SecurePasswordReset />} />
                 <Route path="/access-denied" element={<AccessDenied />} />
                 <Route path="/mfa-verify" element={<MfaVerify />} />
+                <Route path="/strategy/:slug" element={<PublicStrategy />} />
 
                 {/* Protected routes with sidebar layout */}
                 <Route element={<SimpleAuthGuard><AppLayout /></SimpleAuthGuard>}>
@@ -81,6 +85,8 @@ function App() {
                   <Route path="/data-foundry" element={<DataFoundry />} />
                   <Route path="/infrastructure" element={<Infrastructure />} />
                   <Route path="/erp" element={<ERP />} />
+                  <Route path="/decisions" element={<Decisions />} />
+                  <Route path="/board-packs" element={<BoardPacks />} />
                   <Route path="/support" element={<Support />} />
                   {/* test-setup removed for production launch */}
                   <Route path="/tactical-map" element={<TacticalMap />} />

@@ -13,6 +13,8 @@ import {
   Shield,
   Ticket,
   Package,
+  Gavel,
+  FileText,
   LucideIcon
 } from "lucide-react";
 
@@ -38,6 +40,18 @@ export const navItems: NavItem[] = [
     title: "Planning",
     url: "/planning",
     icon: Calendar,
+    requiredRole: 'manager',
+  },
+  {
+    title: "Decision Log",
+    url: "/decisions",
+    icon: Gavel,
+    requiredRole: 'manager',
+  },
+  {
+    title: "Board Packs",
+    url: "/board-packs",
+    icon: FileText,
     requiredRole: 'manager',
   },
   {
