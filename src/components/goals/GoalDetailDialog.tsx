@@ -5,12 +5,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Link2, Gavel, Activity, Plus, ExternalLink } from 'lucide-react';
+import { Link2, Gavel, Activity, Plus, ExternalLink, FileText } from 'lucide-react';
 import StrategyErpBindingPanel from '@/components/strategy/StrategyErpBindingPanel';
 import { useDecisionLog } from '@/hooks/useDecisionLog';
 import NewDecisionDialog from '@/components/decisions/NewDecisionDialog';
 import { useStrategyERPBindings } from '@/hooks/useStrategyERPBindings';
-import { Link } from 'react-router-dom';
+import { useBoardPacks } from '@/hooks/useBoardPacks';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface Props {
   open: boolean;
