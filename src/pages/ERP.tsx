@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import ERPModuleSelector from '@/components/erp/ERPModuleSelector';
 import ERPStrategicIntegration from '@/components/erp/ERPStrategicIntegration';
+import StrategyOSPanel from '@/components/strategy/StrategyOSPanel';
 import ERPOnboardingWizard from '@/components/erp/ERPOnboardingWizard';
 import { FinancialModule } from '@/components/erp/modules/FinancialModule';
 import { HRModule } from '@/components/erp/modules/HRModule';
@@ -299,7 +300,7 @@ const ERPPage: React.FC = () => {
         <TabsContent value="projects" className="pt-4"><ProjectModule /></TabsContent>
 
         <TabsContent value="integration" className="pt-4">
-          <ERPStrategicIntegration organizationId={organizationId || ''} />
+          <StrategyOSPanel organizationId={organizationId || ''} />
         </TabsContent>
 
         {/* Industries */}

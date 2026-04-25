@@ -55,16 +55,54 @@ export const useBoardPacks = () => {
   const generate = useMutation({
     mutationFn: async (input: { title: string; periodLabel?: string; notes?: string }) => {
       if (!orgId || !userId) throw new Error('Not ready');
-      // Snapshot strategic goals and decisions
-      const [goalsRes, decisionsRes] = await Promise.all([
+      // Snapshot strategic goals, decisions, and ERP bindings (so the board sees real, live KPIs)
+      const [goalsRes, decisionsRes, bindingsRes, orgRes] = await Promise.all([
         supabase.from('strategic_goals').select('*'),
-        supabase.from('decision_logs' as any).select('*, options:decision_log_options(*), signoffs:decision_log_signoffs(*)').eq('organization_id', orgId),
+        supabase
+          .from('decision_logs' as any)
+          .select('*, options:decision_log_options(*), signoffs:decision_log_signoffs(*)')
+          .eq('organization_id', orgId),
+        supabase
+          .from('strategy_erp_bindings' as any)
+          .select('*')
+          .eq('organization_id', orgId),
+        supabase
+          .from('organizations')
+          .select('name, logo_url, website, industry')
+          .eq('id', orgId)
+          .maybeSingle(),
       ]);
+
+      const goals = (goalsRes.data ?? []) as any[];
+      const decisions = (decisionsRes.data ?? []) as any[];
+      const bindings = (bindingsRes.data as any[]) ?? [];
+
+      // KPI rollup
+      const totalGoals = goals.length;
+      const onTrack = goals.filter((g) => (g.progress ?? 0) >= 70).length;
+      const atRisk = goals.filter((g) => g.risk_level === 'high' || (g.progress ?? 0) < 30).length;
+      const avgProgress = totalGoals
+        ? Math.round(goals.reduce((s, g) => s + (g.progress ?? 0), 0) / totalGoals)
+        : 0;
+
       const snapshot = {
         generated_at: new Date().toISOString(),
-        goals: goalsRes.data ?? [],
-        decisions: decisionsRes.data ?? [],
+        organization: orgRes.data ?? null,
+        kpis: {
+          totalGoals,
+          onTrack,
+          atRisk,
+          avgProgress,
+          decisionsLogged: decisions.length,
+          decisionsFinalized: decisions.filter((d) => d.status === 'decided').length,
+          liveBindings: bindings.length,
+          syncedBindings: bindings.filter((b) => b.last_synced_at).length,
+        },
+        goals,
+        decisions,
+        bindings,
       };
+
       const { data, error } = await supabase
         .from('board_packs' as any)
         .insert({
@@ -82,7 +120,7 @@ export const useBoardPacks = () => {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['board-packs', orgId] });
-      toast.success('Board pack drafted');
+      toast.success('Board pack drafted with live KPIs');
     },
     onError: (e: any) => toast.error(e.message ?? 'Failed to generate'),
   });

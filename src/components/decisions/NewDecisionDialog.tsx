@@ -12,22 +12,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultGoalId?: string | null;
 }
 
 const blankOption = () => ({ label: '', description: '', pros: '', cons: '', estimated_impact: '' });
 
-const NewDecisionDialog: React.FC<Props> = ({ open, onOpenChange }) => {
+const NewDecisionDialog: React.FC<Props> = ({ open, onOpenChange, defaultGoalId }) => {
   const { createDecision } = useDecisionLog();
   const { goals } = useStrategicGoals();
   const [title, setTitle] = useState('');
   const [context, setContext] = useState('');
-  const [goalId, setGoalId] = useState<string>('none');
+  const [goalId, setGoalId] = useState<string>(defaultGoalId ?? 'none');
   const [options, setOptions] = useState([blankOption(), blankOption()]);
+
+  React.useEffect(() => {
+    if (open && defaultGoalId) setGoalId(defaultGoalId);
+  }, [open, defaultGoalId]);
 
   const reset = () => {
     setTitle('');
     setContext('');
-    setGoalId('none');
+    setGoalId(defaultGoalId ?? 'none');
     setOptions([blankOption(), blankOption()]);
   };
 
