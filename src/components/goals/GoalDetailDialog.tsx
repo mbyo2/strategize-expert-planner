@@ -49,6 +49,54 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
           </div>
         </DialogHeader>
 
+        {/* Quick actions */}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              onOpenChange(false);
+              navigate(`/decisions?goalId=${goal.id}`);
+            }}
+          >
+            <Gavel className="w-3.5 h-3.5 mr-1.5" /> Go to decisions
+            <ExternalLink className="w-3 h-3 ml-1.5 opacity-60" />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={generate.isPending}
+            onClick={() =>
+              generate.mutate(
+                {
+                  title: `${goal.name} — Board Pack`,
+                  periodLabel: new Date().toLocaleDateString(undefined, {
+                    month: 'short',
+                    year: 'numeric',
+                  }),
+                  notes: `Generated from goal: ${goal.name}`,
+                },
+                {
+                  onSuccess: () => {
+                    onOpenChange(false);
+                    navigate('/board-packs');
+                  },
+                }
+              )
+            }
+          >
+            <FileText className="w-3.5 h-3.5 mr-1.5" />
+            {generate.isPending ? 'Creating…' : 'Create board pack'}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setNewDecisionOpen(true)}
+          >
+            <Plus className="w-3.5 h-3.5 mr-1.5" /> New decision
+          </Button>
+        </div>
+
         {/* Quick KPIs */}
         <div className="grid grid-cols-3 gap-3">
           <Card>
