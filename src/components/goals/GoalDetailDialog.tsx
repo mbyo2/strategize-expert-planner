@@ -5,12 +5,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Link2, Gavel, Activity, Plus, ExternalLink } from 'lucide-react';
+import { Link2, Gavel, Activity, Plus, ExternalLink, FileText } from 'lucide-react';
 import StrategyErpBindingPanel from '@/components/strategy/StrategyErpBindingPanel';
 import { useDecisionLog } from '@/hooks/useDecisionLog';
 import NewDecisionDialog from '@/components/decisions/NewDecisionDialog';
 import { useStrategyERPBindings } from '@/hooks/useStrategyERPBindings';
-import { Link } from 'react-router-dom';
+import { useBoardPacks } from '@/hooks/useBoardPacks';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface Props {
   open: boolean;
@@ -21,6 +22,8 @@ interface Props {
 const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
   const { decisions } = useDecisionLog();
   const { bindings, sync } = useStrategyERPBindings(goal?.id);
+  const { generate } = useBoardPacks();
+  const navigate = useNavigate();
   const [newDecisionOpen, setNewDecisionOpen] = useState(false);
 
   if (!goal) return null;
@@ -45,6 +48,54 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
             </div>
           </div>
         </DialogHeader>
+
+        {/* Quick actions */}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              onOpenChange(false);
+              navigate(`/decisions?goalId=${goal.id}`);
+            }}
+          >
+            <Gavel className="w-3.5 h-3.5 mr-1.5" /> Go to decisions
+            <ExternalLink className="w-3 h-3 ml-1.5 opacity-60" />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={generate.isPending}
+            onClick={() =>
+              generate.mutate(
+                {
+                  title: `${goal.name} — Board Pack`,
+                  periodLabel: new Date().toLocaleDateString(undefined, {
+                    month: 'short',
+                    year: 'numeric',
+                  }),
+                  notes: `Generated from goal: ${goal.name}`,
+                },
+                {
+                  onSuccess: () => {
+                    onOpenChange(false);
+                    navigate('/board-packs');
+                  },
+                }
+              )
+            }
+          >
+            <FileText className="w-3.5 h-3.5 mr-1.5" />
+            {generate.isPending ? 'Creating…' : 'Create board pack'}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setNewDecisionOpen(true)}
+          >
+            <Plus className="w-3.5 h-3.5 mr-1.5" /> New decision
+          </Button>
+        </div>
 
         {/* Quick KPIs */}
         <div className="grid grid-cols-3 gap-3">
