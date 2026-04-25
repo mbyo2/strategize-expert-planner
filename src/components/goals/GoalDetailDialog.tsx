@@ -22,6 +22,8 @@ interface Props {
 const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
   const { decisions } = useDecisionLog();
   const { bindings, sync } = useStrategyERPBindings(goal?.id);
+  const { generate } = useBoardPacks();
+  const navigate = useNavigate();
   const [newDecisionOpen, setNewDecisionOpen] = useState(false);
 
   if (!goal) return null;
