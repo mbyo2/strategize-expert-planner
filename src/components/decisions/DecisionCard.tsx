@@ -4,6 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { CheckCircle2, AlertTriangle, MinusCircle, Trash2, Gavel, Signature } from 'lucide-react';
 import { DecisionLog, useDecisionLog, SignoffStance } from '@/hooks/useDecisionLog';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
