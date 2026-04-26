@@ -96,6 +96,9 @@ const BoardPacks = () => {
                     <Button size="sm" variant="outline" onClick={() => { exportBoardPackCSV(p); toast.success('CSV downloaded'); }}>
                       <Download className="w-3 h-3 mr-1" /> CSV
                     </Button>
+                    <Button size="sm" variant="outline" onClick={() => { exportBoardPackFlatCSV(p); toast.success('Flat CSV downloaded'); }}>
+                      <Download className="w-3 h-3 mr-1" /> CSV (Excel)
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => { exportBoardPackJSON(p); toast.success('JSON downloaded'); }}>
                       <FileJson className="w-3 h-3 mr-1" /> JSON
                     </Button>
