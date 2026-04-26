@@ -23,6 +23,7 @@ const BoardPacks = () => {
   const [title, setTitle] = useState('');
   const [period, setPeriod] = useState('');
   const [notes, setNotes] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const submit = async () => {
     if (!title.trim()) return;
