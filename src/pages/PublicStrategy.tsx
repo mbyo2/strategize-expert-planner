@@ -39,12 +39,15 @@ const PublicStrategy = () => {
 
   if (error || !pack) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-8">
+      <div className="min-h-screen flex items-center justify-center p-8 bg-background">
         <Card className="max-w-md">
           <CardContent className="p-8 text-center">
             <FileText className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
             <h2 className="font-semibold mb-1">Strategy not found</h2>
-            <p className="text-sm text-muted-foreground">This board pack is not publicly available.</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              This board pack is no longer publicly available.
+            </p>
+            <a href="/" className="text-sm text-primary hover:underline">Return home</a>
           </CardContent>
         </Card>
       </div>
