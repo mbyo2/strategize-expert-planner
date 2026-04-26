@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { BarChart3, Target, Users, TrendingUp, Calendar, Bell, Plus, Loader2 } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
 import InfoCard from '@/components/InfoCard';
+import StrategyOSHero from '@/components/dashboard/StrategyOSHero';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useNavigate } from 'react-router-dom';
