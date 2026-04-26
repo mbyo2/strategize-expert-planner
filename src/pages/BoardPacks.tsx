@@ -93,6 +93,12 @@ const BoardPacks = () => {
                   </div>
                   {p.notes && <p className="text-sm text-muted-foreground">{p.notes}</p>}
                   <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" onClick={() => { exportBoardPackCSV(p); toast.success('CSV downloaded'); }}>
+                      <Download className="w-3 h-3 mr-1" /> CSV
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => { exportBoardPackJSON(p); toast.success('JSON downloaded'); }}>
+                      <FileJson className="w-3 h-3 mr-1" /> JSON
+                    </Button>
                     {p.status === 'published' && p.share_slug ? (
                       <>
                         <Button size="sm" variant="outline" onClick={() => copyLink(p.share_slug)}>
