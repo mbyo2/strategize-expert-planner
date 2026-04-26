@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { FileText, Plus, Loader2, Globe, Lock, Trash2, ExternalLink, Copy } from 'lucide-react';
+import { FileText, Plus, Loader2, Globe, Lock, Trash2, ExternalLink, Copy, Download, FileJson } from 'lucide-react';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
+import { exportBoardPackCSV, exportBoardPackJSON } from '@/utils/boardPackExport';
 import { toast } from 'sonner';
 
 const BoardPacks = () => {
