@@ -15,7 +15,7 @@ const Decisions = () => {
   const { goals } = useStrategicGoals();
   const [open, setOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  const filterGoalId = searchParams.get('goal');
+  const filterGoalId = searchParams.get('goalId') ?? searchParams.get('goal');
 
   const filteredDecisions = useMemo(() => {
     if (!filterGoalId) return decisions;
@@ -29,6 +29,7 @@ const Decisions = () => {
 
   const clearFilter = () => {
     searchParams.delete('goal');
+    searchParams.delete('goalId');
     setSearchParams(searchParams);
   };
 
