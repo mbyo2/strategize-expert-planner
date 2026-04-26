@@ -39,12 +39,15 @@ const PublicStrategy = () => {
 
   if (error || !pack) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-8">
+      <div className="min-h-screen flex items-center justify-center p-8 bg-background">
         <Card className="max-w-md">
           <CardContent className="p-8 text-center">
             <FileText className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
             <h2 className="font-semibold mb-1">Strategy not found</h2>
-            <p className="text-sm text-muted-foreground">This board pack is not publicly available.</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              This board pack is no longer publicly available.
+            </p>
+            <a href="/" className="text-sm text-primary hover:underline">Return home</a>
           </CardContent>
         </Card>
       </div>
@@ -54,17 +57,36 @@ const PublicStrategy = () => {
   const snapshot = (pack as any).snapshot ?? {};
   const goals: any[] = snapshot.goals ?? [];
   const decisions: any[] = snapshot.decisions ?? [];
+  const initiatives: any[] = snapshot.initiatives ?? [];
   const kpis = snapshot.kpis ?? {};
   const org = snapshot.organization ?? null;
 
   const orgName = org?.name ?? 'Strategy snapshot';
+  const description = `${pack.title} · ${pack.period_label ?? ''} · Published strategy snapshot from ${orgName}`;
+  const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Report',
+    name: pack.title,
+    datePublished: pack.published_at,
+    publisher: org ? { '@type': 'Organization', name: orgName, url: org.website, logo: org.logo_url } : undefined,
+    about: orgName,
+    url: pageUrl,
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>{pack.title} — {orgName}</title>
-        <meta name="description" content={`${pack.title} · ${pack.period_label ?? ''} · Published strategy snapshot from ${orgName}`} />
-        <link rel="canonical" href={typeof window !== 'undefined' ? window.location.href : ''} />
+        <title>{`${pack.title} — ${orgName}`}</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={pageUrl} />
+        <meta property="og:title" content={`${pack.title} — ${orgName}`} />
+        <meta property="og:description" content={description} />
+        <meta property="og:type" content="article" />
+        {org?.logo_url && <meta property="og:image" content={org.logo_url} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 
       {/* Hero */}
@@ -232,6 +254,28 @@ const PublicStrategy = () => {
             </div>
           )}
         </section>
+
+        {/* Initiatives */}
+        {initiatives.length > 0 && (
+          <section>
+            <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+              <Zap className="w-5 h-5 text-primary" /> Active initiatives
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {initiatives.slice(0, 8).map((i: any) => (
+                <Card key={i.id}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-base">{i.title ?? i.name}</CardTitle>
+                      {i.status && <Badge variant="outline" className="capitalize">{i.status}</Badge>}
+                    </div>
+                    {i.description && <CardDescription className="line-clamp-2">{i.description}</CardDescription>}
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
 
         <footer className="border-t pt-6 text-xs text-muted-foreground flex items-center justify-between flex-wrap gap-2">
           <span>

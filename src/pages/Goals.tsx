@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Target, Plus, Calendar, Loader2, Trash2, Edit, Link2, Gavel, Zap } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
+import SEO from '@/components/SEO';
 import GoalFormDialog from '@/components/GoalFormDialog';
 import GoalDetailDialog from '@/components/goals/GoalDetailDialog';
 import { useStrategicGoals } from '@/hooks/useStrategicGoals';
@@ -121,6 +122,7 @@ const Goals = () => {
         </Button>
       }
     >
+      <SEO title="Strategic Goals · Strategic" description="Goals tied to live ERP data, accountable decisions, and signed strategic commitments." />
       <div className="space-y-6">
         {/* KPI bar */}
         <div className="grid gap-3 grid-cols-2 md:grid-cols-4">

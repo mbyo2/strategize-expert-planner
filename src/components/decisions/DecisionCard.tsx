@@ -4,6 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { CheckCircle2, AlertTriangle, MinusCircle, Trash2, Gavel, Signature } from 'lucide-react';
 import { DecisionLog, useDecisionLog, SignoffStance } from '@/hooks/useDecisionLog';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
@@ -29,6 +33,7 @@ const DecisionCard: React.FC<Props> = ({ decision }) => {
   const [rationale, setRationale] = useState(decision.final_rationale ?? '');
   const [signComment, setSignComment] = useState('');
   const [stance, setStance] = useState<SignoffStance>('approve');
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const mySignoff = decision.signoffs?.find((s) => s.signer_id === userId);
   const decided = decision.status === 'decided';
@@ -44,7 +49,7 @@ const DecisionCard: React.FC<Props> = ({ decision }) => {
             </div>
             {decision.context && <CardDescription className="mt-1">{decision.context}</CardDescription>}
           </div>
-          <Button variant="ghost" size="icon" onClick={() => remove.mutate(decision.id)}>
+          <Button variant="ghost" size="icon" aria-label="Delete decision" onClick={() => setConfirmDelete(true)}>
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
@@ -186,6 +191,26 @@ const DecisionCard: React.FC<Props> = ({ decision }) => {
           </div>
         </div>
       </CardContent>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this decision?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes the decision, its options, and all sign-offs. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { remove.mutate(decision.id); setConfirmDelete(false); }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

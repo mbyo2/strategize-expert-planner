@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import PageLayout from '@/components/PageLayout';
+import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +16,7 @@ const Decisions = () => {
   const { goals } = useStrategicGoals();
   const [open, setOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  const filterGoalId = searchParams.get('goal');
+  const filterGoalId = searchParams.get('goalId') ?? searchParams.get('goal');
 
   const filteredDecisions = useMemo(() => {
     if (!filterGoalId) return decisions;
@@ -29,6 +30,7 @@ const Decisions = () => {
 
   const clearFilter = () => {
     searchParams.delete('goal');
+    searchParams.delete('goalId');
     setSearchParams(searchParams);
   };
 
@@ -43,6 +45,7 @@ const Decisions = () => {
         </Button>
       }
     >
+      <SEO title="Decision Log · Strategic" description="The human accountability trail: options, trade-offs, sign-offs for every strategic decision." />
       {filterGoalName && (
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="gap-1">

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { BarChart3, Target, Users, TrendingUp, Calendar, Bell, Plus, Loader2 } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
 import InfoCard from '@/components/InfoCard';
+import StrategyOSHero from '@/components/dashboard/StrategyOSHero';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useNavigate } from 'react-router-dom';
@@ -78,6 +79,8 @@ const Dashboard = () => {
       }
     >
       <div className="space-y-6">
+        <StrategyOSHero />
+
         {/* Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {quickStats.map((stat) => (
