@@ -33,6 +33,7 @@ const DecisionCard: React.FC<Props> = ({ decision }) => {
   const [rationale, setRationale] = useState(decision.final_rationale ?? '');
   const [signComment, setSignComment] = useState('');
   const [stance, setStance] = useState<SignoffStance>('approve');
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const mySignoff = decision.signoffs?.find((s) => s.signer_id === userId);
   const decided = decision.status === 'decided';
