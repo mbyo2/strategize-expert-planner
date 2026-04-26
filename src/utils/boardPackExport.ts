@@ -8,12 +8,9 @@ const csvEscape = (v: any) => {
 
 const toCsv = (rows: Record<string, any>[]) => {
   if (!rows.length) return '';
-  const headers = Array.from(
-    rows.reduce((set, r) => {
-      Object.keys(r).forEach((k) => set.add(k));
-      return set;
-    }, new Set<string>())
-  );
+  const headerSet = new Set<string>();
+  rows.forEach((r) => Object.keys(r).forEach((k) => headerSet.add(k)));
+  const headers = Array.from(headerSet);
   return [headers.join(','), ...rows.map((r) => headers.map((h) => csvEscape(r[h])).join(','))].join('\n');
 };
 
