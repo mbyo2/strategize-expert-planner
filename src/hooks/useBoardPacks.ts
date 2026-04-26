@@ -70,9 +70,9 @@ export const useBoardPacks = () => {
         .select('name, logo_url, website, industry')
         .eq('id', orgId)
         .maybeSingle();
-      const initiativesRes = await supabase.from('planning_initiatives').select('*').eq('organization_id', orgId);
-      const reviewsRes = await supabase.from('strategy_reviews' as any).select('*').eq('organization_id', orgId);
-      const metricsRes = await supabase.from('industry_metrics').select('*').eq('organization_id', orgId);
+      const initiativesRes: any = await (supabase as any).from('planning_initiatives').select('*').eq('organization_id', orgId);
+      const reviewsRes: any = await (supabase as any).from('strategy_reviews').select('*').eq('organization_id', orgId);
+      const metricsRes: any = await (supabase as any).from('industry_metrics').select('*').eq('organization_id', orgId);
 
       const goals = (goalsRes.data ?? []) as any[];
       const decisions = (decisionsRes.data ?? []) as any[];
