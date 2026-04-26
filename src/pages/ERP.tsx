@@ -149,8 +149,8 @@ const ERPPage: React.FC = () => {
 
       {/* Main Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="border-b">
-          <TabsList className="h-auto p-0 bg-transparent gap-0">
+        <div className="border-b overflow-x-auto">
+          <TabsList className="h-auto p-0 bg-transparent gap-0 w-max min-w-full">
             {[
               { value: 'overview', label: 'Overview', icon: BarChart3 },
               { value: 'financial', label: 'Financial', icon: DollarSign },
