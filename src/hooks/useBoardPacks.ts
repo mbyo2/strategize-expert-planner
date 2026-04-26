@@ -55,27 +55,34 @@ export const useBoardPacks = () => {
   const generate = useMutation({
     mutationFn: async (input: { title: string; periodLabel?: string; notes?: string }) => {
       if (!orgId || !userId) throw new Error('Not ready');
-      // Snapshot strategic goals, decisions, and ERP bindings (so the board sees real, live KPIs)
-      const [goalsRes, decisionsRes, bindingsRes, orgRes] = await Promise.all([
-        supabase.from('strategic_goals').select('*'),
-        supabase
-          .from('decision_logs' as any)
-          .select('*, options:decision_log_options(*), signoffs:decision_log_signoffs(*)')
-          .eq('organization_id', orgId),
-        supabase
-          .from('strategy_erp_bindings' as any)
-          .select('*')
-          .eq('organization_id', orgId),
-        supabase
-          .from('organizations')
-          .select('name, logo_url, website, industry')
-          .eq('id', orgId)
-          .maybeSingle(),
-      ]);
+      // Snapshot full strategic context: goals, decisions, bindings, initiatives, reviews, industry KPIs, org
+      const [goalsRes, decisionsRes, bindingsRes, orgRes, initiativesRes, reviewsRes, metricsRes] =
+        await Promise.all([
+          supabase.from('strategic_goals').select('*'),
+          supabase
+            .from('decision_logs' as any)
+            .select('*, options:decision_log_options(*), signoffs:decision_log_signoffs(*)')
+            .eq('organization_id', orgId),
+          supabase
+            .from('strategy_erp_bindings' as any)
+            .select('*')
+            .eq('organization_id', orgId),
+          supabase
+            .from('organizations')
+            .select('name, logo_url, website, industry')
+            .eq('id', orgId)
+            .maybeSingle(),
+          supabase.from('planning_initiatives').select('*').eq('organization_id', orgId),
+          supabase.from('strategy_reviews' as any).select('*').eq('organization_id', orgId),
+          supabase.from('industry_metrics').select('*').eq('organization_id', orgId),
+        ]);
 
       const goals = (goalsRes.data ?? []) as any[];
       const decisions = (decisionsRes.data ?? []) as any[];
       const bindings = (bindingsRes.data as any[]) ?? [];
+      const initiatives = (initiativesRes.data as any[]) ?? [];
+      const reviews = (reviewsRes.data as any[]) ?? [];
+      const metrics = (metricsRes.data as any[]) ?? [];
 
       // KPI rollup
       const totalGoals = goals.length;
@@ -97,10 +104,17 @@ export const useBoardPacks = () => {
           decisionsFinalized: decisions.filter((d) => d.status === 'decided').length,
           liveBindings: bindings.length,
           syncedBindings: bindings.filter((b) => b.last_synced_at).length,
+          activeInitiatives: initiatives.filter((i) => i.status === 'active' || i.status === 'in_progress').length,
+          totalInitiatives: initiatives.length,
+          reviewsScheduled: reviews.length,
+          industryMetrics: metrics.length,
         },
         goals,
         decisions,
         bindings,
+        initiatives,
+        reviews,
+        industry_metrics: metrics,
       };
 
       const { data, error } = await supabase
