@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import PageLayout from '@/components/PageLayout';
+import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
