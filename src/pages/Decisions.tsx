@@ -45,6 +45,7 @@ const Decisions = () => {
         </Button>
       }
     >
+      <SEO title="Decision Log · Strategic" description="The human accountability trail: options, trade-offs, sign-offs for every strategic decision." />
       {filterGoalName && (
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="gap-1">
