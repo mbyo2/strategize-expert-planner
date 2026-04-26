@@ -128,7 +128,7 @@ const BoardPacks = () => {
                         <Globe className="w-3 h-3 mr-1" /> Publish
                       </Button>
                     )}
-                    <Button size="icon" variant="ghost" onClick={() => remove.mutate(p.id)}>
+                    <Button size="icon" variant="ghost" aria-label="Delete board pack" onClick={() => setConfirmDeleteId(p.id)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
