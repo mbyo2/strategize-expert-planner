@@ -56,26 +56,23 @@ export const useBoardPacks = () => {
     mutationFn: async (input: { title: string; periodLabel?: string; notes?: string }) => {
       if (!orgId || !userId) throw new Error('Not ready');
       // Snapshot full strategic context: goals, decisions, bindings, initiatives, reviews, industry KPIs, org
-      const [goalsRes, decisionsRes, bindingsRes, orgRes, initiativesRes, reviewsRes, metricsRes] =
-        await Promise.all([
-          supabase.from('strategic_goals').select('*'),
-          supabase
-            .from('decision_logs' as any)
-            .select('*, options:decision_log_options(*), signoffs:decision_log_signoffs(*)')
-            .eq('organization_id', orgId),
-          supabase
-            .from('strategy_erp_bindings' as any)
-            .select('*')
-            .eq('organization_id', orgId),
-          supabase
-            .from('organizations')
-            .select('name, logo_url, website, industry')
-            .eq('id', orgId)
-            .maybeSingle(),
-          supabase.from('planning_initiatives').select('*').eq('organization_id', orgId),
-          supabase.from('strategy_reviews' as any).select('*').eq('organization_id', orgId),
-          supabase.from('industry_metrics').select('*').eq('organization_id', orgId),
-        ]);
+      const goalsRes = await supabase.from('strategic_goals').select('*');
+      const decisionsRes = await supabase
+        .from('decision_logs' as any)
+        .select('*, options:decision_log_options(*), signoffs:decision_log_signoffs(*)')
+        .eq('organization_id', orgId);
+      const bindingsRes = await supabase
+        .from('strategy_erp_bindings' as any)
+        .select('*')
+        .eq('organization_id', orgId);
+      const orgRes = await supabase
+        .from('organizations')
+        .select('name, logo_url, website, industry')
+        .eq('id', orgId)
+        .maybeSingle();
+      const initiativesRes = await supabase.from('planning_initiatives').select('*').eq('organization_id', orgId);
+      const reviewsRes = await supabase.from('strategy_reviews' as any).select('*').eq('organization_id', orgId);
+      const metricsRes = await supabase.from('industry_metrics').select('*').eq('organization_id', orgId);
 
       const goals = (goalsRes.data ?? []) as any[];
       const decisions = (decisionsRes.data ?? []) as any[];
