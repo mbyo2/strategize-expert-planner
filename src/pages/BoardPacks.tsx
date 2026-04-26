@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { FileText, Plus, Loader2, Globe, Lock, Trash2, ExternalLink, Copy } from 'lucide-react';
+import { FileText, Plus, Loader2, Globe, Lock, Trash2, ExternalLink, Copy, Download, FileJson } from 'lucide-react';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
+import { exportBoardPackCSV, exportBoardPackJSON } from '@/utils/boardPackExport';
 import { toast } from 'sonner';
 
 const BoardPacks = () => {
@@ -92,6 +93,12 @@ const BoardPacks = () => {
                   </div>
                   {p.notes && <p className="text-sm text-muted-foreground">{p.notes}</p>}
                   <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" onClick={() => { exportBoardPackCSV(p); toast.success('CSV downloaded'); }}>
+                      <Download className="w-3 h-3 mr-1" /> CSV
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => { exportBoardPackJSON(p); toast.success('JSON downloaded'); }}>
+                      <FileJson className="w-3 h-3 mr-1" /> JSON
+                    </Button>
                     {p.status === 'published' && p.share_slug ? (
                       <>
                         <Button size="sm" variant="outline" onClick={() => copyLink(p.share_slug)}>
