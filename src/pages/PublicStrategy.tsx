@@ -57,17 +57,36 @@ const PublicStrategy = () => {
   const snapshot = (pack as any).snapshot ?? {};
   const goals: any[] = snapshot.goals ?? [];
   const decisions: any[] = snapshot.decisions ?? [];
+  const initiatives: any[] = snapshot.initiatives ?? [];
   const kpis = snapshot.kpis ?? {};
   const org = snapshot.organization ?? null;
 
   const orgName = org?.name ?? 'Strategy snapshot';
+  const description = `${pack.title} · ${pack.period_label ?? ''} · Published strategy snapshot from ${orgName}`;
+  const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Report',
+    name: pack.title,
+    datePublished: pack.published_at,
+    publisher: org ? { '@type': 'Organization', name: orgName, url: org.website, logo: org.logo_url } : undefined,
+    about: orgName,
+    url: pageUrl,
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>{pack.title} — {orgName}</title>
-        <meta name="description" content={`${pack.title} · ${pack.period_label ?? ''} · Published strategy snapshot from ${orgName}`} />
-        <link rel="canonical" href={typeof window !== 'undefined' ? window.location.href : ''} />
+        <title>{`${pack.title} — ${orgName}`}</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={pageUrl} />
+        <meta property="og:title" content={`${pack.title} — ${orgName}`} />
+        <meta property="og:description" content={description} />
+        <meta property="og:type" content="article" />
+        {org?.logo_url && <meta property="og:image" content={org.logo_url} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 
       {/* Hero */}
