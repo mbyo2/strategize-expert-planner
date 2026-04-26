@@ -255,6 +255,28 @@ const PublicStrategy = () => {
           )}
         </section>
 
+        {/* Initiatives */}
+        {initiatives.length > 0 && (
+          <section>
+            <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+              <Zap className="w-5 h-5 text-primary" /> Active initiatives
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {initiatives.slice(0, 8).map((i: any) => (
+                <Card key={i.id}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-base">{i.title ?? i.name}</CardTitle>
+                      {i.status && <Badge variant="outline" className="capitalize">{i.status}</Badge>}
+                    </div>
+                    {i.description && <CardDescription className="line-clamp-2">{i.description}</CardDescription>}
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
+
         <footer className="border-t pt-6 text-xs text-muted-foreground flex items-center justify-between flex-wrap gap-2">
           <span>
             Snapshot generated {snapshot.generated_at ? new Date(snapshot.generated_at).toLocaleString() : ''}
