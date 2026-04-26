@@ -49,7 +49,7 @@ const DecisionCard: React.FC<Props> = ({ decision }) => {
             </div>
             {decision.context && <CardDescription className="mt-1">{decision.context}</CardDescription>}
           </div>
-          <Button variant="ghost" size="icon" onClick={() => remove.mutate(decision.id)}>
+          <Button variant="ghost" size="icon" aria-label="Delete decision" onClick={() => setConfirmDelete(true)}>
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
