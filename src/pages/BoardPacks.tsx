@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { FileText, Plus, Loader2, Globe, Lock, Trash2, ExternalLink, Copy, Download, FileJson } from 'lucide-react';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
-import { exportBoardPackCSV, exportBoardPackJSON } from '@/utils/boardPackExport';
+import { exportBoardPackCSV, exportBoardPackJSON, exportBoardPackFlatCSV } from '@/utils/boardPackExport';
 import { toast } from 'sonner';
 
 const BoardPacks = () => {
@@ -95,6 +95,9 @@ const BoardPacks = () => {
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" variant="outline" onClick={() => { exportBoardPackCSV(p); toast.success('CSV downloaded'); }}>
                       <Download className="w-3 h-3 mr-1" /> CSV
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => { exportBoardPackFlatCSV(p); toast.success('Flat CSV downloaded'); }}>
+                      <Download className="w-3 h-3 mr-1" /> CSV (Excel)
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => { exportBoardPackJSON(p); toast.success('JSON downloaded'); }}>
                       <FileJson className="w-3 h-3 mr-1" /> JSON

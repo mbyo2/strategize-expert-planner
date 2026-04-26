@@ -79,3 +79,95 @@ export const exportBoardPackCSV = (pack: any) => {
   const blob = new Blob([combined], { type: 'text/csv;charset=utf-8;' });
   saveAs(blob, `${base}-${date}.csv`);
 };
+
+/**
+ * Excel-friendly flat CSV: one row per item across all entity kinds, with a
+ * single consistent column schema. Each row represents exactly one KPI, goal,
+ * decision, or ERP binding. Empty cells are used where a field doesn't apply.
+ */
+export const exportBoardPackFlatCSV = (pack: any) => {
+  const snap = pack.snapshot ?? {};
+  const date = new Date(pack.created_at).toISOString().split('T')[0];
+  const base = safeName(pack.title);
+  const generatedAt = snap.generated_at ?? pack.created_at;
+
+  type Row = {
+    pack_title: string;
+    period: string;
+    generated_at: string;
+    entity_type: 'kpi' | 'goal' | 'decision' | 'binding';
+    entity_id: string;
+    name: string;
+    status: string;
+    metric: string;
+    current_value: string | number;
+    target_value: string | number;
+    progress: string | number;
+    risk_level: string;
+    decision_type: string;
+    chosen_option: string;
+    options_count: string | number;
+    signoffs_count: string | number;
+    erp_module: string;
+    goal_id: string;
+    last_synced_at: string;
+    start_date: string;
+    due_date: string;
+    decided_at: string;
+    created_at: string;
+  };
+
+  const blank: Omit<Row, 'pack_title' | 'period' | 'generated_at' | 'entity_type'> = {
+    entity_id: '', name: '', status: '', metric: '',
+    current_value: '', target_value: '', progress: '', risk_level: '',
+    decision_type: '', chosen_option: '', options_count: '', signoffs_count: '',
+    erp_module: '', goal_id: '', last_synced_at: '',
+    start_date: '', due_date: '', decided_at: '', created_at: '',
+  };
+
+  const meta = {
+    pack_title: pack.title,
+    period: pack.period_label ?? '',
+    generated_at: generatedAt,
+  };
+
+  const rows: Row[] = [];
+
+  Object.entries(snap.kpis ?? {}).forEach(([k, v]) => {
+    rows.push({ ...meta, entity_type: 'kpi', ...blank, entity_id: k, name: k, metric: k, current_value: v as any });
+  });
+
+  (snap.goals ?? []).forEach((g: any) => {
+    rows.push({
+      ...meta, entity_type: 'goal', ...blank,
+      entity_id: g.id ?? '', name: g.name ?? '', status: g.status ?? '',
+      current_value: g.current_value ?? '', target_value: g.target_value ?? '',
+      progress: g.progress ?? '', risk_level: g.risk_level ?? '',
+      start_date: g.start_date ?? '', due_date: g.due_date ?? '',
+    });
+  });
+
+  (snap.decisions ?? []).forEach((d: any) => {
+    rows.push({
+      ...meta, entity_type: 'decision', ...blank,
+      entity_id: d.id ?? '', name: d.title ?? '', status: d.status ?? '',
+      decision_type: d.decision_type ?? '', chosen_option: d.chosen_option_id ?? '',
+      options_count: d.options?.length ?? 0, signoffs_count: d.signoffs?.length ?? 0,
+      created_at: d.created_at ?? '', decided_at: d.decided_at ?? '',
+    });
+  });
+
+  (snap.bindings ?? []).forEach((b: any) => {
+    rows.push({
+      ...meta, entity_type: 'binding', ...blank,
+      entity_id: b.id ?? '', name: b.erp_metric ?? '', metric: b.erp_metric ?? '',
+      current_value: b.current_value ?? '', target_value: b.target_value ?? '',
+      erp_module: b.erp_module ?? '', goal_id: b.goal_id ?? '',
+      last_synced_at: b.last_synced_at ?? '',
+    });
+  });
+
+  const csv = toCsv(rows as unknown as Record<string, any>[]);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  saveAs(blob, `${base}-${date}-flat.csv`);
+};
