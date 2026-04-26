@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { FileText, Plus, Loader2, Globe, Lock, Trash2, ExternalLink, Copy, Download, FileJson } from 'lucide-react';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
-import { exportBoardPackCSV, exportBoardPackJSON } from '@/utils/boardPackExport';
+import { exportBoardPackCSV, exportBoardPackJSON, exportBoardPackFlatCSV } from '@/utils/boardPackExport';
 import { toast } from 'sonner';
 
 const BoardPacks = () => {
