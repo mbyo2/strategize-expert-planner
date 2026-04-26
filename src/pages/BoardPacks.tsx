@@ -48,6 +48,7 @@ const BoardPacks = () => {
         </Button>
       }
     >
+      <SEO title="Board Packs · Strategic" description="Frozen, signed snapshots of strategy with live KPIs, decisions and ERP bindings." />
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
