@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Target, Plus, Calendar, Loader2, Trash2, Edit, Link2, Gavel, Zap } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
+import SEO from '@/components/SEO';
 import GoalFormDialog from '@/components/GoalFormDialog';
 import GoalDetailDialog from '@/components/goals/GoalDetailDialog';
 import { useStrategicGoals } from '@/hooks/useStrategicGoals';
