@@ -142,6 +142,7 @@ export const useBoardPacks = () => {
         industry_metrics: metrics,
       };
 
+      report(8);
       const { data, error } = await supabase
         .from('board_packs' as any)
         .insert({
