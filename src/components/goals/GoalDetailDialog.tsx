@@ -342,13 +342,28 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
               initiatives, reviews and industry metrics are also captured.
             </p>
 
-            {(generate.isPending || currentPhase) && phases.length > 0 && (
-              <Card className="border-primary/40 bg-primary/5">
+            {(generate.isPending || currentPhase || genError) && phases.length > 0 && (
+              <Card
+                className={
+                  genError
+                    ? 'border-destructive/50 bg-destructive/5'
+                    : 'border-primary/40 bg-primary/5'
+                }
+              >
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-medium flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                      Generating board pack…
+                      {genError ? (
+                        <>
+                          <AlertCircle className="w-4 h-4 text-destructive" />
+                          <span className="text-destructive">Generation failed</span>
+                        </>
+                      ) : (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                          Generating board pack…
+                        </>
+                      )}
                     </div>
                     <span className="text-xs text-muted-foreground tabular-nums">
                       {currentPhase?.index ?? 0} / {currentPhase?.total ?? phases.length}
@@ -366,20 +381,26 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
                     {phases.map((p, i) => {
                       const stepNum = i + 1;
                       const activeIdx = currentPhase?.index ?? 0;
-                      const done = stepNum < activeIdx || !generate.isPending;
+                      const failedIdx = genError?.phase?.index ?? 0;
+                      const isFailed = !!genError && stepNum === failedIdx;
+                      const done = !genError && (stepNum < activeIdx || (!generate.isPending && !genError));
                       const active = generate.isPending && stepNum === activeIdx;
                       return (
                         <li
                           key={p.key}
                           className={`flex items-center gap-2 text-xs ${
-                            done
+                            isFailed
+                              ? 'text-destructive font-medium'
+                              : done
                               ? 'text-muted-foreground'
                               : active
                               ? 'text-foreground font-medium'
                               : 'text-muted-foreground/60'
                           }`}
                         >
-                          {active ? (
+                          {isFailed ? (
+                            <XCircle className="w-3.5 h-3.5 text-destructive" />
+                          ) : active ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
                           ) : done ? (
                             <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
@@ -391,6 +412,14 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
                       );
                     })}
                   </ul>
+                  {genError && (
+                    <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+                      <div className="font-medium mb-0.5">
+                        Failed at: {genError.phase?.label ?? 'Unknown phase'}
+                      </div>
+                      <div className="text-destructive/80 break-words">{genError.message}</div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -399,18 +428,23 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setPreviewOpen(false)}
+              onClick={() => {
+                setGenError(null);
+                setPreviewOpen(false);
+              }}
               disabled={generate.isPending}
             >
-              Cancel
+              {genError ? 'Close' : 'Cancel'}
             </Button>
             <Button
               disabled={generate.isPending}
               aria-busy={generate.isPending}
               aria-live="polite"
+              variant={genError ? 'destructive' : 'default'}
               onClick={() => {
                 setPhases([]);
                 setCurrentPhase(null);
+                setGenError(null);
                 generate.mutate(
                   {
                     title: `${goal.name} — Board Pack`,
@@ -434,6 +468,14 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
                       onOpenChange(false);
                       navigate('/board-packs');
                     },
+                    onError: (err: any) => {
+                      setGenError({
+                        message: err?.message ?? 'Unknown error during generation',
+                        phase: currentPhase
+                          ? { index: currentPhase.index, label: currentPhase.label }
+                          : null,
+                      });
+                    },
                   }
                 );
               }}
@@ -442,6 +484,11 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
                 <>
                   <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
                   Generating…
+                </>
+              ) : genError ? (
+                <>
+                  <AlertCircle className="w-4 h-4 mr-1.5" />
+                  Retry generation
                 </>
               ) : (
                 <>
