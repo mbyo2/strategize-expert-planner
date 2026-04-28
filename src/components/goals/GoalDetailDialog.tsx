@@ -341,7 +341,7 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
               initiatives, reviews and industry metrics are also captured.
             </p>
 
-            {generate.isPending && (
+            {(generate.isPending || currentPhase) && phases.length > 0 && (
               <Card className="border-primary/40 bg-primary/5">
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
@@ -350,21 +350,26 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
                       Generating board pack…
                     </div>
                     <span className="text-xs text-muted-foreground tabular-nums">
-                      {Math.min(genStep, GEN_STEPS.length)} / {GEN_STEPS.length}
+                      {currentPhase?.index ?? 0} / {currentPhase?.total ?? phases.length}
                     </span>
                   </div>
                   <Progress
-                    value={(Math.min(genStep, GEN_STEPS.length) / GEN_STEPS.length) * 100}
+                    value={
+                      currentPhase
+                        ? (currentPhase.index / currentPhase.total) * 100
+                        : 0
+                    }
                     className="h-1.5"
                   />
                   <ul className="space-y-1.5" aria-live="polite">
-                    {GEN_STEPS.map((label, i) => {
+                    {phases.map((p, i) => {
                       const stepNum = i + 1;
-                      const done = stepNum < genStep;
-                      const active = stepNum === genStep;
+                      const activeIdx = currentPhase?.index ?? 0;
+                      const done = stepNum < activeIdx || !generate.isPending;
+                      const active = generate.isPending && stepNum === activeIdx;
                       return (
                         <li
-                          key={label}
+                          key={p.key}
                           className={`flex items-center gap-2 text-xs ${
                             done
                               ? 'text-muted-foreground'
@@ -373,14 +378,14 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
                               : 'text-muted-foreground/60'
                           }`}
                         >
-                          {done ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
-                          ) : active ? (
+                          {active ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                          ) : done ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
                           ) : (
                             <Circle className="w-3.5 h-3.5" />
                           )}
-                          <span>{label}</span>
+                          <span>{p.label}</span>
                         </li>
                       );
                     })}
