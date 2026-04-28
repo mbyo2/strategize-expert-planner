@@ -28,28 +28,18 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
   const navigate = useNavigate();
   const [newDecisionOpen, setNewDecisionOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [genStep, setGenStep] = useState(0);
-
-  const GEN_STEPS = [
-    'Collecting strategic goals',
-    'Logging decisions & sign-offs',
-    'Reading ERP bindings',
-    'Capturing initiatives & reviews',
-    'Snapshotting industry metrics',
-    'Computing KPI rollups',
-    'Freezing immutable snapshot',
-  ];
+  const [phases, setPhases] = useState<Array<{ key: string; label: string }>>([]);
+  const [currentPhase, setCurrentPhase] = useState<{ index: number; total: number; label: string } | null>(null);
 
   useEffect(() => {
     if (!generate.isPending) {
-      setGenStep(0);
-      return;
+      // reset shortly after completion so progress visibly hits 100%
+      const t = setTimeout(() => {
+        setCurrentPhase(null);
+        setPhases([]);
+      }, 600);
+      return () => clearTimeout(t);
     }
-    setGenStep(1);
-    const id = setInterval(() => {
-      setGenStep((s) => (s < GEN_STEPS.length ? s + 1 : s));
-    }, 450);
-    return () => clearInterval(id);
   }, [generate.isPending]);
 
   if (!goal) return null;
@@ -351,7 +341,7 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
               initiatives, reviews and industry metrics are also captured.
             </p>
 
-            {generate.isPending && (
+            {(generate.isPending || currentPhase) && phases.length > 0 && (
               <Card className="border-primary/40 bg-primary/5">
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
@@ -360,21 +350,26 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
                       Generating board pack…
                     </div>
                     <span className="text-xs text-muted-foreground tabular-nums">
-                      {Math.min(genStep, GEN_STEPS.length)} / {GEN_STEPS.length}
+                      {currentPhase?.index ?? 0} / {currentPhase?.total ?? phases.length}
                     </span>
                   </div>
                   <Progress
-                    value={(Math.min(genStep, GEN_STEPS.length) / GEN_STEPS.length) * 100}
+                    value={
+                      currentPhase
+                        ? (currentPhase.index / currentPhase.total) * 100
+                        : 0
+                    }
                     className="h-1.5"
                   />
                   <ul className="space-y-1.5" aria-live="polite">
-                    {GEN_STEPS.map((label, i) => {
+                    {phases.map((p, i) => {
                       const stepNum = i + 1;
-                      const done = stepNum < genStep;
-                      const active = stepNum === genStep;
+                      const activeIdx = currentPhase?.index ?? 0;
+                      const done = stepNum < activeIdx || !generate.isPending;
+                      const active = generate.isPending && stepNum === activeIdx;
                       return (
                         <li
-                          key={label}
+                          key={p.key}
                           className={`flex items-center gap-2 text-xs ${
                             done
                               ? 'text-muted-foreground'
@@ -383,14 +378,14 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
                               : 'text-muted-foreground/60'
                           }`}
                         >
-                          {done ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
-                          ) : active ? (
+                          {active ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                          ) : done ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
                           ) : (
                             <Circle className="w-3.5 h-3.5" />
                           )}
-                          <span>{label}</span>
+                          <span>{p.label}</span>
                         </li>
                       );
                     })}
@@ -412,7 +407,9 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
               disabled={generate.isPending}
               aria-busy={generate.isPending}
               aria-live="polite"
-              onClick={() =>
+              onClick={() => {
+                setPhases([]);
+                setCurrentPhase(null);
                 generate.mutate(
                   {
                     title: `${goal.name} — Board Pack`,
@@ -421,6 +418,14 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
                       year: 'numeric',
                     }),
                     notes: `Generated from goal: ${goal.name}`,
+                    onPhase: (p) => {
+                      setPhases((prev) =>
+                        prev.some((x) => x.key === p.key)
+                          ? prev
+                          : [...prev, { key: p.key, label: p.label }]
+                      );
+                      setCurrentPhase({ index: p.index, total: p.total, label: p.label });
+                    },
                   },
                   {
                     onSuccess: () => {
@@ -429,8 +434,8 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
                       navigate('/board-packs');
                     },
                   }
-                )
-              }
+                );
+              }}
             >
               {generate.isPending ? (
                 <>
