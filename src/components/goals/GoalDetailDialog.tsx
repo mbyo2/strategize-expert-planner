@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Link2, Gavel, Activity, Plus, ExternalLink, FileText, Eye } from 'lucide-react';
+import { Link2, Gavel, Activity, Plus, ExternalLink, FileText, Eye, Loader2 } from 'lucide-react';
 import { DialogFooter } from '@/components/ui/dialog';
 import StrategyErpBindingPanel from '@/components/strategy/StrategyErpBindingPanel';
 import { useDecisionLog } from '@/hooks/useDecisionLog';
@@ -329,11 +329,17 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setPreviewOpen(false)}
+              disabled={generate.isPending}
+            >
               Cancel
             </Button>
             <Button
               disabled={generate.isPending}
+              aria-busy={generate.isPending}
+              aria-live="polite"
               onClick={() =>
                 generate.mutate(
                   {
@@ -354,8 +360,17 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
                 )
               }
             >
-              <FileText className="w-4 h-4 mr-1.5" />
-              {generate.isPending ? 'Generating…' : 'Confirm & generate'}
+              {generate.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                  Generating…
+                </>
+              ) : (
+                <>
+                  <FileText className="w-4 h-4 mr-1.5" />
+                  Confirm & generate
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
