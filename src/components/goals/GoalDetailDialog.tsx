@@ -407,7 +407,9 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
               disabled={generate.isPending}
               aria-busy={generate.isPending}
               aria-live="polite"
-              onClick={() =>
+              onClick={() => {
+                setPhases([]);
+                setCurrentPhase(null);
                 generate.mutate(
                   {
                     title: `${goal.name} — Board Pack`,
@@ -416,6 +418,14 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
                       year: 'numeric',
                     }),
                     notes: `Generated from goal: ${goal.name}`,
+                    onPhase: (p) => {
+                      setPhases((prev) =>
+                        prev.some((x) => x.key === p.key)
+                          ? prev
+                          : [...prev, { key: p.key, label: p.label }]
+                      );
+                      setCurrentPhase({ index: p.index, total: p.total, label: p.label });
+                    },
                   },
                   {
                     onSuccess: () => {
@@ -424,8 +434,8 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
                       navigate('/board-packs');
                     },
                   }
-                )
-              }
+                );
+              }}
             >
               {generate.isPending ? (
                 <>
