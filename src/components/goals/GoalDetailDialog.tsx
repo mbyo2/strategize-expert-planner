@@ -26,6 +26,7 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
   const { generate } = useBoardPacks();
   const navigate = useNavigate();
   const [newDecisionOpen, setNewDecisionOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   if (!goal) return null;
 
