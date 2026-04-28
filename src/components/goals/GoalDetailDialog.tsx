@@ -30,17 +30,18 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [phases, setPhases] = useState<Array<{ key: string; label: string }>>([]);
   const [currentPhase, setCurrentPhase] = useState<{ index: number; total: number; label: string } | null>(null);
+  const [genError, setGenError] = useState<{ message: string; phase: { index: number; label: string } | null } | null>(null);
 
   useEffect(() => {
-    if (!generate.isPending) {
-      // reset shortly after completion so progress visibly hits 100%
+    if (!generate.isPending && !genError) {
+      // reset shortly after success so progress visibly hits 100%
       const t = setTimeout(() => {
         setCurrentPhase(null);
         setPhases([]);
       }, 600);
       return () => clearTimeout(t);
     }
-  }, [generate.isPending]);
+  }, [generate.isPending, genError]);
 
   if (!goal) return null;
 
