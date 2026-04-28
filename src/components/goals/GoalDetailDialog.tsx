@@ -28,28 +28,18 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
   const navigate = useNavigate();
   const [newDecisionOpen, setNewDecisionOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [genStep, setGenStep] = useState(0);
-
-  const GEN_STEPS = [
-    'Collecting strategic goals',
-    'Logging decisions & sign-offs',
-    'Reading ERP bindings',
-    'Capturing initiatives & reviews',
-    'Snapshotting industry metrics',
-    'Computing KPI rollups',
-    'Freezing immutable snapshot',
-  ];
+  const [phases, setPhases] = useState<Array<{ key: string; label: string }>>([]);
+  const [currentPhase, setCurrentPhase] = useState<{ index: number; total: number; label: string } | null>(null);
 
   useEffect(() => {
     if (!generate.isPending) {
-      setGenStep(0);
-      return;
+      // reset shortly after completion so progress visibly hits 100%
+      const t = setTimeout(() => {
+        setCurrentPhase(null);
+        setPhases([]);
+      }, 600);
+      return () => clearTimeout(t);
     }
-    setGenStep(1);
-    const id = setInterval(() => {
-      setGenStep((s) => (s < GEN_STEPS.length ? s + 1 : s));
-    }, 450);
-    return () => clearInterval(id);
   }, [generate.isPending]);
 
   if (!goal) return null;
