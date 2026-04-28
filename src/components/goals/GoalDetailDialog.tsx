@@ -250,6 +250,116 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
           defaultGoalId={goal.id}
         />
       </DialogContent>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" /> Board pack preview
+            </DialogTitle>
+            <DialogDescription>
+              Review the live KPIs that will be frozen into this snapshot for{' '}
+              <span className="font-medium text-foreground">{goal.name}</span>.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <Card>
+                <CardContent className="p-3">
+                  <div className="text-xs text-muted-foreground">Progress</div>
+                  <div className="text-xl font-bold">{goal.progress ?? 0}%</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-3">
+                  <div className="text-xs text-muted-foreground">ERP bindings</div>
+                  <div className="text-xl font-bold">{bindings.length}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {bindings.filter((b: any) => b.last_synced_at).length} synced
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-3">
+                  <div className="text-xs text-muted-foreground">Decisions</div>
+                  <div className="text-xl font-bold">{linkedDecisions.length}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {linkedDecisions.filter((d) => d.status === 'decided').length} finalized
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-3">
+                  <div className="text-xs text-muted-foreground">Risk</div>
+                  <div className="text-xl font-bold capitalize">{goal.risk_level ?? '—'}</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardContent className="p-4 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Title</span>
+                  <span className="font-medium">{goal.name} — Board Pack</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Period</span>
+                  <span className="font-medium">
+                    {new Date().toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Current value → Target</span>
+                  <span className="font-medium">
+                    {goal.current_value ?? '—'} → {goal.target_value ?? '—'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Status</span>
+                  <Badge variant="outline" className="capitalize">{goal.status}</Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            <p className="text-xs text-muted-foreground">
+              Generating will create an immutable snapshot. Org-wide goals, decisions, ERP bindings,
+              initiatives, reviews and industry metrics are also captured.
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={generate.isPending}
+              onClick={() =>
+                generate.mutate(
+                  {
+                    title: `${goal.name} — Board Pack`,
+                    periodLabel: new Date().toLocaleDateString(undefined, {
+                      month: 'short',
+                      year: 'numeric',
+                    }),
+                    notes: `Generated from goal: ${goal.name}`,
+                  },
+                  {
+                    onSuccess: () => {
+                      setPreviewOpen(false);
+                      onOpenChange(false);
+                      navigate('/board-packs');
+                    },
+                  }
+                )
+              }
+            >
+              <FileText className="w-4 h-4 mr-1.5" />
+              {generate.isPending ? 'Generating…' : 'Confirm & generate'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
