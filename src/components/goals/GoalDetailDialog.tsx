@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle2, Circle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,6 +28,29 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
   const navigate = useNavigate();
   const [newDecisionOpen, setNewDecisionOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [genStep, setGenStep] = useState(0);
+
+  const GEN_STEPS = [
+    'Collecting strategic goals',
+    'Logging decisions & sign-offs',
+    'Reading ERP bindings',
+    'Capturing initiatives & reviews',
+    'Snapshotting industry metrics',
+    'Computing KPI rollups',
+    'Freezing immutable snapshot',
+  ];
+
+  useEffect(() => {
+    if (!generate.isPending) {
+      setGenStep(0);
+      return;
+    }
+    setGenStep(1);
+    const id = setInterval(() => {
+      setGenStep((s) => (s < GEN_STEPS.length ? s + 1 : s));
+    }, 450);
+    return () => clearInterval(id);
+  }, [generate.isPending]);
 
   if (!goal) return null;
 
@@ -326,6 +350,54 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
               Generating will create an immutable snapshot. Org-wide goals, decisions, ERP bindings,
               initiatives, reviews and industry metrics are also captured.
             </p>
+
+            {generate.isPending && (
+              <Card className="border-primary/40 bg-primary/5">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-medium flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      Generating board pack…
+                    </div>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {Math.min(genStep, GEN_STEPS.length)} / {GEN_STEPS.length}
+                    </span>
+                  </div>
+                  <Progress
+                    value={(Math.min(genStep, GEN_STEPS.length) / GEN_STEPS.length) * 100}
+                    className="h-1.5"
+                  />
+                  <ul className="space-y-1.5" aria-live="polite">
+                    {GEN_STEPS.map((label, i) => {
+                      const stepNum = i + 1;
+                      const done = stepNum < genStep;
+                      const active = stepNum === genStep;
+                      return (
+                        <li
+                          key={label}
+                          className={`flex items-center gap-2 text-xs ${
+                            done
+                              ? 'text-muted-foreground'
+                              : active
+                              ? 'text-foreground font-medium'
+                              : 'text-muted-foreground/60'
+                          }`}
+                        >
+                          {done ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                          ) : active ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                          ) : (
+                            <Circle className="w-3.5 h-3.5" />
+                          )}
+                          <span>{label}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           <DialogFooter>
