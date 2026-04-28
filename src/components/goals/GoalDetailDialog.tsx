@@ -67,28 +67,10 @@ const GoalDetailDialog: React.FC<Props> = ({ open, onOpenChange, goal }) => {
           <Button
             size="sm"
             variant="outline"
-            disabled={generate.isPending}
-            onClick={() =>
-              generate.mutate(
-                {
-                  title: `${goal.name} — Board Pack`,
-                  periodLabel: new Date().toLocaleDateString(undefined, {
-                    month: 'short',
-                    year: 'numeric',
-                  }),
-                  notes: `Generated from goal: ${goal.name}`,
-                },
-                {
-                  onSuccess: () => {
-                    onOpenChange(false);
-                    navigate('/board-packs');
-                  },
-                }
-              )
-            }
+            onClick={() => setPreviewOpen(true)}
           >
-            <FileText className="w-3.5 h-3.5 mr-1.5" />
-            {generate.isPending ? 'Creating…' : 'Create board pack'}
+            <Eye className="w-3.5 h-3.5 mr-1.5" />
+            Preview board pack
           </Button>
           <Button
             size="sm"
