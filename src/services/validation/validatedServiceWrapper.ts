@@ -92,11 +92,13 @@ export const erpEntitySchemas = {
     ),
     organization_id: baseSchemas.uuid,
     module_key: z.string().min(1).max(100),
+    created_by: baseSchemas.uuid,
   }),
   update: z.object({
     entity_data: z.record(z.any()).optional(),
     metadata: z.record(z.any()).optional(),
     status: z.string().optional(),
+    updated_by: baseSchemas.uuid.optional(),
   }),
 };
 
