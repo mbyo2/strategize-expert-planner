@@ -37,6 +37,11 @@ export const navItems: NavItem[] = [
     icon: Target,
   },
   {
+    title: "Strategy",
+    url: "/strategy",
+    icon: TrendingUp,
+  },
+  {
     title: "Planning",
     url: "/planning",
     icon: Calendar,

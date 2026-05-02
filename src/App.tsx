@@ -41,6 +41,7 @@ import Support from '@/pages/Support';
 import ERP from '@/pages/ERP';
 import Decisions from '@/pages/Decisions';
 import BoardPacks from '@/pages/BoardPacks';
+import Strategy from '@/pages/Strategy';
 import PublicStrategy from '@/pages/PublicStrategy';
 import TestSetup from '@/pages/TestSetup';
 
@@ -68,6 +69,7 @@ function App() {
                 {/* Protected routes with sidebar layout */}
                 <Route element={<SimpleAuthGuard><AppLayout /></SimpleAuthGuard>}>
                   <Route path="/" element={<Dashboard />} />
+                  <Route path="/strategy" element={<Strategy />} />
                   <Route path="/goals" element={<Goals />} />
                   <Route path="/planning" element={<Planning />} />
                   <Route path="/teams" element={<Teams />} />

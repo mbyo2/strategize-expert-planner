@@ -1229,6 +1229,7 @@ export type Database = {
           stakeholders: Json | null
           start_date: string | null
           status: string
+          strategy_plan_id: string | null
           success_metrics: Json | null
           updated_at: string
         }
@@ -1248,6 +1249,7 @@ export type Database = {
           stakeholders?: Json | null
           start_date?: string | null
           status?: string
+          strategy_plan_id?: string | null
           success_metrics?: Json | null
           updated_at?: string
         }
@@ -1267,6 +1269,7 @@ export type Database = {
           stakeholders?: Json | null
           start_date?: string | null
           status?: string
+          strategy_plan_id?: string | null
           success_metrics?: Json | null
           updated_at?: string
         }
@@ -1593,6 +1596,7 @@ export type Database = {
           risk_level: string | null
           start_date: string | null
           status: string
+          strategy_plan_id: string | null
           target_value: number | null
           updated_at: string
           user_id: string
@@ -1613,6 +1617,7 @@ export type Database = {
           risk_level?: string | null
           start_date?: string | null
           status?: string
+          strategy_plan_id?: string | null
           target_value?: number | null
           updated_at?: string
           user_id: string
@@ -1633,6 +1638,7 @@ export type Database = {
           risk_level?: string | null
           start_date?: string | null
           status?: string
+          strategy_plan_id?: string | null
           target_value?: number | null
           updated_at?: string
           user_id?: string
@@ -1731,6 +1737,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      strategy_plans: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string | null
+          id: string
+          name: string
+          organization_id: string
+          owner_id: string | null
+          start_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          owner_id?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          owner_id?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      strategy_progress_logs: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          note: string | null
+          organization_id: string
+          progress: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          note?: string | null
+          organization_id: string
+          progress: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          note?: string | null
+          organization_id?: string
+          progress?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       strategy_reviews: {
         Row: {
