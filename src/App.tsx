@@ -69,6 +69,7 @@ function App() {
                 {/* Protected routes with sidebar layout */}
                 <Route element={<SimpleAuthGuard><AppLayout /></SimpleAuthGuard>}>
                   <Route path="/" element={<Dashboard />} />
+                  <Route path="/strategy" element={<Strategy />} />
                   <Route path="/goals" element={<Goals />} />
                   <Route path="/planning" element={<Planning />} />
                   <Route path="/teams" element={<Teams />} />
