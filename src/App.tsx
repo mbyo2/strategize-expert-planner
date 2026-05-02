@@ -41,6 +41,7 @@ import Support from '@/pages/Support';
 import ERP from '@/pages/ERP';
 import Decisions from '@/pages/Decisions';
 import BoardPacks from '@/pages/BoardPacks';
+import Strategy from '@/pages/Strategy';
 import PublicStrategy from '@/pages/PublicStrategy';
 import TestSetup from '@/pages/TestSetup';
 
