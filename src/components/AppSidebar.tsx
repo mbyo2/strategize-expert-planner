@@ -21,7 +21,7 @@ import {
 const navGroups = [
   {
     label: 'Overview',
-    items: ['Dashboard', 'Strategic Goals', 'Planning'],
+    items: ['Dashboard', 'Strategic Goals', 'Strategy', 'Planning'],
   },
   {
     label: 'Strategy OS',
