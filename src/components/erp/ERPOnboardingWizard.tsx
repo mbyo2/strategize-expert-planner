@@ -109,12 +109,17 @@ const ERPOnboardingWizard: React.FC<ERPOnboardingWizardProps> = ({ organizationI
     activateModules(allModules, {
       onSuccess: async () => {
         if (selectedIndustries.length > 0) {
-          updateConfig({
-            module_settings: {
-              industry: selectedIndustries[0],
-              industries: selectedIndustries,
-            },
-          } as any);
+          await new Promise<void>((resolve) => {
+            updateConfig(
+              {
+                module_settings: {
+                  industry: selectedIndustries[0],
+                  industries: selectedIndustries,
+                },
+              } as any,
+              { onSuccess: () => resolve(), onError: () => resolve() } as any
+            );
+          });
           const seedable = selectedIndustries.filter(k => INDUSTRY_TEMPLATES[k as IndustryKey]);
           if (seedable.length > 0) {
             toast.info(`Loading starter templates for ${seedable.length} industr${seedable.length === 1 ? 'y' : 'ies'}…`);
