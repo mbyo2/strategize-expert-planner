@@ -49,7 +49,7 @@ export class ERPService {
       .upsert({
         organization_id: organizationId,
         ...config
-      })
+      }, { onConflict: 'organization_id' })
       .select()
       .single();
 
