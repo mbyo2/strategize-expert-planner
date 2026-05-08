@@ -5,7 +5,8 @@ export interface Invitation {
   email: string;
   role: string;
   organization_id: string;
-  token: string;
+  /** Plain token only present on create/resend responses; never stored in DB. */
+  token?: string;
   token_hash: string;
   expires_at: string;
   accepted_at: string | null;

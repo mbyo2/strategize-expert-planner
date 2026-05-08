@@ -1098,7 +1098,6 @@ export type Database = {
           invited_by: string | null
           organization_id: string
           role: string
-          token: string
           token_hash: string
           updated_at: string | null
         }
@@ -1111,7 +1110,6 @@ export type Database = {
           invited_by?: string | null
           organization_id: string
           role?: string
-          token?: string
           token_hash: string
           updated_at?: string | null
         }
@@ -1124,7 +1122,6 @@ export type Database = {
           invited_by?: string | null
           organization_id?: string
           role?: string
-          token?: string
           token_hash?: string
           updated_at?: string | null
         }
