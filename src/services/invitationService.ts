@@ -5,7 +5,8 @@ export interface Invitation {
   email: string;
   role: string;
   organization_id: string;
-  token: string;
+  /** Plain token only present on create/resend responses; never stored in DB. */
+  token?: string;
   token_hash: string;
   expires_at: string;
   accepted_at: string | null;
@@ -68,7 +69,6 @@ export const InvitationService = {
         organization_id: organizationId,
         email: email.toLowerCase(),
         role,
-        token,
         token_hash: tokenHash,
         expires_at: expiresAt,
         invited_by: user.id,
@@ -77,7 +77,7 @@ export const InvitationService = {
       .single();
 
     if (error) throw error;
-    return data as Invitation;
+    return { ...(data as Invitation), token };
   },
 
   async getPendingInvitations(organizationId: string): Promise<Invitation[]> {
@@ -110,7 +110,6 @@ export const InvitationService = {
     const { data, error } = await supabase
       .from('organization_invitations')
       .update({
-        token,
         token_hash: tokenHash,
         expires_at: expiresAt,
       })
@@ -119,6 +118,6 @@ export const InvitationService = {
       .single();
 
     if (error) throw error;
-    return data as Invitation;
+    return { ...(data as Invitation), token };
   },
 };
