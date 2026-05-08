@@ -12,9 +12,10 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { FileText, Plus, Loader2, Globe, Lock, Trash2, ExternalLink, Copy, Download, FileJson } from 'lucide-react';
+import { FileText, Plus, Loader2, Globe, Lock, Trash2, ExternalLink, Copy, Download, FileJson, FileDown } from 'lucide-react';
 import { useBoardPacks } from '@/hooks/useBoardPacks';
 import { exportBoardPackCSV, exportBoardPackJSON, exportBoardPackFlatCSV } from '@/utils/boardPackExport';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const BoardPacks = () => {
@@ -24,6 +25,26 @@ const BoardPacks = () => {
   const [period, setPeriod] = useState('');
   const [notes, setNotes] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [pdfBusy, setPdfBusy] = useState<string | null>(null);
+
+  const downloadPdf = async (packId: string) => {
+    setPdfBusy(packId);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-board-pack-pdf', {
+        body: { packId },
+      });
+      if (error) throw error;
+      const url = (data as any)?.url;
+      if (!url) throw new Error('No URL returned');
+      window.open(url, '_blank', 'noopener');
+      toast.success('PDF ready');
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || 'Failed to generate PDF');
+    } finally {
+      setPdfBusy(null);
+    }
+  };
 
   const submit = async () => {
     if (!title.trim()) return;
@@ -108,6 +129,10 @@ const BoardPacks = () => {
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => { exportBoardPackJSON(p); toast.success('JSON downloaded'); }}>
                       <FileJson className="w-3 h-3 mr-1" /> JSON
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => downloadPdf(p.id)} disabled={pdfBusy === p.id}>
+                      {pdfBusy === p.id ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <FileDown className="w-3 h-3 mr-1" />}
+                      PDF
                     </Button>
                     {p.status === 'published' && p.share_slug ? (
                       <>
