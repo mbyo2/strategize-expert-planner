@@ -316,10 +316,16 @@ export class UserManagementService {
   }
 
   static async acceptOrganizationInvitation(token: string) {
+    const encoder = new TextEncoder();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(token));
+    const tokenHash = Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
     const { data, error } = await supabase
       .from('organization_invitations')
       .update({ accepted_at: new Date().toISOString() })
-      .eq('token', token)
+      .eq('token_hash', tokenHash)
       .is('accepted_at', null)
       .gt('expires_at', new Date().toISOString())
       .select()
