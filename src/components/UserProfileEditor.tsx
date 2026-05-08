@@ -10,9 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Mail, Building, Globe, Clock, Bell } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import AvatarUpload from '@/components/AvatarUpload';
 import { toast } from 'sonner';
 
 const profileSchema = z.object({
@@ -60,13 +60,14 @@ const UserProfileEditor = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
-        <Avatar className="h-20 w-20">
-          <AvatarImage src={session.user?.avatar || ''} />
-          <AvatarFallback>
-            <User className="h-10 w-10" />
-          </AvatarFallback>
-        </Avatar>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        {session.user?.id && (
+          <AvatarUpload
+            userId={session.user.id}
+            currentUrl={session.user?.avatar}
+            fallbackName={session.user?.name}
+          />
+        )}
         <div>
           <h1 className="text-2xl font-bold">{session.user?.name || 'User Profile'}</h1>
           <p className="text-muted-foreground">{session.user?.email}</p>
