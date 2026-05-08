@@ -110,7 +110,6 @@ export const InvitationService = {
     const { data, error } = await supabase
       .from('organization_invitations')
       .update({
-        token,
         token_hash: tokenHash,
         expires_at: expiresAt,
       })
@@ -119,6 +118,6 @@ export const InvitationService = {
       .single();
 
     if (error) throw error;
-    return data as Invitation;
+    return { ...(data as Invitation), token };
   },
 };
