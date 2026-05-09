@@ -153,13 +153,26 @@ interface LegacyMemberData {
 }
 
 async function addTeamMemberLegacy(teamId: string, data: LegacyMemberData): Promise<TeamMember> {
-  // For legacy support, we need to find or create a user
-  // For now, we'll create a placeholder - in production you'd look up the user by email
+  // Look up user by email in profiles. If they don't exist, throw a clear error
+  // (we cannot create auth users client-side; an invitation flow is required).
+  const { data: profile, error: lookupError } = await supabase
+    .from('profiles')
+    .select('id, name, email, avatar')
+    .eq('email', data.email.toLowerCase().trim())
+    .maybeSingle();
+
+  if (lookupError) throw lookupError;
+  if (!profile) {
+    throw new Error(
+      `No registered user found with email ${data.email}. Send them an invitation first.`,
+    );
+  }
+
   const { data: member, error } = await supabase
     .from('team_members')
     .insert({
       team_id: teamId,
-      user_id: crypto.randomUUID(), // This should be a real user ID in production
+      user_id: profile.id,
       role: data.role,
       department: data.department || null,
       position: data.position || null,
@@ -171,9 +184,9 @@ async function addTeamMemberLegacy(teamId: string, data: LegacyMemberData): Prom
   if (error) throw error;
   return {
     ...member,
-    name: data.name,
-    email: data.email,
-    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.email}`,
+    name: profile.name || data.name,
+    email: profile.email || data.email,
+    avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.email}`,
   };
 }
 

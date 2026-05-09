@@ -146,12 +146,14 @@ class AuthService {
 
   private async getUserData(userId: string) {
     try {
-      // In a real app, you would fetch additional user data from a profiles table
-      // For now, we'll return mock data based on user ID patterns
+      const [profileResult, roleResult] = await Promise.all([
+        supabase.from('profiles').select('name, avatar').eq('id', userId).maybeSingle(),
+        supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
+      ]);
       return {
-        name: 'User',
-        role: 'viewer',
-        avatar: undefined
+        name: profileResult.data?.name || 'User',
+        role: roleResult.data?.role || 'viewer',
+        avatar: profileResult.data?.avatar,
       };
     } catch (error) {
       console.error('Error fetching user data:', error);
