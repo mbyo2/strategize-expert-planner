@@ -100,23 +100,54 @@ export const exportToExcel = (data: any[], options: ExportOptions = {}) => {
 };
 
 /**
- * Export data to PDF format
- * Note: In a real application, you would use a library like jspdf or pdfmake
- * This is a placeholder that shows a toast notification
+ * Export data to PDF format using jsPDF (auto-tabular layout).
  */
-export const exportToPDF = (data: any[], options: ExportOptions = {}) => {
-  // Generate filename with optional timestamp
-  const timestamp = options.includeTimestamp ? `_${new Date().toISOString().split('T')[0]}` : '';
-  const fileName = `${options.fileName || 'export'}${timestamp}.pdf`;
-  
-  toast.info('PDF export would require a library like jspdf in a real application');
-  
-  // Show a mock success message
-  setTimeout(() => {
+export const exportToPDF = async (data: any[], options: ExportOptions = {}) => {
+  try {
+    const { jsPDF } = await import('jspdf');
+    const timestamp = options.includeTimestamp ? `_${new Date().toISOString().split('T')[0]}` : '';
+    const fileName = `${options.fileName || 'export'}${timestamp}.pdf`;
+
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    const headers = Object.keys(data[0]);
+    const margin = 32;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const colWidth = (pageWidth - margin * 2) / headers.length;
+    const rowHeight = 18;
+    let y = margin;
+
+    doc.setFontSize(14);
+    doc.text(options.fileName || 'Export', margin, y);
+    y += 24;
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    headers.forEach((h, i) => doc.text(String(h), margin + i * colWidth, y));
+    y += rowHeight;
+    doc.setFont('helvetica', 'normal');
+
+    for (const row of data) {
+      if (y > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+      headers.forEach((h, i) => {
+        const v = row[h];
+        const text = v === null || v === undefined ? '' : String(v);
+        doc.text(text.length > 60 ? text.slice(0, 57) + '…' : text, margin + i * colWidth, y);
+      });
+      y += rowHeight;
+    }
+
+    doc.save(fileName);
     toast.success(`Successfully exported to ${fileName}`);
-  }, 1000);
-  
-  return true;
+    return true;
+  } catch (error) {
+    console.error('Error exporting to PDF:', error);
+    toast.error('Failed to export to PDF');
+    return false;
+  }
 };
 
 /**
