@@ -270,9 +270,9 @@ const ERPPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
-                    {activeModules.map(mod => (
+                    {activeModules.filter(Boolean).map((mod: string) => (
                       <Badge key={mod} variant="secondary" className="px-3 py-1.5 text-sm capitalize">
-                        {mod.replace(/_/g, ' ')}
+                        {String(mod).replace(/_/g, ' ')}
                       </Badge>
                     ))}
                   </div>
