@@ -195,6 +195,66 @@ const LLMConnector: React.FC = () => {
           </Select>
         </div>
 
+        {lastError && (
+          <Alert variant="destructive" className="relative">
+            <AlertTriangle className="h-4 w-4" />
+            <button
+              onClick={() => setLastError(null)}
+              className="absolute right-2 top-2 opacity-70 hover:opacity-100"
+              aria-label="Dismiss"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <AlertTitle>{lastError.title}</AlertTitle>
+            <AlertDescription className="space-y-2 text-sm">
+              {lastError.hint && <p>{lastError.hint}</p>}
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs opacity-80">
+                {lastError.code && <span><strong>Code:</strong> {lastError.code}</span>}
+                {lastError.status && <span><strong>HTTP:</strong> {lastError.status}</span>}
+                {lastError.upstreamStatus && (
+                  <span><strong>Alibaba HTTP:</strong> {lastError.upstreamStatus}</span>
+                )}
+              </div>
+              {lastError.upstreamBody && (
+                <details className="mt-1">
+                  <summary className="cursor-pointer text-xs opacity-80 hover:opacity-100">
+                    Show provider response
+                  </summary>
+                  <pre className="mt-2 whitespace-pre-wrap break-all rounded bg-background/50 p-2 text-[11px] max-h-40 overflow-auto">
+                    {lastError.upstreamBody}
+                  </pre>
+                </details>
+              )}
+              {(lastError.code === 'INVALID_API_KEY' ||
+                lastError.code === 'MISSING_API_KEY' ||
+                lastError.code === 'INVALID_API_KEY_FORMAT') && (
+                <p className="text-xs">
+                  Update the secret in{' '}
+                  <a
+                    className="underline"
+                    href="https://supabase.com/dashboard/project/ublzhmimdynqzqsdicyn/settings/functions"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Edge Function Secrets → DASHSCOPE_API_KEY
+                  </a>
+                  .
+                </p>
+              )}
+              <p className="text-xs">
+                <a
+                  className="underline"
+                  href="https://supabase.com/dashboard/project/ublzhmimdynqzqsdicyn/functions/ai-chat/logs"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View edge function logs →
+                </a>
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="border rounded-lg p-4 min-h-[260px] max-h-[420px] overflow-y-auto space-y-3 bg-muted/30">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center text-center text-muted-foreground py-8">
