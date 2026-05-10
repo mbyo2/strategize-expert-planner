@@ -33,9 +33,17 @@ const LLMConnector: React.FC = () => {
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
+    setLastError(null);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        const msg = 'You must be signed in to use the AI assistant.';
+        setLastError({ title: 'Not signed in', detail: msg, hint: 'Refresh the page and log in again.' });
+        toast.error(msg);
+        setLoading(false);
+        return;
+      }
       const controller = new AbortController();
       abortRef.current = controller;
 
@@ -43,17 +51,43 @@ const LLMConnector: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ messages: [...messages, userMsg], model }),
         signal: controller.signal,
       });
 
       if (!resp.ok || !resp.body) {
-        const err = await resp.json().catch(() => ({ error: 'Request failed' }));
-        if (resp.status === 429) toast.error('Rate limited — try again shortly');
-        else if (resp.status === 401) toast.error('Invalid API key — check DASHSCOPE_API_KEY');
-        else toast.error(err.error || 'AI request failed');
+        const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+        const code = err.code || `HTTP_${resp.status}`;
+        let title = err.error || 'AI request failed';
+        let hint = err.hint as string | undefined;
+
+        if (resp.status === 401 && code === 'UNAUTHORIZED_NO_AUTH_HEADER') {
+          title = 'Not authenticated to edge function';
+          hint = 'Your Supabase session expired. Refresh and log back in.';
+        } else if (resp.status === 401 && code === 'INVALID_API_KEY') {
+          title = 'Alibaba rejected the Model Studio API key';
+        } else if (resp.status === 403) {
+          title = 'Model not enabled on this Alibaba account';
+        } else if (resp.status === 429) {
+          title = 'Rate limited or out of credits';
+        } else if (resp.status === 502 || resp.status === 503) {
+          title = 'Cannot reach Alibaba Model Studio';
+        } else if (code === 'MISSING_API_KEY') {
+          title = 'DASHSCOPE_API_KEY not configured on the server';
+        }
+
+        setLastError({
+          title,
+          detail: err.error,
+          hint,
+          code,
+          status: resp.status,
+          upstreamStatus: err.upstream_status,
+          upstreamBody: err.upstream_body,
+        });
+        toast.error(title, { description: hint?.slice(0, 120) });
         setLoading(false);
         return;
       }
@@ -63,6 +97,7 @@ const LLMConnector: React.FC = () => {
       let buffer = '';
       let assistant = '';
       let done = false;
+      let receivedAny = false;
 
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
@@ -83,6 +118,7 @@ const LLMConnector: React.FC = () => {
             const parsed = JSON.parse(data);
             const delta = parsed.choices?.[0]?.delta?.content;
             if (delta) {
+              receivedAny = true;
               assistant += delta;
               setMessages(prev => {
                 const next = [...prev];
@@ -96,11 +132,29 @@ const LLMConnector: React.FC = () => {
           }
         }
       }
-    } catch (e: any) {
-      if (e.name !== 'AbortError') {
-        console.error(e);
-        toast.error('Failed to reach AI service');
+
+      if (!receivedAny) {
+        const msg = 'Stream ended without any content';
+        setLastError({
+          title: msg,
+          hint: 'The connection closed before Alibaba sent any tokens. This usually means the model rejected the request silently — try qwen-turbo, shorten the prompt, or check your account balance.',
+          code: 'EMPTY_STREAM',
+        });
+        toast.error(msg);
       }
+    } catch (e: any) {
+      if (e?.name === 'AbortError') return;
+      console.error(e);
+      const offline = typeof navigator !== 'undefined' && !navigator.onLine;
+      setLastError({
+        title: offline ? 'You appear to be offline' : 'Connection to AI service interrupted',
+        detail: e?.message,
+        hint: offline
+          ? 'Reconnect to the internet and retry.'
+          : 'The streaming connection dropped mid-response. Retry; if it keeps happening, check the ai-chat edge function logs.',
+        code: 'STREAM_INTERRUPTED',
+      });
+      toast.error('AI stream interrupted', { description: e?.message?.slice(0, 120) });
     } finally {
       setLoading(false);
       abortRef.current = null;
