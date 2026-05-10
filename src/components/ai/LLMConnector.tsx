@@ -4,11 +4,22 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Brain, Send, Sparkles, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Brain, Send, Sparkles, Loader2, AlertTriangle, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
+
+type ChatError = {
+  title: string;
+  detail?: string;
+  hint?: string;
+  code?: string;
+  status?: number;
+  upstreamStatus?: number;
+  upstreamBody?: string;
+};
 
 const MODELS = [
   { id: 'qwen-plus', label: 'Qwen Plus (balanced)' },
@@ -23,6 +34,7 @@ const LLMConnector: React.FC = () => {
   const [input, setInput] = useState('Summarize our top strategic risks for the next quarter.');
   const [messages, setMessages] = useState<Msg[]>([]);
   const [loading, setLoading] = useState(false);
+  const [lastError, setLastError] = useState<ChatError | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const send = async () => {
